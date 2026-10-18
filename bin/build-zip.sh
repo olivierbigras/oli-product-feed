@@ -5,7 +5,6 @@
 #   bin/build-zip.sh [output.zip]
 #
 # Default output: dist/oli-product-feed-<version>.zip
-# When /opt/cursor/artifacts exists, the ZIP is also copied there.
 #
 # Archive layout (same as a wp.org version ZIP):
 #   oli-product-feed/
@@ -119,7 +118,9 @@ done < <(find "$DEST" \( \
 	\) -print0)
 
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-	STAMP="$(git -C "$ROOT" log -1 --format=%ct)"
+	# Timestamp from packaged paths only, so build-script-only commits
+	# do not change the ZIP hash.
+	STAMP="$(git -C "$ROOT" log -1 --format=%ct -- "${copy_paths[@]}")"
 else
 	STAMP="$(date +%s)"
 fi
@@ -139,8 +140,3 @@ else
 	md5 -q "$OUT"
 fi
 unzip -l "$OUT"
-
-if [[ -d /opt/cursor/artifacts ]]; then
-	cp -f "$OUT" "/opt/cursor/artifacts/$(basename "$OUT")"
-	echo "Copied to /opt/cursor/artifacts/$(basename "$OUT")"
-fi
