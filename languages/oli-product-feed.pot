@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Oli Product Feed 0.5.0\n"
+"Project-Id-Version: Oli Product Feed 0.5.1\n"
 "Report-Msgid-Bugs-To: https://github.com/bigrat95/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
@@ -1261,12 +1261,12 @@ msgstr ""
 msgid "Optional. Leave empty for clean links."
 msgstr ""
 
-#: src/Admin/Editor.php:927
-msgid "Other link parameters"
+#: src/Admin/Editor.php:1053
+msgid "Parameters added to links"
 msgstr ""
 
-#: src/Admin/Editor.php:927
-msgid "One per line: key=value. Added after the language URL conversion."
+#: src/Admin/Editor.php:1056
+msgid "Query string of key=value pairs (for example wcpbc-manual-country=US). Added to each item link (g:link) and to mobile_link when it is set. Existing parameters (variation attribute_*, lang) are kept. Not added to image_link. Empty: off."
 msgstr ""
 
 #: src/Admin/Editor.php:928

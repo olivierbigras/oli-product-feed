@@ -16,6 +16,7 @@ use Oliprfe\Lang;
 use Oliprfe\Pricing;
 use Oliprfe\Scheduler;
 use Oliprfe\Sources;
+use Oliprfe\Util;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -334,6 +335,20 @@ final class Editor {
 			$lines[] = $k . '=' . $v;
 		}
 		return implode( "\n", $lines );
+	}
+
+	/**
+	 * Key/value pairs as a query string ("key=value&key=value").
+	 *
+	 * @param array<string,string> $pairs Pairs.
+	 * @return string
+	 */
+	private static function query_string( array $pairs ) {
+		$parts = array();
+		foreach ( $pairs as $k => $v ) {
+			$parts[] = $k . '=' . $v;
+		}
+		return implode( '&', $parts );
 	}
 
 	/**
@@ -1033,7 +1048,12 @@ final class Editor {
 			$utm .= '<p><label><code>' . esc_html( $key ) . '</code> ' . self::text( 'feed[utm][' . $key . ']', '', isset( $feed['utm'][ $key ] ) ? $feed['utm'][ $key ] : '', 'regular-text' ) . '</label></p>';
 		}
 		self::row( __( 'UTM tags', 'oli-product-feed' ), '', $utm, __( 'Optional. Leave empty for clean links.', 'oli-product-feed' ) );
-		self::row( __( 'Other link parameters', 'oli-product-feed' ), 'opf-link_args', '<textarea name="feed[link_args]" id="opf-link_args" rows="2" class="large-text code">' . esc_textarea( self::pairs_text( $feed['link_args'] ) ) . '</textarea>', __( 'One per line: key=value. Added after the language URL conversion.', 'oli-product-feed' ) );
+		self::row(
+			__( 'Parameters added to links', 'oli-product-feed' ),
+			'opf-link_args',
+			self::text( 'feed[link_args]', 'opf-link_args', self::query_string( $feed['link_args'] ), 'regular-text code', ' placeholder="wcpbc-manual-country=US"' ),
+			__( 'Query string of key=value pairs (for example wcpbc-manual-country=US). Added to each item link (g:link) and to mobile_link when it is set. Existing parameters (variation attribute_*, lang) are kept. Not added to image_link. Empty: off.', 'oli-product-feed' )
+		);
 		$sizes = array( 'full' => __( 'Original file (recommended)', 'oli-product-feed' ) );
 		foreach ( get_intermediate_image_sizes() as $size ) {
 			$sizes[ $size ] = $size;
@@ -1137,7 +1157,7 @@ final class Editor {
 			'image_size'              => (string) $get( 'image_size', 'full' ),
 			'max_additional_images'   => (int) $get( 'max_additional_images', 10 ),
 			'force_https'             => ! empty( $post['force_https'] ),
-			'link_args'               => $lines( $get( 'link_args' ) ),
+			'link_args'               => Util::query_pairs( $get( 'link_args' ) ),
 			'utm'                     => is_array( $get( 'utm', array() ) ) ? $get( 'utm', array() ) : array(),
 			'filters'                 => array(
 				'categories_include' => isset( $filters['categories_include'] ) ? (array) $filters['categories_include'] : array(),

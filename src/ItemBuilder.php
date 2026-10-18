@@ -243,6 +243,21 @@ final class ItemBuilder {
 			return self::excluded( 'filtered', $warnings );
 		}
 
+		$args = array_merge(
+			isset( $feed['link_args'] ) && is_array( $feed['link_args'] ) ? $feed['link_args'] : array(),
+			isset( $feed['utm'] ) && is_array( $feed['utm'] ) ? $feed['utm'] : array()
+		);
+		/**
+		 * Filters the query arguments added to each item link (g:link) and to mobile_link.
+		 * Return an empty array to add nothing. Not applied to image_link.
+		 *
+		 * @param array       $args    Arguments (key => value).
+		 * @param \WC_Product $product Product or variation.
+		 * @param array       $feed    Feed configuration.
+		 */
+		$args = apply_filters( 'oliprfe_link_args', $args, $product, $feed );
+		$item = Util::apply_feed_link_args( $item, is_array( $args ) ? $args : array() );
+
 		$row     = $this->channel->normalize( $item, $feed );
 		$missing = $this->channel->validate( $row );
 		if ( ! empty( $missing ) ) {
@@ -802,26 +817,14 @@ final class ItemBuilder {
 	}
 
 	/**
-	 * Product link in the feed language, with query arguments.
+	 * Product link in the feed language. Extra query arguments are added later
+	 * (g:link and mobile_link) so mapped links get the same parameters.
 	 *
 	 * @param \WC_Product $product Product.
 	 * @return string
 	 */
 	private function link( $product ) {
-		$url  = Lang::feed_url( $product->get_permalink(), $this->feed['language'], ! empty( $this->feed['force_https'] ) );
-		$args = array_merge( $this->feed['link_args'], $this->feed['utm'] );
-
-		/**
-		 * Filters the query arguments added to a product link.
-		 *
-		 * @param array       $args    Arguments.
-		 * @param \WC_Product $product Product.
-		 * @param array       $feed    Feed configuration.
-		 */
-		$args = apply_filters( 'oliprfe_link_args', $args, $product, $this->feed );
-		if ( ! empty( $args ) ) {
-			$url = add_query_arg( array_map( 'rawurlencode', $args ), $url );
-		}
+		$url = Lang::feed_url( $product->get_permalink(), $this->feed['language'], ! empty( $this->feed['force_https'] ) );
 
 		/**
 		 * Filters a product link.

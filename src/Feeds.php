@@ -352,7 +352,7 @@ final class Feeds {
 		$out['max_additional_images'] = isset( $in['max_additional_images'] ) ? max( 0, min( 10, (int) $in['max_additional_images'] ) ) : $d['max_additional_images'];
 		$out['force_https']           = isset( $in['force_https'] ) ? (bool) $in['force_https'] : $d['force_https'];
 
-		$out['link_args'] = self::sanitize_pairs( isset( $in['link_args'] ) ? $in['link_args'] : array() );
+		$out['link_args'] = Util::query_pairs( isset( $in['link_args'] ) ? $in['link_args'] : array() );
 		$out['utm']       = array();
 		$utm              = self::sanitize_pairs( isset( $in['utm'] ) ? $in['utm'] : array() );
 		foreach ( array( 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content' ) as $k ) {
