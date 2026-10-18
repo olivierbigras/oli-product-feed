@@ -2,6 +2,7 @@
 
 ## 2026-10-18
 
+- **Build** (`bin/build-zip.sh`) : script reproductible pour le ZIP installable (racine `oli-product-feed/`, sans tests / .git / node_modules / outils, fichier `.mo` FR compilé).
 - **Traductions** (`languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`) : traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
 - **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.1 → 0.5.2.
 
