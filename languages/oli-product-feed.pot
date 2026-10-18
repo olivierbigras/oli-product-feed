@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Oli Product Feed 0.5.2\n"
+"Project-Id-Version: Oli Product Feed 0.5.3\n"
 "Report-Msgid-Bugs-To: https://github.com/bigrat95/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-18T20:50:22+00:00\n"
+"POT-Creation-Date: 2026-10-18T23:48:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: oli-product-feed\n"
@@ -1897,7 +1897,7 @@ msgstr ""
 msgid "Price Based on Country (zone of the feed country)"
 msgstr ""
 
-#: src/Plugin.php:53
+#: src/Plugin.php:88
 msgid "Oli Product Feed requires WooCommerce to be installed and active."
 msgstr ""
 

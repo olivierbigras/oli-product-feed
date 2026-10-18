@@ -2,6 +2,9 @@
 
 ## 2026-10-18
 
+- **Traductions** (`languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`, `languages/oli-product-feed-fr_CA.po`, `languages/oli-product-feed-fr_CA.mo`) : toutes les chaînes de l’interface en français (liste des flux, éditeur, canaux, notices, CLI, métabox produit). Catalogue `fr_CA` en français québécois (courriel, etc.). Repli `fr_CA` → `fr_FR` via le filtre `load_textdomain_mofile` si le fichier canadien est absent (WordPress ne le fait pas tout seul ; pas de `load_plugin_textdomain()`, retiré pour la revue wp.org).
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.2 → 0.5.3.
+
 - **Build** (`bin/build-zip.sh`) : script reproductible pour le ZIP installable (racine `oli-product-feed/`, sans tests / .git / node_modules / outils, fichier `.mo` FR compilé).
 - **Traductions** (`languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`) : traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
 - **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.1 → 0.5.2.
