@@ -121,9 +121,12 @@ final class ItemBuilder {
 			return self::excluded( 'no_price' );
 		}
 		// Price range on the price shown to customers (sale price included).
-		$shown = null !== $prices['sale'] ? (float) $prices['sale'] : (float) $prices['regular'];
+		$shown = Pricing::displayed( $prices );
 		if ( ( '' !== $feed['filters']['price_min'] && $shown < (float) $feed['filters']['price_min'] ) || ( '' !== $feed['filters']['price_max'] && $shown > (float) $feed['filters']['price_max'] ) ) {
 			return self::excluded( 'price_range' );
+		}
+		if ( Pricing::below_min( $prices, $feed, $product ) ) {
+			return self::excluded( 'min_price' );
 		}
 
 		$item = array(

@@ -58,6 +58,7 @@ final class Feeds {
 			'currency'                => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD',
 			'price_source'            => 'woocommerce',
 			'price_source_options'    => array(),
+			'min_price'               => '',
 			'variations'              => true,
 			'frequency'               => 'daily',
 			'start_hour'              => -1,
@@ -332,6 +333,7 @@ final class Feeds {
 		$currency            = isset( $in['currency'] ) ? strtoupper( preg_replace( '/[^A-Za-z]/', '', (string) $in['currency'] ) ) : '';
 		$out['currency']     = 3 === strlen( $currency ) ? $currency : $d['currency'];
 		$out['price_source'] = isset( $in['price_source'] ) ? sanitize_key( $in['price_source'] ) : $d['price_source'];
+		$out['min_price']    = self::amount( isset( $in['min_price'] ) ? $in['min_price'] : '' );
 
 		$out['price_source_options'] = array();
 		if ( isset( $in['price_source_options'] ) && is_array( $in['price_source_options'] ) ) {

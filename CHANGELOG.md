@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-18
+
+- **Filtres** (`src/Feeds.php`, `src/Pricing.php`, `src/ItemBuilder.php`, `src/Admin/Editor.php`) : seuil « Prix minimum » par flux (décimal, vide ou 0 = désactivé). Les produits simples et les variations dont le prix affiché — prix soldé si une promo est active, sinon le prix régulier, dans la devise du flux, le même montant que `<g:price>` / `<g:sale_price>` (y compris Price Based on Country / prix manuels US) — est sous ce seuil sont exclus. La comparaison se fait sur ce prix final, sans convertir le seuil (150 USD pour un flux USD, 150 CAD pour un flux CAD). Filtre `oliprfe_min_price` (valeur, flux, produit) pour les surcharges. Sans seuil, la sortie des flux existants reste identique.
+- **Tests** (`tests/test-min-price.php`) : cas vide/0, promo, devise du flux sans conversion, prix style WCPBC, filtre de surcharge.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.4.1 → 0.5.0.
+
 ## 0.4.1 (2026-10-16)
 
 - Fix: with TranslatePress, a `fr_CA` feed wrote `http://site/fr/fr/produit/slug/` (404) for every item link and the channel `<link>`. After `trp_switch_language()`, `get_permalink()` and `home_url()` already include `/fr/`; `Lang::url()` ran the converter again (second `/fr/`, `https` dropped) and `prefix_url()` compared against the already-prefixed `home_url()`. URL translation is now idempotent (existing language slug is not doubled), the base URL is taken in the default language then converted once, and `force_https` runs after conversion.

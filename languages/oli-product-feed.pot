@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Oli Product Feed 0.4.1\n"
+"Project-Id-Version: Oli Product Feed 0.5.0\n"
 "Report-Msgid-Bugs-To: https://github.com/bigrat95/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
@@ -608,6 +608,10 @@ msgstr ""
 msgid "Outside the price range"
 msgstr ""
 
+#: src/Admin/Editor.php:447
+msgid "Below the minimum price"
+msgstr ""
+
 #: src/Admin/Editor.php:371
 msgid "Invalid GTIN (not sent)"
 msgstr ""
@@ -831,6 +835,14 @@ msgstr ""
 
 #: src/Admin/Editor.php:549
 msgid "Empty: no limit. Uses the price shown to customers (sale price included)."
+msgstr ""
+
+#: src/Admin/Editor.php:631
+msgid "Minimum price"
+msgstr ""
+
+#: src/Admin/Editor.php:634
+msgid "Simple products and variations whose displayed price in this feed currency is below this amount are excluded. Empty or 0: off. The displayed price is the sale price when a promotion is active, otherwise the regular price — the same amount written in g:price / g:sale_price (including Price Based on Country or converted zone prices). Enter the threshold in the feed currency (150 for a 150 USD or 150 CAD feed); it is not converted."
 msgstr ""
 
 #: src/Admin/Editor.php:550
