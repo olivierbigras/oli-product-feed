@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.5.2 =
+* Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+
 = 0.5.1 =
 * NEW: Per-feed “Parameters added to links” query string (for example `wcpbc-manual-country=US`). Added to each item `g:link` and to `mobile_link` when it is set, not to `image_link`. Existing query parameters are kept. Empty: off. Filter: `oliprfe_link_args`.
 
@@ -172,6 +175,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.2 =
+Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
 
 = 0.5.1 =
 Optional per-feed query string on item links. Existing feeds without extra parameters are unchanged.
