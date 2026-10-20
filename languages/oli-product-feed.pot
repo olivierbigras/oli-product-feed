@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Oli Product Feed 0.5.4\n"
+"Project-Id-Version: Oli Product Feed 0.5.5\n"
 "Report-Msgid-Bugs-To: https://github.com/olivierbigras/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
