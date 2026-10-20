@@ -93,6 +93,8 @@ namespace {
 	if ( ! function_exists( 'add_query_arg' ) ) {
 		/**
 		 * Minimal WordPress add_query_arg( array $args, $url ).
+		 * Matches core: existing query values are encoded, newly added values are not
+		 * (build_query urlencode=false). Callers must encode new values.
 		 *
 		 * @param array  $args Arguments.
 		 * @param string $url  URL.
@@ -110,13 +112,16 @@ namespace {
 				$bits = explode( '?', $url, 2 );
 				$url  = $bits[0];
 				parse_str( $bits[1], $qs );
+				foreach ( $qs as $k => $v ) {
+					$qs[ $k ] = rawurlencode( (string) $v );
+				}
 			}
 			foreach ( (array) $args as $k => $v ) {
 				$qs[ $k ] = $v;
 			}
 			$pairs = array();
 			foreach ( $qs as $k => $v ) {
-				$pairs[] = rawurlencode( (string) $k ) . '=' . rawurlencode( (string) $v );
+				$pairs[] = rawurlencode( (string) $k ) . '=' . $v;
 			}
 			return $url . ( $pairs ? '?' . implode( '&', $pairs ) : '' ) . $frag;
 		}
@@ -240,6 +245,25 @@ namespace Oliprfe {
 		'simple product link receives wcpbc-manual-country=US',
 		'https://site/produit/slug/?wcpbc-manual-country=US',
 		Util::add_query_args( $simple, array( 'wcpbc-manual-country' => 'US' ) )
+	);
+
+	// --- Values with &, # or space stay one valid query value (rawurlencoded).
+	$oliprfe_assert(
+		'value with & # and space is rawurlencoded',
+		'https://site/produit/slug/?ref=a%26b&hash=c%23d&q=hello%20world',
+		Util::add_query_args(
+			$simple,
+			array(
+				'ref'  => 'a&b',
+				'hash' => 'c#d',
+				'q'    => 'hello world',
+			)
+		)
+	);
+	$oliprfe_assert(
+		'percent-encoded value is decoded then re-encoded on the link',
+		'https://site/produit/slug/?ref=a%26b',
+		Util::add_query_args( $simple, Util::query_pairs( 'ref=a%26b' ) )
 	);
 
 	// --- Variation: attribute_* is kept.

@@ -125,7 +125,8 @@ final class Util {
 
 	/**
 	 * Sanitized key=value pairs from a query string, one-per-line text, or an array.
-	 * Only pairs with `=` are kept. Keys go through sanitize_key(), values through sanitize_text_field().
+	 * Only pairs with `=` are kept. Keys go through sanitize_key() (lowercased,
+	 * characters outside [a-z0-9_-] stripped). Values go through sanitize_text_field().
 	 *
 	 * @param mixed $raw Query string (`wcpbc-manual-country=US`), lines, or array.
 	 * @return array<string,string>
@@ -155,6 +156,7 @@ final class Util {
 			if ( ! is_scalar( $v ) ) {
 				continue;
 			}
+			// Parameter keys are lowercased (and stripped of characters outside [a-z0-9_-]) by sanitize_key().
 			$k = sanitize_key( (string) $k );
 			if ( '' === $k ) {
 				continue;
@@ -167,6 +169,8 @@ final class Util {
 	/**
 	 * Adds query arguments to a URL with add_query_arg(), keeping those already present
 	 * (variation attribute_*, lang, …). Empty $args leaves the URL unchanged.
+	 * Values are rawurlencoded before add_query_arg() so `&`, `#` and spaces stay
+	 * one valid query value (WordPress add_query_arg does not encode newly added values).
 	 *
 	 * @param string               $url  URL.
 	 * @param array<string,string> $args Arguments.
@@ -176,7 +180,11 @@ final class Util {
 		if ( '' === (string) $url || empty( $args ) ) {
 			return $url;
 		}
-		return add_query_arg( $args, $url );
+		$encoded = array();
+		foreach ( $args as $k => $v ) {
+			$encoded[ $k ] = rawurlencode( (string) $v );
+		}
+		return add_query_arg( $encoded, $url );
 	}
 
 	/**

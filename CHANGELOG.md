@@ -2,6 +2,12 @@
 
 ## 2026-10-20
 
+- **Liens** (`src/Util.php`) : les valeurs des paramètres ajoutés aux liens sont passées à `add_query_arg` après `rawurlencode`, pour qu’un `&`, un `#` ou un espace restent une valeur unique et valide (WordPress n’encode pas les valeurs nouvellement ajoutées).
+- **Docs** (`src/Util.php`, `readme.txt`) : les clés des paramètres passent en minuscules (`sanitize_key`).
+- **readme.txt** : entrée 0.5.3 ajoutée dans Upgrade Notice.
+- **Tests** (`tests/test-link-args.php`) : `&`, `#` et espace dans une valeur ; le stub `add_query_arg` aligne le comportement de WordPress (valeurs nouvelles non encodées).
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.4 → 0.5.5.
+
 - **Liens GitHub** (`oli-product-feed.php`, `languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_CA.po`, `.mo` recompilés) : compte GitHub `bigrat95` → `olivierbigras` (compte renommé ; redirection GitHub en place). `Contributors: bigrat95` (wp.org) inchangé. Aucun changement fonctionnel.
 - **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.3 → 0.5.4.
 

@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.4
+Stable tag: 0.5.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,7 +37,7 @@ Product feeds for WooCommerce: Google Merchant Center, Pinterest, Meta, TikTok a
 * **Filters**: categories, tags, price range, **minimum price** (empty or 0: off) on the displayed feed price (`g:price` / `g:sale_price`, including Price Based on Country), stock status, product IDs, words in the title, required fields; exclusion rules and availability rules on custom fields; live count of the matching products. Filter: `oliprfe_min_price`.
 * **Backorder availability date**: optional per-feed lead time (default 21 days) for products on backorder or sold while out of stock. Google, Microsoft (Bing) and Meta receive `g:availability` = backorder (or preorder if configured), `g:availability_date` in ISO 8601 with the site time zone, and optional handling time. In-stock items are unchanged. A per-product override (days or a fixed date) can be set on the product and on each variation.
 * **Google product category** per category or per product
-* **UTM and extra link parameters**: per-feed query string (for example `wcpbc-manual-country=US`) added to each item `g:link` and to `mobile_link` when set, never to `image_link`. Existing parameters (variation `attribute_*`, `lang`) are kept. Filter: `oliprfe_link_args`.
+* **UTM and extra link parameters**: per-feed query string (for example `wcpbc-manual-country=US`) added to each item `g:link` and to `mobile_link` when set, never to `image_link`. Parameter keys are lowercased (`sanitize_key`). Existing parameters (variation `attribute_*`, `lang`) are kept. Filter: `oliprfe_link_args`.
 * **Clear log**: every generation lists the excluded products and why
 
 = Generation and serving =
@@ -93,6 +93,10 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 3. Settings.
 
 == Changelog ==
+
+= 0.5.5 =
+* Fix: parameter values added to item links are rawurlencoded before `add_query_arg`, so `&`, `#` and spaces stay one valid query value.
+* Docs: parameter keys are lowercased (`sanitize_key`).
 
 = 0.5.4 =
 * Maintenance : liens GitHub mis à jour vers github.com/olivierbigras (compte renommé, anciennement bigrat95). Aucun changement fonctionnel.
@@ -182,8 +186,14 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Upgrade Notice ==
 
+= 0.5.5 =
+Link parameter values with `&`, `#` or a space are now encoded. Parameter keys stay lowercased (`sanitize_key`).
+
 = 0.5.4 =
 Maintenance : liens GitHub mis à jour. Aucun changement fonctionnel.
+
+= 0.5.3 =
+Traductions FR de toute l’interface (fr_FR et fr_CA). Repli fr_CA → fr_FR si le catalogue canadien est absent.
 
 = 0.5.2 =
 Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
