@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Oli Product Feed
- * Plugin URI: https://github.com/bigrat95/oli-product-feed
+ * Plugin URI: https://github.com/olivierbigras/oli-product-feed
  * Description: Product feeds for WooCommerce: Google Merchant Center, Pinterest, Meta (Facebook, Instagram), TikTok, Microsoft (Bing) and generic CSV/XML. One feed per language and currency, TranslatePress support, background generation and WP-CLI.
  * Version: 0.4.1
  * Requires at least: 6.4

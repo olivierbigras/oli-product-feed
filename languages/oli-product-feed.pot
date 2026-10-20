@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Oli Product Feed 0.4.1\n"
-"Report-Msgid-Bugs-To: https://github.com/bigrat95/oli-product-feed/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/olivierbigras/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,7 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #: oli-product-feed.php
-msgid "https://github.com/bigrat95/oli-product-feed"
+msgid "https://github.com/olivierbigras/oli-product-feed"
 msgstr ""
 
 #. Description of the plugin
