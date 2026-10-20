@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-20
+
+- **Liens GitHub** (`oli-product-feed.php`, `languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_CA.po`, `.mo` recompilés) : compte GitHub `bigrat95` → `olivierbigras` (compte renommé ; redirection GitHub en place). `Contributors: bigrat95` (wp.org) inchangé. Aucun changement fonctionnel.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.3 → 0.5.4.
+
 ## 2026-10-18
 
 - **Traductions** (`languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`, `languages/oli-product-feed-fr_CA.po`, `languages/oli-product-feed-fr_CA.mo`) : toutes les chaînes de l’interface en français (liste des flux, éditeur, canaux, notices, CLI, métabox produit). Catalogue `fr_CA` en français québécois (courriel, etc.). Repli `fr_CA` → `fr_FR` via le filtre `load_textdomain_mofile` si le fichier canadien est absent (WordPress ne le fait pas tout seul ; pas de `load_plugin_textdomain()`, retiré pour la revue wp.org).

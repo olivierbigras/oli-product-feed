@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.5.4 =
+* Maintenance : liens GitHub mis à jour vers github.com/olivierbigras (compte renommé, anciennement bigrat95). Aucun changement fonctionnel.
+
 = 0.5.3 =
 * Traductions FR de toute l’interface (liste, éditeur, canaux, notices, CLI, métabox produit). Fichiers fr_FR et fr_CA bundlés (français québécois : courriel, etc.). Repli fr_CA → fr_FR si le catalogue canadien est absent.
 
@@ -178,6 +181,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.4 =
+Maintenance : liens GitHub mis à jour. Aucun changement fonctionnel.
 
 = 0.5.2 =
 Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
