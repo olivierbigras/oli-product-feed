@@ -16,6 +16,7 @@ use Oliprfe\Lang;
 use Oliprfe\Pricing;
 use Oliprfe\Scheduler;
 use Oliprfe\Sources;
+use Oliprfe\Util;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -337,6 +338,20 @@ final class Editor {
 	}
 
 	/**
+	 * Key/value pairs as a query string ("key=value&key=value").
+	 *
+	 * @param array<string,string> $pairs Pairs.
+	 * @return string
+	 */
+	private static function query_string( array $pairs ) {
+		$parts = array();
+		foreach ( $pairs as $k => $v ) {
+			$parts[] = $k . '=' . $v;
+		}
+		return implode( '&', $parts );
+	}
+
+	/**
 	 * Sidebar: status, URL, actions, log.
 	 *
 	 * @param array<string,mixed> $feed    Feed.
@@ -444,6 +459,7 @@ final class Editor {
 			'filtered'             => __( 'Excluded by a filter', 'oli-product-feed' ),
 			'no_price'             => __( 'No price', 'oli-product-feed' ),
 			'price_range'          => __( 'Outside the price range', 'oli-product-feed' ),
+			'min_price'            => __( 'Below the minimum price', 'oli-product-feed' ),
 			'invalid_gtin'         => __( 'Invalid GTIN (not sent)', 'oli-product-feed' ),
 			'no_brand'             => __( 'No brand', 'oli-product-feed' ),
 		);
@@ -623,6 +639,14 @@ final class Editor {
 		$range .= '<label for="opf-price_min">' . esc_html__( 'Min', 'oli-product-feed' ) . '</label> <input type="number" min="0" step="0.01" class="small-text" id="opf-price_min" name="feed[filters][price_min]" value="' . esc_attr( $f['price_min'] ) . '"> ';
 		$range .= '<label for="opf-price_max">' . esc_html__( 'Max', 'oli-product-feed' ) . '</label> <input type="number" min="0" step="0.01" class="small-text" id="opf-price_max" name="feed[filters][price_max]" value="' . esc_attr( $f['price_max'] ) . '"> ' . esc_html( $feed['currency'] ) . '</fieldset>';
 		self::row( __( 'Price range', 'oli-product-feed' ), '', $range, __( 'Empty: no limit. Uses the price shown to customers (sale price included).', 'oli-product-feed' ) );
+		$min_price  = '<input type="number" min="0" step="0.01" class="small-text" id="opf-min_price" name="feed[min_price]" value="' . esc_attr( isset( $feed['min_price'] ) ? (string) $feed['min_price'] : '' ) . '"> ';
+		$min_price .= esc_html( $feed['currency'] );
+		self::row(
+			__( 'Minimum price', 'oli-product-feed' ),
+			'opf-min_price',
+			$min_price,
+			__( 'Simple products and variations whose displayed price in this feed currency is below this amount are excluded. Empty or 0: off. The displayed price is the sale price when a promotion is active, otherwise the regular price — the same amount written in g:price / g:sale_price (including Price Based on Country or converted zone prices). Enter the threshold in the feed currency (150 for a 150 USD or 150 CAD feed); it is not converted.', 'oli-product-feed' )
+		);
 		self::row( __( 'Variations', 'oli-product-feed' ), '', self::checkbox( 'feed[variations]', $feed['variations'], __( 'Export each variation as its own item (linked by item_group_id); the variable parent is not exported', 'oli-product-feed' ) ) );
 		self::row( __( 'Exclude product IDs', 'oli-product-feed' ), 'opf-exclude_ids', self::text( 'feed[filters][exclude_ids]', 'opf-exclude_ids', implode( ', ', $f['exclude_ids'] ), 'regular-text code' ), __( 'Product or variation IDs, separated by commas.', 'oli-product-feed' ) );
 		self::row( __( 'Title contains', 'oli-product-feed' ), 'opf-title_contains', self::text( 'feed[filters][title_contains]', 'opf-title_contains', $f['title_contains'] ) );
@@ -1024,7 +1048,12 @@ final class Editor {
 			$utm .= '<p><label><code>' . esc_html( $key ) . '</code> ' . self::text( 'feed[utm][' . $key . ']', '', isset( $feed['utm'][ $key ] ) ? $feed['utm'][ $key ] : '', 'regular-text' ) . '</label></p>';
 		}
 		self::row( __( 'UTM tags', 'oli-product-feed' ), '', $utm, __( 'Optional. Leave empty for clean links.', 'oli-product-feed' ) );
-		self::row( __( 'Other link parameters', 'oli-product-feed' ), 'opf-link_args', '<textarea name="feed[link_args]" id="opf-link_args" rows="2" class="large-text code">' . esc_textarea( self::pairs_text( $feed['link_args'] ) ) . '</textarea>', __( 'One per line: key=value. Added after the language URL conversion.', 'oli-product-feed' ) );
+		self::row(
+			__( 'Parameters added to links', 'oli-product-feed' ),
+			'opf-link_args',
+			self::text( 'feed[link_args]', 'opf-link_args', self::query_string( $feed['link_args'] ), 'regular-text code', ' placeholder="wcpbc-manual-country=US"' ),
+			__( 'Query string of key=value pairs (for example wcpbc-manual-country=US). Added to each item link (g:link) and to mobile_link when it is set. Existing parameters (variation attribute_*, lang) are kept. Not added to image_link. Empty: off.', 'oli-product-feed' )
+		);
 		$sizes = array( 'full' => __( 'Original file (recommended)', 'oli-product-feed' ) );
 		foreach ( get_intermediate_image_sizes() as $size ) {
 			$sizes[ $size ] = $size;
@@ -1120,6 +1149,7 @@ final class Editor {
 			'currency'                => (string) $get( 'currency' ),
 			'price_source'            => (string) $get( 'price_source', 'woocommerce' ),
 			'price_source_options'    => array(),
+			'min_price'               => (string) $get( 'min_price' ),
 			'variations'              => ! empty( $post['variations'] ),
 			'frequency'               => (string) $get( 'frequency', 'daily' ),
 			'start_hour'              => (string) $get( 'start_hour', '-1' ),
@@ -1127,7 +1157,7 @@ final class Editor {
 			'image_size'              => (string) $get( 'image_size', 'full' ),
 			'max_additional_images'   => (int) $get( 'max_additional_images', 10 ),
 			'force_https'             => ! empty( $post['force_https'] ),
-			'link_args'               => $lines( $get( 'link_args' ) ),
+			'link_args'               => Util::query_pairs( $get( 'link_args' ) ),
 			'utm'                     => is_array( $get( 'utm', array() ) ) ? $get( 'utm', array() ) : array(),
 			'filters'                 => array(
 				'categories_include' => isset( $filters['categories_include'] ) ? (array) $filters['categories_include'] : array(),

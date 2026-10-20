@@ -72,6 +72,55 @@ final class Pricing {
 	}
 
 	/**
+	 * Price written for the product in this feed: sale price when a promotion is active, otherwise the regular price.
+	 * Same amount as `<g:sale_price>` or `<g:price>` (feed currency, after `oliprfe_price`).
+	 *
+	 * @param array<string,mixed> $prices Prices from get().
+	 * @return float
+	 */
+	public static function displayed( array $prices ) {
+		return null !== $prices['sale'] ? (float) $prices['sale'] : (float) $prices['regular'];
+	}
+
+	/**
+	 * Effective minimum displayed price of a feed (0 = off). Compared in the feed currency, never converted.
+	 *
+	 * @param array<string,mixed> $feed    Feed configuration.
+	 * @param \WC_Product         $product Product or variation.
+	 * @return float
+	 */
+	public static function min_price( array $feed, $product ) {
+		$value = isset( $feed['min_price'] ) ? $feed['min_price'] : '';
+
+		/**
+		 * Filters the minimum displayed price of a feed. Empty or 0 disables the threshold.
+		 * The value is in the feed currency (150 for a 150 USD or 150 CAD feed); it is not converted.
+		 *
+		 * @param mixed       $value   Stored threshold (string amount, or empty).
+		 * @param array       $feed    Feed configuration.
+		 * @param \WC_Product $product Product or variation.
+		 */
+		$value = apply_filters( 'oliprfe_min_price', $value, $feed, $product );
+		if ( ! is_numeric( $value ) || (float) $value <= 0 ) {
+			return 0.0;
+		}
+		return (float) $value;
+	}
+
+	/**
+	 * Is the displayed feed price below the feed minimum?
+	 *
+	 * @param array<string,mixed> $prices  Prices from get().
+	 * @param array<string,mixed> $feed    Feed configuration.
+	 * @param \WC_Product         $product Product or variation.
+	 * @return bool
+	 */
+	public static function below_min( array $prices, array $feed, $product ) {
+		$min = self::min_price( $feed, $product );
+		return $min > 0 && self::displayed( $prices ) < $min;
+	}
+
+	/**
 	 * Raw WooCommerce prices ('edit' context, so that no front-end price filter changes them).
 	 *
 	 * @param \WC_Product $product Product.

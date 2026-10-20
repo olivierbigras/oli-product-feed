@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-10-20
+
+- **Liens GitHub** (`oli-product-feed.php`, `languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_CA.po`, `.mo` recompilés) : compte GitHub `bigrat95` → `olivierbigras` (compte renommé ; redirection GitHub en place). `Contributors: bigrat95` (wp.org) inchangé. Aucun changement fonctionnel.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.3 → 0.5.4.
+
+## 2026-10-18
+
+- **Traductions** (`languages/oli-product-feed.pot`, `languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`, `languages/oli-product-feed-fr_CA.po`, `languages/oli-product-feed-fr_CA.mo`) : toutes les chaînes de l’interface en français (liste des flux, éditeur, canaux, notices, CLI, métabox produit). Catalogue `fr_CA` en français québécois (courriel, etc.). Repli `fr_CA` → `fr_FR` via le filtre `load_textdomain_mofile` si le fichier canadien est absent (WordPress ne le fait pas tout seul ; pas de `load_plugin_textdomain()`, retiré pour la revue wp.org).
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.2 → 0.5.3.
+
+- **Build** (`bin/build-zip.sh`) : script reproductible pour le ZIP installable (racine `oli-product-feed/`, sans tests / .git / node_modules / outils, fichier `.mo` FR compilé).
+- **Traductions** (`languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`) : traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.1 → 0.5.2.
+
+- **Liens** (`src/Util.php`, `src/Feeds.php`, `src/ItemBuilder.php`, `src/Admin/Editor.php`) : réglage « Paramètres ajoutés aux liens » (chaîne de requête, ex. `wcpbc-manual-country=US`, vide par défaut). Ajouté à `<link>` (`g:link`) de chaque article et à `mobile_link` s’il existe, via `add_query_arg`, en conservant les paramètres déjà présents (`attribute_*` des variations, `lang`). Pas ajouté à `image_link`. Saisie limitée aux paires `clé=valeur` (`sanitize_key` / `sanitize_text_field`). Filtre `oliprfe_link_args` (tableau, produit, flux — ordre déjà utilisé par Price Based on Country). Sans réglage, la sortie reste identique.
+- **Tests** (`tests/test-link-args.php`) : produit simple, variation `attribute_*`, paramètre déjà présent, `mobile_link`, `image_link` intact, filtre.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.0 → 0.5.1.
+
+- **Filtres** (`src/Feeds.php`, `src/Pricing.php`, `src/ItemBuilder.php`, `src/Admin/Editor.php`) : seuil « Prix minimum » par flux (décimal, vide ou 0 = désactivé). Les produits simples et les variations dont le prix affiché — prix soldé si une promo est active, sinon le prix régulier, dans la devise du flux, le même montant que `<g:price>` / `<g:sale_price>` (y compris Price Based on Country / prix manuels US) — est sous ce seuil sont exclus. La comparaison se fait sur ce prix final, sans convertir le seuil (150 USD pour un flux USD, 150 CAD pour un flux CAD). Filtre `oliprfe_min_price` (valeur, flux, produit) pour les surcharges. Sans seuil, la sortie des flux existants reste identique.
+- **Tests** (`tests/test-min-price.php`) : cas vide/0, promo, devise du flux sans conversion, prix style WCPBC, filtre de surcharge.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.4.1 → 0.5.0.
+
 ## 0.4.1 (2026-10-16)
 
 - Fix: with TranslatePress, a `fr_CA` feed wrote `http://site/fr/fr/produit/slug/` (404) for every item link and the channel `<link>`. After `trp_switch_language()`, `get_permalink()` and `home_url()` already include `/fr/`; `Lang::url()` ran the converter again (second `/fr/`, `https` dropped) and `prefix_url()` compared against the already-prefixed `home_url()`. URL translation is now idempotent (existing language slug is not doubled), the base URL is taken in the default language then converted once, and `force_https` runs after conversion.

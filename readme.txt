@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.4.1
+Stable tag: 0.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,10 +34,10 @@ Product feeds for WooCommerce: Google Merchant Center, Pinterest, Meta, TikTok a
 * **Per-product values** for the odd product (for example the color of one item)
 * **Title template** such as `{brand} {name} {type} - {variation}`, with the type set per category
 * **GTIN validation** (check digit); **MPN = SKU** for all brands or only for a list of brands
-* **Filters**: categories, tags, price range, stock status, product IDs, words in the title, required fields; exclusion rules and availability rules on custom fields; live count of the matching products
+* **Filters**: categories, tags, price range, **minimum price** (empty or 0: off) on the displayed feed price (`g:price` / `g:sale_price`, including Price Based on Country), stock status, product IDs, words in the title, required fields; exclusion rules and availability rules on custom fields; live count of the matching products. Filter: `oliprfe_min_price`.
 * **Backorder availability date**: optional per-feed lead time (default 21 days) for products on backorder or sold while out of stock. Google, Microsoft (Bing) and Meta receive `g:availability` = backorder (or preorder if configured), `g:availability_date` in ISO 8601 with the site time zone, and optional handling time. In-stock items are unchanged. A per-product override (days or a fixed date) can be set on the product and on each variation.
 * **Google product category** per category or per product
-* **UTM and extra link parameters**
+* **UTM and extra link parameters**: per-feed query string (for example `wcpbc-manual-country=US`) added to each item `g:link` and to `mobile_link` when set, never to `image_link`. Existing parameters (variation `attribute_*`, `lang`) are kept. Filter: `oliprfe_link_args`.
 * **Clear log**: every generation lists the excluded products and why
 
 = Generation and serving =
@@ -93,6 +93,21 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 3. Settings.
 
 == Changelog ==
+
+= 0.5.4 =
+* Maintenance : liens GitHub mis à jour vers github.com/olivierbigras (compte renommé, anciennement bigrat95). Aucun changement fonctionnel.
+
+= 0.5.3 =
+* Traductions FR de toute l’interface (liste, éditeur, canaux, notices, CLI, métabox produit). Fichiers fr_FR et fr_CA bundlés (français québécois : courriel, etc.). Repli fr_CA → fr_FR si le catalogue canadien est absent.
+
+= 0.5.2 =
+* Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+
+= 0.5.1 =
+* NEW: Per-feed “Parameters added to links” query string (for example `wcpbc-manual-country=US`). Added to each item `g:link` and to `mobile_link` when it is set, not to `image_link`. Existing query parameters are kept. Empty: off. Filter: `oliprfe_link_args`.
+
+= 0.5.0 =
+* NEW: Per-feed minimum price. Simple products and variations whose displayed price (sale price when a promotion is active, otherwise the regular price) in the feed currency is below the threshold are excluded. Empty or 0: off. Same amount as g:price / g:sale_price, including Price Based on Country; the threshold is not converted (150 USD on a USD feed, 150 CAD on a CAD feed). Filter: `oliprfe_min_price`.
 
 = 0.4.1 =
 * Fix: TranslatePress fr_CA feeds no longer write doubled language slugs (`/fr/fr/…`, a 404) or `http://` on item links and the channel `<link>`. URLs that already have `/fr/` are left as-is; default-language URLs are converted once; `force_https` is applied after conversion.
@@ -166,6 +181,18 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.4 =
+Maintenance : liens GitHub mis à jour. Aucun changement fonctionnel.
+
+= 0.5.2 =
+Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+
+= 0.5.1 =
+Optional per-feed query string on item links. Existing feeds without extra parameters are unchanged.
+
+= 0.5.0 =
+Optional per-feed minimum price. Existing feeds without a threshold are unchanged.
 
 = 0.4.0 =
 Backorder availability dates for Google, Bing and Meta, and a TranslatePress language fix so French (Canada) feeds no longer stay in English.

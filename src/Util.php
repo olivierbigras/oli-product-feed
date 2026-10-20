@@ -124,6 +124,82 @@ final class Util {
 	}
 
 	/**
+	 * Sanitized key=value pairs from a query string, one-per-line text, or an array.
+	 * Only pairs with `=` are kept. Keys go through sanitize_key(), values through sanitize_text_field().
+	 *
+	 * @param mixed $raw Query string (`wcpbc-manual-country=US`), lines, or array.
+	 * @return array<string,string>
+	 */
+	public static function query_pairs( $raw ) {
+		if ( is_array( $raw ) ) {
+			$pairs = $raw;
+		} else {
+			$raw = ltrim( trim( (string) $raw ), '?' );
+			if ( '' === $raw ) {
+				return array();
+			}
+			$raw   = (string) preg_replace( '/[\r\n]+/', '&', $raw );
+			$pairs = array();
+			foreach ( explode( '&', $raw ) as $chunk ) {
+				$chunk = trim( $chunk );
+				if ( '' === $chunk || false === strpos( $chunk, '=' ) ) {
+					continue;
+				}
+				$parts         = explode( '=', $chunk, 2 );
+				$key           = rawurldecode( trim( $parts[0] ) );
+				$pairs[ $key ] = rawurldecode( trim( $parts[1] ) );
+			}
+		}
+		$out = array();
+		foreach ( $pairs as $k => $v ) {
+			if ( ! is_scalar( $v ) ) {
+				continue;
+			}
+			$k = sanitize_key( (string) $k );
+			if ( '' === $k ) {
+				continue;
+			}
+			$out[ $k ] = sanitize_text_field( (string) $v );
+		}
+		return $out;
+	}
+
+	/**
+	 * Adds query arguments to a URL with add_query_arg(), keeping those already present
+	 * (variation attribute_*, lang, …). Empty $args leaves the URL unchanged.
+	 *
+	 * @param string               $url  URL.
+	 * @param array<string,string> $args Arguments.
+	 * @return string
+	 */
+	public static function add_query_args( $url, array $args ) {
+		if ( '' === (string) $url || empty( $args ) ) {
+			return $url;
+		}
+		return add_query_arg( $args, $url );
+	}
+
+	/**
+	 * Adds feed link arguments to g:link and mobile_link. image_link is left untouched.
+	 * Empty $args returns the item unchanged (byte-identical feeds).
+	 *
+	 * @param array<string,mixed>  $item Item.
+	 * @param array<string,string> $args Arguments.
+	 * @return array<string,mixed>
+	 */
+	public static function apply_feed_link_args( array $item, array $args ) {
+		if ( empty( $args ) ) {
+			return $item;
+		}
+		foreach ( array( 'link', 'mobile_link' ) as $field ) {
+			if ( ! empty( $item[ $field ] ) && is_string( $item[ $field ] ) ) {
+				$item[ $field ] = self::encode_url( self::add_query_args( $item[ $field ], $args ) );
+			}
+		}
+		return $item;
+	}
+
+	/**
 	 * Percent-encodes the characters of a URL that are not allowed raw (non-ASCII, spaces), keeping the rest.
 	 *
 	 * @param string $url URL.
