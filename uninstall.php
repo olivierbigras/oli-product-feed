@@ -23,7 +23,7 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 	static function () {
 		global $wpdb;
 
-		foreach ( array( 'oliprfe_tick', 'oliprfe_run_batch' ) as $oliprfe_hook ) {
+		foreach ( array( 'oliprfe_tick', 'oliprfe_run_batch', 'oli_pf_tick', 'oli_pf_run_batch' ) as $oliprfe_hook ) {
 			if ( function_exists( 'as_unschedule_all_actions' ) ) {
 				as_unschedule_all_actions( $oliprfe_hook );
 			}
@@ -44,9 +44,9 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 				? (int) $wpdb->get_var( $wpdb->prepare( 'SELECT group_id FROM %i WHERE slug = %s', $oliprfe_as_groups, 'oli-product-feed' ) )
 				: 0;
 			if ( $oliprfe_has_table( $oliprfe_as_logs ) ) {
-				$wpdb->query( $wpdb->prepare( 'DELETE l FROM %i l INNER JOIN %i a ON a.action_id = l.action_id WHERE a.hook IN (%s, %s) OR ( a.group_id > 0 AND a.group_id = %d )', $oliprfe_as_logs, $oliprfe_as_actions, 'oliprfe_tick', 'oliprfe_run_batch', $oliprfe_group_id ) );
+				$wpdb->query( $wpdb->prepare( 'DELETE l FROM %i l INNER JOIN %i a ON a.action_id = l.action_id WHERE a.hook IN (%s, %s, %s, %s) OR ( a.group_id > 0 AND a.group_id = %d )', $oliprfe_as_logs, $oliprfe_as_actions, 'oliprfe_tick', 'oliprfe_run_batch', 'oli_pf_tick', 'oli_pf_run_batch', $oliprfe_group_id ) );
 			}
-			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE hook IN (%s, %s) OR ( group_id > 0 AND group_id = %d )', $oliprfe_as_actions, 'oliprfe_tick', 'oliprfe_run_batch', $oliprfe_group_id ) );
+			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE hook IN (%s, %s, %s, %s) OR ( group_id > 0 AND group_id = %d )', $oliprfe_as_actions, 'oliprfe_tick', 'oliprfe_run_batch', 'oli_pf_tick', 'oli_pf_run_batch', $oliprfe_group_id ) );
 			if ( $oliprfe_group_id && ! $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE group_id = %d', $oliprfe_as_actions, $oliprfe_group_id ) ) ) {
 				$wpdb->delete( $oliprfe_as_groups, array( 'group_id' => $oliprfe_group_id ), array( '%d' ) );
 			}
@@ -72,7 +72,7 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 		$oliprfe_folder = Oliprfe\Storage::folder();
 		$oliprfe_feeds  = get_posts(
 			array(
-				'post_type'      => 'oliprfe_feed',
+				'post_type'      => array( 'oliprfe_feed', 'oli_pf_feed' ),
 				'post_status'    => array_keys( get_post_stati() ), // Trash included ('any' excludes it).
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
@@ -81,6 +81,9 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 		$oliprfe_names  = array();
 		foreach ( $oliprfe_feeds as $oliprfe_id ) {
 			$oliprfe_config = json_decode( (string) get_post_meta( $oliprfe_id, '_oliprfe_config', true ), true );
+			if ( ! is_array( $oliprfe_config ) ) {
+				$oliprfe_config = json_decode( (string) get_post_meta( $oliprfe_id, '_oli_pf_config', true ), true );
+			}
 			$oliprfe_slug   = is_array( $oliprfe_config ) && ! empty( $oliprfe_config['file_slug'] ) ? sanitize_file_name( $oliprfe_config['file_slug'] ) : 'feed-' . (int) $oliprfe_id;
 			foreach ( array( 'xml', 'csv', 'tsv', 'txt' ) as $oliprfe_ext ) {
 				$oliprfe_names[] = $oliprfe_slug . '.' . $oliprfe_ext;
@@ -124,10 +127,13 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 		// Per-product backorder override (simple products and variations).
 		$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_oliprfe_availability' ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time cleanup of the plugin's product meta.
+		foreach ( array( '_oli_pf_config', '_oli_pf_log', '_oli_pf_last_run' ) as $oliprfe_old_meta ) {
+			$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => $oliprfe_old_meta ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Leftover pre-0.3.5 keys.
+		}
 
 		// Options (settings and generation states) and transients (locks).
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time cleanup by prefix.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( 'oliprfe_' ) . '%', $wpdb->esc_like( '_transient_oliprfe_' ) . '%', $wpdb->esc_like( '_transient_timeout_oliprfe_' ) . '%' ) );
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s", $wpdb->esc_like( 'oliprfe_' ) . '%', $wpdb->esc_like( '_transient_oliprfe_' ) . '%', $wpdb->esc_like( '_transient_timeout_oliprfe_' ) . '%', $wpdb->esc_like( 'oli_pf_' ) . '%', $wpdb->esc_like( '_transient_oli_pf_' ) . '%', $wpdb->esc_like( '_transient_timeout_oli_pf_' ) . '%' ) );
 		// phpcs:enable
 		wp_cache_flush();
 	}

@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.5
+Stable tag: 0.5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,14 +44,43 @@ Product feeds for WooCommerce: Google Merchant Center, Pinterest, Meta, TikTok a
 
 * **Background generation** with Action Scheduler (WP-Cron fallback), in batches, with a lock and an atomic file swap
 * **Schedule**: hourly, twice a day, daily or weekly, at an off-peak hour; optional regeneration when products change (at most every 15 minutes)
-* **Static file** (default) or **served by WordPress** with a short cache, `X-Robots-Tag: noindex`, ETag and Last-Modified, for hosts whose CDN keeps static files too long. The pre-generated file is streamed while the plugins load (never rebuilt during the request); an optional must-use loader serves it even earlier
+* **Static file** (default) or **served by WordPress** with a short cache, `X-Robots-Tag: noindex`, ETag and Last-Modified, for hosts whose CDN keeps static files too long. The pre-generated file is streamed while the plugins load (never rebuilt during the request)
 * **Logs** in WooCommerce > Status > Logs
 * **Access**: the plugin screens need the `manage_woocommerce` capability (administrators and shop managers); when shop manager access is turned off in the settings, `manage_options` (administrators)
 * **WP-CLI**: `wp oli-feed list|generate|status|export|import|settings`
 
-= Privacy =
+== External services ==
 
-The plugin makes no external request, loads no remote asset and collects no data. Feeds only contain public product data.
+The plugin itself does not call a remote API, does not load a remote script or font, and does not collect personal data. Feed files stay on the site (`wp-content/uploads/`). The links and fetches below are the only third-party contacts.
+
+= PayPal (donate) =
+
+Optional Donate / support links (Plugins screen, a dismissible notice on the plugin screens, the plugin footer, and the WordPress.org Donate link) open `https://www.paypal.com/donate/` in the browser when someone clicks them. No server-side request is made. PayPal may then see the visitor’s IP address, browser data and, if they complete a donation, the amount and the payment details they enter.
+
+* Terms: https://www.paypal.com/legalhub/useragreement-full
+* Privacy: https://www.paypal.com/legalhub/privacy-full
+
+= Author and source links =
+
+The plugin header links to the author’s site (`https://olivierbigras.com`) and to the public repository (`https://github.com/olivierbigras/oli-product-feed`). Nothing is fetched unless someone clicks those links.
+
+* olivierbigras.com: https://olivierbigras.com
+* GitHub terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+* GitHub privacy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
+
+= Shopping platforms (Google, Pinterest, Meta, TikTok, Microsoft) =
+
+The plugin writes local product feed files. It does not call Merchant Center, Pinterest Catalogs, Meta Commerce Manager, TikTok Catalog or Microsoft Merchant Center. After you paste a feed URL into a platform, **that platform** fetches the file on its own schedule. The file holds public catalog data: titles, descriptions, links, image URLs, prices, availability, GTIN/MPN and the attributes you mapped.
+
+* Google terms: https://policies.google.com/terms — privacy: https://policies.google.com/privacy
+* Pinterest terms: https://policy.pinterest.com/terms-of-service — privacy: https://policy.pinterest.com/privacy-policy
+* Meta terms: https://www.facebook.com/policies — privacy: https://www.facebook.com/privacy/policy
+* TikTok terms: https://www.tiktok.com/legal/page/row/terms-of-service/en — privacy: https://www.tiktok.com/legal/page/row/privacy-policy/en
+* Microsoft terms: https://www.microsoft.com/servicesagreement — privacy: https://privacy.microsoft.com/privacystatement
+
+== Privacy ==
+
+No outbound request is made from WordPress. Feeds only contain public product data. Donate and author links are opt-in (click). Platforms receive a feed only after you submit its URL.
 
 == Installation ==
 
@@ -93,6 +122,11 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 3. Settings.
 
 == Changelog ==
+
+= 0.5.6 =
+* Docs: External services section (PayPal donate, author/source links, shopping platforms that fetch the feed).
+* Prefix: leftover admin CSS/HTML/JS `opf-` identifiers renamed to `oliprfe-`.
+* Prefix: on update, options, transients, the feed post type and meta stored as `oli_pf_*` (0.3.4 and earlier) are copied to `oliprfe_*`, then the old keys are deleted.
 
 = 0.5.5 =
 * Fix: parameter values added to item links are rawurlencoded before `add_query_arg`, so `&`, `#` and spaces stay one valid query value.
@@ -185,6 +219,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.6 =
+External services documented. Admin CSS/HTML uses the `oliprfe-` prefix. Feeds and settings stored under `oli_pf_` before 0.3.5 are copied to `oliprfe_` on update.
 
 = 0.5.5 =
 Link parameter values with `&`, `#` or a space are now encoded. Parameter keys stay lowercased (`sanitize_key`).

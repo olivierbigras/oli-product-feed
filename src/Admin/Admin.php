@@ -291,7 +291,7 @@ final class Admin {
 	 * @param bool   $add_new Show "Add New Feed".
 	 */
 	public static function heading( $title, $add_new = true ) {
-		echo '<h1 class="wp-heading-inline opf-title"><img src="' . esc_url( OLIPRFE_URL . 'assets/images/icon.svg' ) . '" width="32" height="32" alt="">' . esc_html( $title ) . '</h1>';
+		echo '<h1 class="wp-heading-inline oliprfe-title"><img src="' . esc_url( OLIPRFE_URL . 'assets/images/icon.svg' ) . '" width="32" height="32" alt="">' . esc_html( $title ) . '</h1>';
 		if ( $add_new ) {
 			echo ' <a href="' . esc_url( self::url( array( 'action' => 'new' ) ) ) . '" class="page-title-action">' . esc_html__( 'Add New Feed', 'oli-product-feed' ) . '</a>';
 		}
@@ -398,7 +398,7 @@ final class Admin {
 		} else {
 			$status = array( 'active', 'dashicons-yes-alt', __( 'Active', 'oli-product-feed' ) );
 		}
-		return '<span class="opf-status opf-status-' . esc_attr( $status[0] ) . '"><span class="dashicons ' . esc_attr( $status[1] ) . '" aria-hidden="true"></span>' . esc_html( $status[2] ) . '</span>';
+		return '<span class="oliprfe-status oliprfe-status-' . esc_attr( $status[0] ) . '"><span class="dashicons ' . esc_attr( $status[1] ) . '" aria-hidden="true"></span>' . esc_html( $status[2] ) . '</span>';
 	}
 
 	/**
@@ -429,11 +429,11 @@ final class Admin {
 		$last = Feeds::last_run( $feed_id );
 		if ( Generator::is_running( $feed_id ) ) {
 			$p     = self::progress( $feed_id );
-			$html  = '<div data-opf-generating="' . (int) $feed_id . '">' . $html;
-			$html .= '<progress class="opf-progress" max="100" value="' . (int) $p['percent'] . '" aria-label="' . esc_attr__( 'Generation progress', 'oli-product-feed' ) . '">' . (int) $p['percent'] . '%</progress>';
-			$html .= '<span class="opf-meta opf-progress-text">' . esc_html( self::progress_text( $p ) ) . '</span></div>';
+			$html  = '<div data-oliprfe-generating="' . (int) $feed_id . '">' . $html;
+			$html .= '<progress class="oliprfe-progress" max="100" value="' . (int) $p['percent'] . '" aria-label="' . esc_attr__( 'Generation progress', 'oli-product-feed' ) . '">' . (int) $p['percent'] . '%</progress>';
+			$html .= '<span class="oliprfe-meta oliprfe-progress-text">' . esc_html( self::progress_text( $p ) ) . '</span></div>';
 		} elseif ( ! empty( $last['status'] ) && 'error' === $last['status'] ) {
-			$html .= '<span class="opf-error-text">' . esc_html( isset( $last['message'] ) ? $last['message'] : '' ) . '</span>';
+			$html .= '<span class="oliprfe-error-text">' . esc_html( isset( $last['message'] ) ? $last['message'] : '' ) . '</span>';
 		}
 		return $html;
 	}
@@ -458,7 +458,7 @@ final class Admin {
 	public static function feed_url_field( $feed_id, $context ) {
 		$url    = Storage::url_for( $feed_id );
 		$exists = file_exists( Storage::path_for( $feed_id ) );
-		$id     = 'opf-url-' . $context . '-' . (int) $feed_id;
+		$id     = 'oliprfe-url-' . $context . '-' . (int) $feed_id;
 		$allowed = array(
 			'div'    => array( 'class' => true ),
 			'a'      => array(
@@ -491,21 +491,21 @@ final class Admin {
 				'hidden'   => true,
 			),
 		);
-		$button = '<button type="button" class="button button-small opf-copy" data-target="' . esc_attr( $id ) . '"><span class="dashicons dashicons-admin-page" aria-hidden="true"></span> <span class="opf-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button>';
+		$button = '<button type="button" class="button button-small oliprfe-copy" data-target="' . esc_attr( $id ) . '"><span class="dashicons dashicons-admin-page" aria-hidden="true"></span> <span class="oliprfe-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button>';
 		if ( ! $exists ) {
-			echo '<span class="opf-meta">' . esc_html__( 'Generate the feed to publish its URL.', 'oli-product-feed' ) . '</span>';
+			echo '<span class="oliprfe-meta">' . esc_html__( 'Generate the feed to publish its URL.', 'oli-product-feed' ) . '</span>';
 			return;
 		}
 		if ( 'list' === $context ) {
 			// Short distinct label: the file name (static file) or the feed slug (WordPress serving); full URL in the title.
 			$config = Feeds::get( $feed_id );
 			$label  = Endpoint::enabled() && $config ? '?' . $config['file_slug'] : basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
-			$html   = '<div class="opf-feed-url"><a href="' . esc_url( $url ) . '" class="opf-url-link" title="' . esc_attr( $url ) . '" target="_blank" rel="noopener">' . esc_html( $label ) . '<span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'oli-product-feed' ) . '</span></a>' . $button . '</div>';
+			$html   = '<div class="oliprfe-feed-url"><a href="' . esc_url( $url ) . '" class="oliprfe-url-link" title="' . esc_attr( $url ) . '" target="_blank" rel="noopener">' . esc_html( $label ) . '<span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'oli-product-feed' ) . '</span></a>' . $button . '</div>';
 			echo wp_kses( $html, $allowed );
-			echo '<div class="opf-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code opf-url-input" readonly value="' . esc_attr( $url ) . '" hidden></div><span class="opf-copy-hint" hidden></span>';
+			echo '<div class="oliprfe-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '" hidden></div><span class="oliprfe-copy-hint" hidden></span>';
 			return;
 		}
-		$html = '<div class="opf-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code opf-url-input" readonly value="' . esc_attr( $url ) . '">' . $button . '</div><span class="opf-copy-hint" hidden></span>';
+		$html = '<div class="oliprfe-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '">' . $button . '</div><span class="oliprfe-copy-hint" hidden></span>';
 		echo wp_kses( $html, $allowed );
 	}
 
@@ -515,12 +515,12 @@ final class Admin {
 	private static function render_list() {
 		$table = new ListTable();
 		$table->prepare_items();
-		echo '<div class="wrap opf-wrap">';
+		echo '<div class="wrap oliprfe-wrap">';
 		self::heading( __( 'Product Feeds', 'oli-product-feed' ) );
 		self::tabs( 'feeds' );
 		self::notices();
 		if ( empty( Feeds::all_ids() ) ) {
-			echo '<div class="opf-empty"><span class="dashicons dashicons-rss" aria-hidden="true"></span><h2>' . esc_html__( 'Create your first product feed', 'oli-product-feed' ) . '</h2>';
+			echo '<div class="oliprfe-empty"><span class="dashicons dashicons-rss" aria-hidden="true"></span><h2>' . esc_html__( 'Create your first product feed', 'oli-product-feed' ) . '</h2>';
 			echo '<p>' . esc_html__( 'One feed per platform, language and currency. The file is regenerated in the background and its URL never changes.', 'oli-product-feed' ) . '</p>';
 			echo '<p><a class="button button-primary" href="' . esc_url( self::url( array( 'action' => 'new' ) ) ) . '">' . esc_html__( 'Add New Feed', 'oli-product-feed' ) . '</a></p></div>';
 			self::support_footer();
@@ -528,12 +528,12 @@ final class Admin {
 			return;
 		}
 		$table->views();
-		echo '<form method="get" class="opf-search">';
+		echo '<form method="get" class="oliprfe-search">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( self::SLUG ) . '">';
 		if ( isset( $_GET['channel'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			echo '<input type="hidden" name="channel" value="' . esc_attr( sanitize_key( wp_unslash( $_GET['channel'] ) ) ) . '">'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
-		$table->search_box( __( 'Search feeds', 'oli-product-feed' ), 'opf-feeds' );
+		$table->search_box( __( 'Search feeds', 'oli-product-feed' ), 'oliprfe-feeds' );
 		echo '</form>';
 		echo '<form method="post" action="' . esc_url( self::url() ) . '">';
 		$table->display();
@@ -554,14 +554,14 @@ final class Admin {
 		foreach ( $files as $file ) {
 			$size += (int) filesize( $file );
 		}
-		echo '<div class="wrap opf-wrap">';
+		echo '<div class="wrap oliprfe-wrap">';
 		self::heading( __( 'Product Feeds Settings', 'oli-product-feed' ), false );
 		self::tabs( 'settings' );
 		self::notices();
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="oliprfe_save_settings">';
 		wp_nonce_field( 'oliprfe_save_settings' );
 		echo '<h2>' . esc_html__( 'Feed files', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
-		echo '<tr><th scope="row"><label for="opf-output_dir">' . esc_html__( 'Output folder', 'oli-product-feed' ) . '</label></th><td><code>wp-content/uploads/</code><input type="text" class="regular-text code" id="opf-output_dir" name="s[output_dir]" value="' . esc_attr( $s['output_dir'] ) . '">';
+		echo '<tr><th scope="row"><label for="oliprfe-output_dir">' . esc_html__( 'Output folder', 'oli-product-feed' ) . '</label></th><td><code>wp-content/uploads/</code><input type="text" class="regular-text code" id="oliprfe-output_dir" name="s[output_dir]" value="' . esc_attr( $s['output_dir'] ) . '">';
 		echo '<p class="description">' . esc_html__( 'Folder inside uploads, created when a feed is generated. Changing it changes every feed URL: the feed files move to the new folder, and the previous folder is removed when the plugin created it and nothing else is in it. A folder that cannot be used (symbolic link, outside uploads, not writable) is refused, and nothing is moved. The oliprfe_output_dir filter can also set it.', 'oli-product-feed' ) . '</p>';
 		echo '<p class="description">' . esc_html(
 			sprintf(
@@ -575,11 +575,11 @@ final class Admin {
 		echo '<label><input type="radio" name="s[serve_mode]" value="file"' . checked( $s['serve_mode'], 'file', false ) . '> ' . esc_html__( 'Static file (fastest; the host or CDN decides the cache headers)', 'oli-product-feed' ) . '</label><br>';
 		echo '<label><input type="radio" name="s[serve_mode]" value="endpoint"' . checked( $s['serve_mode'], 'endpoint', false ) . '> ' . esc_html__( 'Through WordPress (?oliprfe_feed=<file>): short cache, noindex, ETag and Last-Modified on any host', 'oli-product-feed' ) . '</label>';
 		echo '<p class="description">' . esc_html__( 'Use WordPress serving when a CDN caches static files for a long time (stale feeds). The feed URLs change: update them in the platforms.', 'oli-product-feed' ) . '</p></fieldset></td></tr>';
-		echo '<tr><th scope="row"><label for="opf-cache_max_age">' . esc_html__( 'Cache lifetime', 'oli-product-feed' ) . '</label></th><td><input type="number" min="0" max="86400" step="60" class="small-text" id="opf-cache_max_age" name="s[cache_max_age]" value="' . esc_attr( (string) $s['cache_max_age'] ) . '"> ' . esc_html__( 'seconds (WordPress serving only; at most half of the regeneration interval of the feed; 0: no-cache)', 'oli-product-feed' ) . '</td></tr>';
+		echo '<tr><th scope="row"><label for="oliprfe-cache_max_age">' . esc_html__( 'Cache lifetime', 'oli-product-feed' ) . '</label></th><td><input type="number" min="0" max="86400" step="60" class="small-text" id="oliprfe-cache_max_age" name="s[cache_max_age]" value="' . esc_attr( (string) $s['cache_max_age'] ) . '"> ' . esc_html__( 'seconds (WordPress serving only; at most half of the regeneration interval of the feed; 0: no-cache)', 'oli-product-feed' ) . '</td></tr>';
 		echo '</tbody></table>';
 		echo '<h2>' . esc_html__( 'Generation', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th scope="row">' . esc_html__( 'Product changes', 'oli-product-feed' ) . '</th><td><input type="hidden" name="s[regen_on_update]" value="0"><label><input type="checkbox" name="s[regen_on_update]" value="1"' . checked( (bool) $s['regen_on_update'], true, false ) . '> ' . esc_html__( 'Regenerate the active feeds when a product is updated (at most every 15 minutes)', 'oli-product-feed' ) . '</label></td></tr>';
-		echo '<tr><th scope="row"><label for="opf-log_level">' . esc_html__( 'Log', 'oli-product-feed' ) . '</label></th><td><select id="opf-log_level" name="s[log_level]">';
+		echo '<tr><th scope="row"><label for="oliprfe-log_level">' . esc_html__( 'Log', 'oli-product-feed' ) . '</label></th><td><select id="oliprfe-log_level" name="s[log_level]">';
 		foreach ( array( 'off' => __( 'Off', 'oli-product-feed' ), 'error' => __( 'Errors only', 'oli-product-feed' ), 'info' => __( 'Errors and every generation', 'oli-product-feed' ) ) as $value => $label ) {
 			echo '<option value="' . esc_attr( $value ) . '"' . selected( $s['log_level'], $value, false ) . '>' . esc_html( $label ) . '</option>';
 		}

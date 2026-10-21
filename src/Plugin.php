@@ -18,6 +18,7 @@ final class Plugin {
 	 * Boots the plugin (plugins_loaded).
 	 */
 	public static function boot() {
+		PrefixMigrate::maybe_run();
 		add_action( 'init', array( Feeds::class, 'register_post_type' ) );
 		add_action( 'wp_trash_post', array( Feeds::class, 'on_trash' ) );
 		add_action( 'transition_post_status', array( Feeds::class, 'on_status' ), 10, 3 );
@@ -89,10 +90,11 @@ final class Plugin {
 	}
 
 	/**
-	 * Activation: nothing to create (the output folder is created on the first generation,
-	 * so that a custom output folder setting is respected).
+	 * Activation: copy any pre-0.3.5 `oli_pf_` options (the output folder is created on the
+	 * first generation, so that a custom output folder setting is respected).
 	 */
 	public static function activate() {
+		PrefixMigrate::maybe_run();
 	}
 
 	/**
