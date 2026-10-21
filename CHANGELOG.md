@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-21
+
+- **readme.txt** : section `== External services ==` (PayPal donate au clic, liens auteur/GitHub au clic, plateformes shopping qui récupèrent le fichier une fois l’URL soumise). Liens conditions + confidentialité. Section Privacy raccourcie.
+- **Préfixe** (`assets/css/admin.css`, `assets/js/admin.js`, `src/Admin/*`) : identifiants admin `opf-` (3 caractères) → `oliprfe-` (classes, ids, `data-*`).
+- **Migration** (`src/PrefixMigrate.php`) : à la mise à jour, copie des options, transients, type de contenu et meta `oli_pf_*` (≤ 0.3.4) vers `oliprfe_*`, puis suppression des anciennes clés, sans écraser une valeur déjà migrée.
+- **uninstall.php** : nettoyage des restes `oli_pf_*` quand « Delete all data » est coché.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.5 → 0.5.6.
+
 ## 2026-10-20
 
 - **Liens** (`src/Util.php`) : les valeurs des paramètres ajoutés aux liens sont passées à `add_query_arg` après `rawurlencode`, pour qu’un `&`, un `#` ou un espace restent une valeur unique et valide (WordPress n’encode pas les valeurs nouvellement ajoutées).

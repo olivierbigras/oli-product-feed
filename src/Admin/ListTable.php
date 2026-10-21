@@ -147,7 +147,7 @@ final class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	protected function column_cb( $item ) {
-		return '<label class="screen-reader-text" for="opf-cb-' . (int) $item['id'] . '">' . esc_html( $item['name'] ) . '</label><input type="checkbox" id="opf-cb-' . (int) $item['id'] . '" name="feed_ids[]" value="' . (int) $item['id'] . '">';
+		return '<label class="screen-reader-text" for="oliprfe-cb-' . (int) $item['id'] . '">' . esc_html( $item['name'] ) . '</label><input type="checkbox" id="oliprfe-cb-' . (int) $item['id'] . '" name="feed_ids[]" value="' . (int) $item['id'] . '">';
 	}
 
 	/**
@@ -181,10 +181,10 @@ final class ListTable extends \WP_List_Table {
 			'edit'      => '<a href="' . esc_url( $edit ) . '">' . esc_html__( 'Edit', 'oli-product-feed' ) . '</a>',
 			'generate'  => '<a href="' . esc_url( Admin::action_url( 'oliprfe_generate', $id ) ) . '">' . esc_html__( 'Generate now', 'oli-product-feed' ) . '</a>',
 			'duplicate' => '<a href="' . esc_url( Admin::action_url( 'oliprfe_duplicate_feed', $id ) ) . '">' . esc_html__( 'Duplicate', 'oli-product-feed' ) . '</a>',
-			'delete'    => '<a class="submitdelete opf-confirm" href="' . esc_url( Admin::action_url( 'oliprfe_delete_feed', $id ) ) . '" data-confirm="' . esc_attr__( 'Delete this feed and its file?', 'oli-product-feed' ) . '">' . esc_html__( 'Delete', 'oli-product-feed' ) . '</a>',
+			'delete'    => '<a class="submitdelete oliprfe-confirm" href="' . esc_url( Admin::action_url( 'oliprfe_delete_feed', $id ) ) . '" data-confirm="' . esc_attr__( 'Delete this feed and its file?', 'oli-product-feed' ) . '">' . esc_html__( 'Delete', 'oli-product-feed' ) . '</a>',
 		);
 		return '<strong><a class="row-title" href="' . esc_url( $edit ) . '">' . esc_html( '' !== $item['name'] ? $item['name'] : __( '(no name)', 'oli-product-feed' ) ) . '</a></strong>'
-			. '<span class="opf-meta">' . esc_html( ( $channel ? $channel->label() : $item['channel'] ) . ' · ' . strtoupper( $item['format'] ) . ' · ' . $sched ) . '</span>'
+			. '<span class="oliprfe-meta">' . esc_html( ( $channel ? $channel->label() : $item['channel'] ) . ' · ' . strtoupper( $item['format'] ) . ' · ' . $sched ) . '</span>'
 			. $this->row_actions( $actions );
 	}
 

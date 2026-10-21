@@ -51,15 +51,15 @@
 	}
 
 	function copied( button ) {
-		var label = button.querySelector( '.opf-copy-label' );
+		var label = button.querySelector( '.oliprfe-copy-label' );
 		var icon  = button.querySelector( '.dashicons' );
 		button.focus(); // Give the focus back to the button.
 		button.classList.add( 'is-copied' );
 		if ( label ) { label.textContent = i18n.copied; }
 		if ( icon ) { icon.className = 'dashicons dashicons-yes'; }
 		speak( i18n.copiedLong );
-		window.clearTimeout( button.opfTimer );
-		button.opfTimer = window.setTimeout( function () {
+		window.clearTimeout( button.oliprfeTimer );
+		button.oliprfeTimer = window.setTimeout( function () {
 			button.classList.remove( 'is-copied' );
 			if ( label ) { label.textContent = i18n.copy; }
 			if ( icon ) { icon.className = 'dashicons dashicons-admin-page'; }
@@ -68,7 +68,7 @@
 
 	function failed( button, input ) {
 		var scope = button.closest( 'td, .misc-pub-section' ) || document;
-		var hint  = scope.querySelector( '.opf-copy-hint' );
+		var hint  = scope.querySelector( '.oliprfe-copy-hint' );
 		input.hidden = false; // Show the full field for a manual copy.
 		input.focus();
 		input.select();
@@ -80,7 +80,7 @@
 	}
 
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest ? event.target.closest( '.opf-copy' ) : null;
+		var button = event.target.closest ? event.target.closest( '.oliprfe-copy' ) : null;
 		if ( ! button ) {
 			return;
 		}
@@ -102,14 +102,14 @@
 
 	/* Focusing the field selects the whole URL. */
 	document.addEventListener( 'focusin', function ( event ) {
-		if ( event.target.classList && event.target.classList.contains( 'opf-url-input' ) ) {
+		if ( event.target.classList && event.target.classList.contains( 'oliprfe-url-input' ) ) {
 			event.target.select();
 		}
 	} );
 
 	/* ---- Confirmations ---- */
 	document.addEventListener( 'click', function ( event ) {
-		var link = event.target.closest ? event.target.closest( '.opf-confirm' ) : null;
+		var link = event.target.closest ? event.target.closest( '.oliprfe-confirm' ) : null;
 		if ( link && link.getAttribute( 'data-confirm' ) && ! window.confirm( link.getAttribute( 'data-confirm' ) ) ) {
 			event.preventDefault();
 		}
@@ -118,7 +118,7 @@
 	/* ---- Mapping: the source type shows the matching control (others hidden + disabled) ---- */
 	document.addEventListener( 'change', function ( event ) {
 		var select = event.target;
-		if ( ! select.classList || ! select.classList.contains( 'opf-src-type' ) ) {
+		if ( ! select.classList || ! select.classList.contains( 'oliprfe-src-type' ) ) {
 			return;
 		}
 		var row = select.closest( 'tr' );
@@ -132,7 +132,7 @@
 	/* ---- Schedule: the start hour only applies to daily and weekly feeds ---- */
 	function syncHour() {
 		var checked = document.querySelector( 'input[name="feed[frequency]"]:checked' );
-		var hour    = document.getElementById( 'opf-start_hour' );
+		var hour    = document.getElementById( 'oliprfe-start_hour' );
 		if ( checked && hour ) {
 			hour.disabled = [ 'daily', 'weekly' ].indexOf( checked.value ) < 0;
 		}
@@ -145,9 +145,9 @@
 
 	/* ---- Custom mapping rows: add from the <template>, remove ---- */
 	function addRow() {
-		var input    = document.getElementById( 'opf-add-attr' );
-		var template = document.getElementById( 'opf-row-template' );
-		var body     = document.querySelector( '.opf-custom-rows' );
+		var input    = document.getElementById( 'oliprfe-add-attr' );
+		var template = document.getElementById( 'oliprfe-row-template' );
+		var body     = document.querySelector( '.oliprfe-custom-rows' );
 		if ( ! input || ! template || ! body ) {
 			return;
 		}
@@ -176,26 +176,26 @@
 		}
 	}
 	document.addEventListener( 'click', function ( event ) {
-		var target = event.target.closest ? event.target.closest( '.opf-add-row, .opf-remove-row' ) : null;
+		var target = event.target.closest ? event.target.closest( '.oliprfe-add-row, .oliprfe-remove-row' ) : null;
 		if ( ! target ) {
 			return;
 		}
 		event.preventDefault();
-		if ( target.classList.contains( 'opf-add-row' ) ) {
+		if ( target.classList.contains( 'oliprfe-add-row' ) ) {
 			addRow();
 			return;
 		}
 		var row = target.closest( 'tr' );
 		if ( row ) {
 			row.parentNode.removeChild( row );
-			var add = document.getElementById( 'opf-add-attr' );
+			var add = document.getElementById( 'oliprfe-add-attr' );
 			if ( add ) {
 				add.focus();
 			}
 		}
 	} );
 	document.addEventListener( 'keydown', function ( event ) {
-		if ( 'opf-add-attr' === event.target.id && 'Enter' === event.key ) {
+		if ( 'oliprfe-add-attr' === event.target.id && 'Enter' === event.key ) {
 			event.preventDefault();
 			addRow();
 		}
@@ -203,27 +203,27 @@
 
 	/* ---- Generation progress (polls every 3 s while a feed is generating) ---- */
 	function poll() {
-		var rows = document.querySelectorAll( '[data-opf-generating]' );
+		var rows = document.querySelectorAll( '[data-oliprfe-generating]' );
 		if ( ! rows.length || ! cfg.ajaxUrl ) {
 			return;
 		}
-		var ids  = Array.prototype.map.call( rows, function ( el ) { return el.getAttribute( 'data-opf-generating' ); } );
+		var ids  = Array.prototype.map.call( rows, function ( el ) { return el.getAttribute( 'data-oliprfe-generating' ); } );
 		var body = new URLSearchParams( { action: 'oliprfe_feed_status', _ajax_nonce: cfg.nonce, ids: ids.join( ',' ) } );
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) { return r.json(); } )
 			.then( function ( json ) {
 				var done = false;
 				( json && json.success ? json.data : [] ).forEach( function ( feed ) {
-					var el = document.querySelector( '[data-opf-generating="' + feed.id + '"]' );
+					var el = document.querySelector( '[data-oliprfe-generating="' + feed.id + '"]' );
 					if ( ! el ) { return; }
 					var bar  = el.querySelector( 'progress' );
-					var text = el.querySelector( '.opf-progress-text' );
+					var text = el.querySelector( '.oliprfe-progress-text' );
 					if ( bar ) { bar.value = feed.percent; }
 					if ( text ) { text.textContent = feed.progressText; }
 					if ( 'generating' !== feed.status ) {
 						done = true;
 						speak( ( 'error' === feed.status ? i18n.failed : i18n.generated ) + ' ' + feed.name );
-						el.removeAttribute( 'data-opf-generating' );
+						el.removeAttribute( 'data-oliprfe-generating' );
 					}
 				} );
 				if ( done ) {
@@ -238,7 +238,7 @@
 	/* ---- Channel: formats of the channel only, generic settings ---- */
 	function syncChannel() {
 		var radio  = document.querySelector( 'input[name="feed[channel]"]:checked' );
-		var select = document.getElementById( 'opf-format' );
+		var select = document.getElementById( 'oliprfe-format' );
 		if ( ! radio || ! select ) {
 			return;
 		}
@@ -249,7 +249,7 @@
 		if ( select.selectedOptions.length && select.selectedOptions[0].disabled ) {
 			select.value = formats[0];
 		}
-		document.querySelectorAll( '.opf-for-generic' ).forEach( function ( row ) {
+		document.querySelectorAll( '.oliprfe-for-generic' ).forEach( function ( row ) {
 			row.hidden = radio.value !== 'generic';
 		} );
 	}
@@ -262,7 +262,7 @@
 	/* ---- Backorder lead time: extra fields only when the option is on ---- */
 	function syncBackorder() {
 		var on = document.querySelector( 'input[name="feed[backorder_lead_enabled]"]' );
-		document.querySelectorAll( '.opf-for-backorder' ).forEach( function ( row ) {
+		document.querySelectorAll( '.oliprfe-for-backorder' ).forEach( function ( row ) {
 			row.hidden = ! on || ! on.checked;
 		} );
 	}
@@ -274,12 +274,12 @@
 
 	/* ---- Number of products matching the filters (unsaved form) ---- */
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.opf-match-refresh' );
+		var button = event.target.closest( '.oliprfe-match-refresh' );
 		if ( ! button || ! cfg.ajaxUrl ) {
 			return;
 		}
 		var form = button.closest( 'form' );
-		var text = form.querySelector( '.opf-match-text' );
+		var text = form.querySelector( '.oliprfe-match-text' );
 		var data = new FormData( form );
 		data.set( 'action', 'oliprfe_match_count' );
 		data.set( '_ajax_nonce', cfg.nonce || '' );
@@ -303,7 +303,7 @@
 		document.body.appendChild( live );
 
 		/* The error summary gets the focus first. */
-		var summary = document.querySelector( '.opf-error-summary' );
+		var summary = document.querySelector( '.oliprfe-error-summary' );
 		if ( summary ) {
 			summary.focus();
 		}
