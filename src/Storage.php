@@ -156,6 +156,27 @@ final class Storage {
 	}
 
 	/**
+	 * Generated feed files in a folder (xml, csv, tsv, txt).
+	 *
+	 * One glob() per extension so hosts without brace expansion in glob() still work.
+	 *
+	 * @param string $dir Folder.
+	 * @return string[] Absolute paths.
+	 */
+	public static function generated_files( $dir ) {
+		$dir   = trailingslashit( (string) $dir );
+		$files = array();
+		foreach ( array( 'xml', 'csv', 'tsv', 'txt' ) as $ext ) {
+			$found = glob( $dir . '*.' . $ext );
+			if ( is_array( $found ) ) {
+				$files = array_merge( $files, $found );
+			}
+		}
+		sort( $files, SORT_STRING );
+		return $files;
+	}
+
+	/**
 	 * Creates the folder (with an empty index.php to prevent listing) and records what the plugin created
 	 * (option `oliprfe_output_dirs`, see OutputDirs). Refused (false, see last_error()) when the folder is a
 	 * symbolic link or inside one, when its real path is outside the uploads directory, or when it is not

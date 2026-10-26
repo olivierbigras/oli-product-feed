@@ -2,6 +2,12 @@
 
 ## 2026-10-26
 
+- **Fix** (`src/Storage.php`, `src/Admin/Admin.php`): Settings listed feed files with `glob(..., GLOB_BRACE)`. That constant is missing on Alpine/musl PHP and some hosts (`Undefined constant "Oliprfe\Admin\GLOB_BRACE"`, HTTP 500). Listing now uses one `glob()` per extension (`xml`, `csv`, `tsv`, `txt`) and merges the results. No other `GLOB_*` or host-dependent constants in the plugin.
+- **Tests** (`tests/test-generated-files.php`): lists the four extensions, ignores other files, empty folder, and asserts `GLOB_BRACE` is gone from `src/`.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot`): 0.5.7 → 0.5.8.
+
+## 2026-10-26 (0.5.7)
+
 - **WordPress.org review** (0.3.4 email, Review ID P0TDX382228HGN): remaining directory items plus lessons from a later review.
 - **Translations**: removed bundled `languages/*.po` and `*.mo`; dropped the `load_textdomain_mofile` fallback. WordPress.org loads translations automatically (no `load_plugin_textdomain()`).
 - **Notices** (`src/Plugin.php`): the WooCommerce-missing admin notice is limited to the plugin screens.

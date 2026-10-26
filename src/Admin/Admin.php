@@ -553,8 +553,7 @@ final class Admin {
 	private static function render_settings() {
 		$s     = Settings::all();
 		$base  = Storage::base();
-		$files = glob( trailingslashit( $base['dir'] ) . '*.{xml,csv,tsv,txt}', GLOB_BRACE );
-		$files = is_array( $files ) ? $files : array();
+		$files = Storage::generated_files( $base['dir'] );
 		$size  = 0;
 		foreach ( $files as $file ) {
 			$size += (int) filesize( $file );

@@ -8,7 +8,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -125,6 +125,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.5.8 =
+* Fix: the Settings screen lists feed files with one glob() per extension, so it no longer fatals on PHP builds without GLOB_BRACE (Alpine/musl and some hosts).
+
 = 0.5.7 =
 * WordPress.org review: bundled .po/.mo files and the leftover textdomain loader are removed; translations come from translate.wordpress.org.
 * Admin notices stay on the plugin screens only.
@@ -227,6 +230,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.8 =
+Settings no longer fatals on hosts whose PHP has no GLOB_BRACE.
 
 = 0.5.7 =
 WordPress.org review: no bundled translations, notices only on plugin screens, distinct Author URI, generic help-text examples.
