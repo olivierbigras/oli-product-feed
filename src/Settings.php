@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Global settings (option `oliprfe_settings`).
  *
@@ -63,14 +63,14 @@ final class Settings {
 	 * @return true|\WP_Error Error (data: folder, reason) when the new output folder was refused.
 	 */
 	public static function save( array $in ) {
-		$current = self::all();
-		$out     = array(
+		$current                    = self::all();
+		$out                        = array(
 			'output_dir'          => isset( $in['output_dir'] ) ? Storage::sanitize_folder( (string) $in['output_dir'] ) : $current['output_dir'],
 			'delete_on_uninstall' => isset( $in['delete_on_uninstall'] ) ? (bool) $in['delete_on_uninstall'] : (bool) $current['delete_on_uninstall'],
 		);
-		$mode                 = isset( $in['serve_mode'] ) ? sanitize_key( $in['serve_mode'] ) : $current['serve_mode'];
-		$out['serve_mode']    = in_array( $mode, array( 'file', 'endpoint' ), true ) ? $mode : 'file';
-		$out['cache_max_age'] = isset( $in['cache_max_age'] ) ? max( 0, min( DAY_IN_SECONDS, (int) $in['cache_max_age'] ) ) : (int) $current['cache_max_age'];
+		$mode                       = isset( $in['serve_mode'] ) ? sanitize_key( $in['serve_mode'] ) : $current['serve_mode'];
+		$out['serve_mode']          = in_array( $mode, array( 'file', 'endpoint' ), true ) ? $mode : 'file';
+		$out['cache_max_age']       = isset( $in['cache_max_age'] ) ? max( 0, min( DAY_IN_SECONDS, (int) $in['cache_max_age'] ) ) : (int) $current['cache_max_age'];
 		$level                      = isset( $in['log_level'] ) ? sanitize_key( $in['log_level'] ) : $current['log_level'];
 		$out['log_level']           = in_array( $level, array( 'off', 'error', 'info' ), true ) ? $level : 'error';
 		$out['shop_manager_access'] = isset( $in['shop_manager_access'] ) ? (bool) $in['shop_manager_access'] : (bool) $current['shop_manager_access'];

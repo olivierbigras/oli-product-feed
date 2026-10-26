@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Builds the normalized item of a product for a feed, then hands it to the channel.
  *
@@ -174,10 +174,10 @@ final class ItemBuilder {
 
 		$item['availability'] = $this->availability( $stock_status, $product, $parent );
 		$this->apply_availability_extras( $item, $product, $parent );
-		$item['price']        = $prices['regular'];
-		$item['sale_price']   = $prices['sale'];
-		$item['sale_from']    = $prices['sale_from'];
-		$item['sale_to']      = $prices['sale_to'];
+		$item['price']      = $prices['regular'];
+		$item['sale_price'] = $prices['sale'];
+		$item['sale_from']  = $prices['sale_from'];
+		$item['sale_to']    = $prices['sale_to'];
 
 		if ( empty( $item['condition'] ) ) {
 			$item['condition'] = 'new';
@@ -393,7 +393,7 @@ final class ItemBuilder {
 	}
 
 	/**
-	 * Writes the brand names with the spelling of their term ("TV JONES" becomes "TV Jones").
+	 * Writes the brand names with the spelling of their term ("ACME BRAND" becomes "Acme Brand").
 	 *
 	 * @param string $text Text.
 	 * @return string
@@ -499,11 +499,11 @@ final class ItemBuilder {
 	 * @return string
 	 */
 	private function title( $product, $parent, $brand ) {
-		$lang = $this->feed['language'];
+		$lang   = $this->feed['language'];
 		$values = array();
 		if ( $parent ) {
-			$title  = Lang::translate( $parent->get_name( 'edit' ), $lang );
-			$name   = $title;
+			$title = Lang::translate( $parent->get_name( 'edit' ), $lang );
+			$name  = $title;
 			foreach ( $product->get_attributes( 'edit' ) as $attribute => $slug ) {
 				if ( '' === (string) $slug ) {
 					continue;
@@ -560,8 +560,8 @@ final class ItemBuilder {
 		if ( '' === $type ) {
 			$type = $this->title_type( $holder );
 		}
-		$template  = $this->feed['title_template'];
-		$tokens    = array(
+		$template = $this->feed['title_template'];
+		$tokens   = array(
 			'{name}'      => $name,
 			'{variation}' => $variation,
 			'{title}'     => $name . ( '' !== $variation ? ' - ' . $variation : '' ),
@@ -571,7 +571,7 @@ final class ItemBuilder {
 			'{sku}'       => (string) $product->get_sku( 'edit' ),
 		);
 		if ( false !== strpos( $template, '{category}' ) ) {
-			$path               = explode( ' > ', Sources::taxonomy( 'product_cat', 'path', $holder, $this->feed, true ) );
+			$path                 = explode( ' > ', Sources::taxonomy( 'product_cat', 'path', $holder, $this->feed, true ) );
 			$tokens['{category}'] = (string) end( $path );
 		}
 		$title = strtr( $template, $tokens );
@@ -600,7 +600,7 @@ final class ItemBuilder {
 
 	/**
 	 * Type to add to a name: empty when the name already says it. Words in brackets are optional
-	 * qualifiers ("[Guitar] Strap" gives "Guitar Strap", left out when the name already has "Strap").
+	 * qualifiers ("[Cotton] Shirt" gives "Cotton Shirt", left out when the name already has "Shirt").
 	 *
 	 * @param string $type Type label.
 	 * @param string $name Product name.
@@ -638,7 +638,14 @@ final class ItemBuilder {
 			if ( ! preg_match( Util::regex( $rule['pattern'] ), $haystack ) ) {
 				continue;
 			}
-			if ( empty( $rule['categories'] ) || $this->rule_applies( array( 'categories' => $rule['categories'], 'google_categories' => array() ), $holder, array() ) ) {
+			if ( empty( $rule['categories'] ) || $this->rule_applies(
+				array(
+					'categories'        => $rule['categories'],
+					'google_categories' => array(),
+				),
+				$holder,
+				array()
+			) ) {
 				return $rule['label'];
 			}
 		}

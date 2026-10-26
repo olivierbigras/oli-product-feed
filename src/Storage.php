@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Feed file storage (uploads/oli-product-feed/).
  *
@@ -153,6 +153,27 @@ final class Storage {
 			'dir' => trailingslashit( $uploads['basedir'] ) . $folder,
 			'url' => $url,
 		);
+	}
+
+	/**
+	 * Generated feed files in a folder (xml, csv, tsv, txt).
+	 *
+	 * One glob() per extension so hosts without brace expansion in glob() still work.
+	 *
+	 * @param string $dir Folder.
+	 * @return string[] Absolute paths.
+	 */
+	public static function generated_files( $dir ) {
+		$dir   = trailingslashit( (string) $dir );
+		$files = array();
+		foreach ( array( 'xml', 'csv', 'tsv', 'txt' ) as $ext ) {
+			$found = glob( $dir . '*.' . $ext );
+			if ( is_array( $found ) ) {
+				$files = array_merge( $files, $found );
+			}
+		}
+		sort( $files, SORT_STRING );
+		return $files;
 	}
 
 	/**

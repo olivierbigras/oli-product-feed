@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Background scheduling: Action Scheduler when available (WooCommerce ships it), WP-Cron otherwise.
  *

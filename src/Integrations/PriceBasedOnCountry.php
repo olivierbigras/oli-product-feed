@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Optional integration with "Price Based on Country for WooCommerce".
  *
@@ -98,7 +98,7 @@ final class PriceBasedOnCountry {
 		if ( '' === $regular || null === $regular || ! is_numeric( $regular ) || (float) $regular <= 0 ) {
 			return null;
 		}
-		$out = array(
+		$out     = array(
 			'regular'   => (float) $regular,
 			'sale'      => is_numeric( $sale ) && (float) $sale > 0 ? (float) $sale : null,
 			'sale_from' => is_array( $prices ) && isset( $prices['sale_from'] ) ? $prices['sale_from'] : null,

@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Admin screens: WooCommerce > Product Feeds (feeds list, feed editor, settings) and their actions.
  *
@@ -94,7 +94,7 @@ final class Admin {
 	 * @return string[]
 	 */
 	public static function plugin_row_meta( $links, $file ) {
-		if ( $file !== plugin_basename( OLIPRFE_FILE ) ) {
+		if ( plugin_basename( OLIPRFE_FILE ) !== $file ) {
 			return $links;
 		}
 		$links[] = '<a href="' . esc_url( OLIPRFE_DONATE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Donate', 'oli-product-feed' ) . '</a>';
@@ -252,7 +252,7 @@ final class Admin {
 			. "\t\t\tfetch(oliprfeAdmin.ajaxUrl, { method: 'POST', body: body, credentials: 'same-origin' });\n"
 			. "\t\t}\n"
 			. "\t});\n"
-			. "})();";
+			. '})();';
 	}
 
 	/**
@@ -305,7 +305,10 @@ final class Admin {
 	 */
 	public static function tabs( $current ) {
 		echo '<nav class="nav-tab-wrapper wp-clearfix" aria-label="' . esc_attr__( 'Secondary menu', 'oli-product-feed' ) . '">';
-		foreach ( array( 'feeds' => __( 'Feeds', 'oli-product-feed' ), 'settings' => __( 'Settings', 'oli-product-feed' ) ) as $tab => $label ) {
+		foreach ( array(
+			'feeds'    => __( 'Feeds', 'oli-product-feed' ),
+			'settings' => __( 'Settings', 'oli-product-feed' ),
+		) as $tab => $label ) {
 			$url = 'feeds' === $tab ? self::url() : self::url( array( 'tab' => $tab ) );
 			echo '<a href="' . esc_url( $url ) . '" class="nav-tab' . ( $current === $tab ? ' nav-tab-active" aria-current="page' : '' ) . '">' . esc_html( $label ) . '</a>';
 		}
@@ -316,7 +319,7 @@ final class Admin {
 	 * Notices from the last action.
 	 */
 	public static function notices() {
-		$code = isset( $_GET['oliprfe_notice'] ) ? sanitize_key( wp_unslash( $_GET['oliprfe_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$code     = isset( $_GET['oliprfe_notice'] ) ? sanitize_key( wp_unslash( $_GET['oliprfe_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$messages = array(
 			'saved'          => array( 'success', __( 'Feed saved.', 'oli-product-feed' ) ),
 			'saved_queued'   => array( 'success', __( 'Feed saved. Generation started in the background.', 'oli-product-feed' ) ),
@@ -334,11 +337,13 @@ final class Admin {
 		if ( 'folder_refused' === $code ) {
 			$folder = isset( $_GET['oliprfe_folder'] ) ? Storage::sanitize_folder( sanitize_text_field( wp_unslash( $_GET['oliprfe_folder'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$reason = isset( $_GET['oliprfe_reason'] ) ? sanitize_key( wp_unslash( $_GET['oliprfe_reason'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( __( 'Settings saved, but the output folder was not changed.', 'oli-product-feed' ) . ' ' . Storage::folder_message( $folder, $reason ) . ' ' . sprintf(
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html(
+				__( 'Settings saved, but the output folder was not changed.', 'oli-product-feed' ) . ' ' . Storage::folder_message( $folder, $reason ) . ' ' . sprintf(
 				/* translators: %s: folder, e.g. "oli-product-feed". */
-				__( 'The feeds stay in wp-content/uploads/%s.', 'oli-product-feed' ),
-				Storage::folder()
-			) ) . '</p></div>';
+					__( 'The feeds stay in wp-content/uploads/%s.', 'oli-product-feed' ),
+					Storage::folder()
+				)
+			) . '</p></div>';
 		}
 		$problem = Storage::problem();
 		if ( $problem ) {
@@ -456,9 +461,9 @@ final class Admin {
 	 * @param string $context list|side.
 	 */
 	public static function feed_url_field( $feed_id, $context ) {
-		$url    = Storage::url_for( $feed_id );
-		$exists = file_exists( Storage::path_for( $feed_id ) );
-		$id     = 'oliprfe-url-' . $context . '-' . (int) $feed_id;
+		$url     = Storage::url_for( $feed_id );
+		$exists  = file_exists( Storage::path_for( $feed_id ) );
+		$id      = 'oliprfe-url-' . $context . '-' . (int) $feed_id;
 		$allowed = array(
 			'div'    => array( 'class' => true ),
 			'a'      => array(
@@ -491,7 +496,7 @@ final class Admin {
 				'hidden'   => true,
 			),
 		);
-		$button = '<button type="button" class="button button-small oliprfe-copy" data-target="' . esc_attr( $id ) . '"><span class="dashicons dashicons-admin-page" aria-hidden="true"></span> <span class="oliprfe-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button>';
+		$button  = '<button type="button" class="button button-small oliprfe-copy" data-target="' . esc_attr( $id ) . '"><span class="dashicons dashicons-admin-page" aria-hidden="true"></span> <span class="oliprfe-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button>';
 		if ( ! $exists ) {
 			echo '<span class="oliprfe-meta">' . esc_html__( 'Generate the feed to publish its URL.', 'oli-product-feed' ) . '</span>';
 			return;
@@ -548,8 +553,7 @@ final class Admin {
 	private static function render_settings() {
 		$s     = Settings::all();
 		$base  = Storage::base();
-		$files = glob( trailingslashit( $base['dir'] ) . '*.{xml,csv,tsv,txt}', GLOB_BRACE );
-		$files = is_array( $files ) ? $files : array();
+		$files = Storage::generated_files( $base['dir'] );
 		$size  = 0;
 		foreach ( $files as $file ) {
 			$size += (int) filesize( $file );
@@ -580,7 +584,11 @@ final class Admin {
 		echo '<h2>' . esc_html__( 'Generation', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th scope="row">' . esc_html__( 'Product changes', 'oli-product-feed' ) . '</th><td><input type="hidden" name="s[regen_on_update]" value="0"><label><input type="checkbox" name="s[regen_on_update]" value="1"' . checked( (bool) $s['regen_on_update'], true, false ) . '> ' . esc_html__( 'Regenerate the active feeds when a product is updated (at most every 15 minutes)', 'oli-product-feed' ) . '</label></td></tr>';
 		echo '<tr><th scope="row"><label for="oliprfe-log_level">' . esc_html__( 'Log', 'oli-product-feed' ) . '</label></th><td><select id="oliprfe-log_level" name="s[log_level]">';
-		foreach ( array( 'off' => __( 'Off', 'oli-product-feed' ), 'error' => __( 'Errors only', 'oli-product-feed' ), 'info' => __( 'Errors and every generation', 'oli-product-feed' ) ) as $value => $label ) {
+		foreach ( array(
+			'off'   => __( 'Off', 'oli-product-feed' ),
+			'error' => __( 'Errors only', 'oli-product-feed' ),
+			'info'  => __( 'Errors and every generation', 'oli-product-feed' ),
+		) as $value => $label ) {
 			echo '<option value="' . esc_attr( $value ) . '"' . selected( $s['log_level'], $value, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select><p class="description">' . esc_html__( 'Written to WooCommerce > Status > Logs (source: oli-product-feed).', 'oli-product-feed' ) . '</p></td></tr>';
@@ -682,7 +690,14 @@ final class Admin {
 				),
 				10 * MINUTE_IN_SECONDS
 			);
-			wp_safe_redirect( self::url( $feed_id ? array( 'action' => 'edit', 'feed' => $feed_id ) : array( 'action' => 'new' ) ) );
+			wp_safe_redirect(
+				self::url(
+					$feed_id ? array(
+						'action' => 'edit',
+						'feed'   => $feed_id,
+					) : array( 'action' => 'new' )
+				)
+			);
 			exit;
 		}
 		$saved = Feeds::save( $config, $feed_id );
@@ -782,14 +797,14 @@ final class Admin {
 	public static function handle_settings() {
 		self::guard();
 		check_admin_referer( 'oliprfe_save_settings' );
-		$raw = isset( $_POST['s'] ) && is_array( $_POST['s'] ) ? wp_unslash( $_POST['s'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Settings::save().
+		$raw   = isset( $_POST['s'] ) && is_array( $_POST['s'] ) ? wp_unslash( $_POST['s'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Settings::save().
 		$saved = Settings::save( $raw );
 		if ( is_wp_error( $saved ) ) {
 			$data = (array) $saved->get_error_data();
 			self::back(
 				'folder_refused',
 				array(
-					'tab'           => 'settings',
+					'tab'            => 'settings',
 					'oliprfe_folder' => isset( $data['folder'] ) ? $data['folder'] : '',
 					'oliprfe_reason' => isset( $data['reason'] ) ? $data['reason'] : '',
 				)

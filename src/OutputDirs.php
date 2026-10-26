@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Output folders written by the plugin (option `oliprfe_output_dirs`), so that a previous output folder
  * (setting or `oliprfe_output_dir` filter changed) and every folder at uninstall can be cleaned up without

@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Feed storage: one private custom post type, configuration as JSON in post meta.
  *
@@ -50,25 +50,25 @@ final class Feeds {
 	 */
 	public static function defaults() {
 		return array(
-			'channel'                 => 'google',
-			'format'                  => 'xml',
-			'file_slug'               => '',
-			'language'                => '',
-			'country'                 => '',
-			'currency'                => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD',
-			'price_source'            => 'woocommerce',
-			'price_source_options'    => array(),
-			'min_price'               => '',
-			'variations'              => true,
-			'frequency'               => 'daily',
-			'start_hour'              => -1,
-			'batch_size'              => 100,
-			'image_size'              => 'full',
-			'max_additional_images'   => 10,
-			'force_https'             => true,
-			'link_args'               => array(),
-			'utm'                     => array(),
-			'filters'                 => array(
+			'channel'                     => 'google',
+			'format'                      => 'xml',
+			'file_slug'                   => '',
+			'language'                    => '',
+			'country'                     => '',
+			'currency'                    => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD',
+			'price_source'                => 'woocommerce',
+			'price_source_options'        => array(),
+			'min_price'                   => '',
+			'variations'                  => true,
+			'frequency'                   => 'daily',
+			'start_hour'                  => -1,
+			'batch_size'                  => 100,
+			'image_size'                  => 'full',
+			'max_additional_images'       => 10,
+			'force_https'                 => true,
+			'link_args'                   => array(),
+			'utm'                         => array(),
+			'filters'                     => array(
 				'categories_include' => array(),
 				'categories_exclude' => array(),
 				'stock_statuses'     => array( 'instock', 'onbackorder', 'outofstock' ),
@@ -81,37 +81,37 @@ final class Feeds {
 				'price_min'          => '',
 				'price_max'          => '',
 			),
-			'availability_rules'      => array(),
-			'backorder_lead_enabled'  => false,
-			'backorder_lead_days'     => 21,
-			'backorder_as_preorder'   => false,
+			'availability_rules'          => array(),
+			'backorder_lead_enabled'      => false,
+			'backorder_lead_days'         => 21,
+			'backorder_as_preorder'       => false,
 			'backorder_min_handling_time' => '',
 			'backorder_max_handling_time' => '',
-			'exclude_rules'           => array(),
-			'title_brand_prefix'      => false,
-			'title_template'          => '',
-			'title_type_map'          => array(),
-			'title_type_rules'        => array(),
-			'mpn_brands'              => array(),
-			'mpn_only_without_gtin'   => false,
-			'brand_priority'          => array(),
-			'brand_from_title'        => false,
-			'description_min_length'  => 0,
-			'description_fallbacks'   => array(),
-			'description_attributes'  => false,
-			'description_remove'      => array(),
-			'description_remove_emails' => false,
-			'title_strip_patterns'    => array(),
-			'title_brand_case'        => false,
-			'field_rules'             => array(),
-			'item_overrides'          => array(),
-			'google_category_default' => '',
-			'google_category_map'     => array(),
-			'google_category_items'   => array(),
-			'mapping'                 => array(),
-			'columns'                 => array(),
-			'xml_root'                => 'products',
-			'xml_item'                => 'product',
+			'exclude_rules'               => array(),
+			'title_brand_prefix'          => false,
+			'title_template'              => '',
+			'title_type_map'              => array(),
+			'title_type_rules'            => array(),
+			'mpn_brands'                  => array(),
+			'mpn_only_without_gtin'       => false,
+			'brand_priority'              => array(),
+			'brand_from_title'            => false,
+			'description_min_length'      => 0,
+			'description_fallbacks'       => array(),
+			'description_attributes'      => false,
+			'description_remove'          => array(),
+			'description_remove_emails'   => false,
+			'title_strip_patterns'        => array(),
+			'title_brand_case'            => false,
+			'field_rules'                 => array(),
+			'item_overrides'              => array(),
+			'google_category_default'     => '',
+			'google_category_map'         => array(),
+			'google_category_items'       => array(),
+			'mapping'                     => array(),
+			'columns'                     => array(),
+			'xml_root'                    => 'products',
+			'xml_item'                    => 'product',
 		);
 	}
 
@@ -397,12 +397,12 @@ final class Feeds {
 			}
 		}
 
-		$out['backorder_lead_enabled'] = ! empty( $in['backorder_lead_enabled'] );
-		$days                          = isset( $in['backorder_lead_days'] ) ? (int) $in['backorder_lead_days'] : $d['backorder_lead_days'];
-		$out['backorder_lead_days']    = max( 1, min( 3650, $days ) );
-		$out['backorder_as_preorder']  = ! empty( $in['backorder_as_preorder'] );
-		$min                           = isset( $in['backorder_min_handling_time'] ) ? trim( (string) $in['backorder_min_handling_time'] ) : '';
-		$max                           = isset( $in['backorder_max_handling_time'] ) ? trim( (string) $in['backorder_max_handling_time'] ) : '';
+		$out['backorder_lead_enabled']      = ! empty( $in['backorder_lead_enabled'] );
+		$days                               = isset( $in['backorder_lead_days'] ) ? (int) $in['backorder_lead_days'] : $d['backorder_lead_days'];
+		$out['backorder_lead_days']         = max( 1, min( 3650, $days ) );
+		$out['backorder_as_preorder']       = ! empty( $in['backorder_as_preorder'] );
+		$min                                = isset( $in['backorder_min_handling_time'] ) ? trim( (string) $in['backorder_min_handling_time'] ) : '';
+		$max                                = isset( $in['backorder_max_handling_time'] ) ? trim( (string) $in['backorder_max_handling_time'] ) : '';
 		$out['backorder_min_handling_time'] = ( '' !== $min && is_numeric( $min ) ) ? (string) max( 0, min( 365, (int) $min ) ) : '';
 		$out['backorder_max_handling_time'] = ( '' !== $max && is_numeric( $max ) ) ? (string) max( 0, min( 365, (int) $max ) ) : '';
 		if ( '' !== $out['backorder_min_handling_time'] && '' !== $out['backorder_max_handling_time'] && (int) $out['backorder_max_handling_time'] < (int) $out['backorder_min_handling_time'] ) {
@@ -421,9 +421,9 @@ final class Feeds {
 			}
 		}
 
-		$out['title_brand_prefix']     = ! empty( $in['title_brand_prefix'] );
-		$out['title_template']         = isset( $in['title_template'] ) ? sanitize_text_field( (string) $in['title_template'] ) : '';
-		$out['title_type_rules']       = array();
+		$out['title_brand_prefix'] = ! empty( $in['title_brand_prefix'] );
+		$out['title_template']     = isset( $in['title_template'] ) ? sanitize_text_field( (string) $in['title_template'] ) : '';
+		$out['title_type_rules']   = array();
 		if ( isset( $in['title_type_rules'] ) && is_array( $in['title_type_rules'] ) ) {
 			foreach ( $in['title_type_rules'] as $rule ) {
 				$pattern = is_array( $rule ) && isset( $rule['pattern'] ) ? self::pattern_list( array( $rule['pattern'] ) ) : array();
@@ -437,11 +437,11 @@ final class Feeds {
 				}
 			}
 		}
-		$out['title_strip_patterns']   = self::pattern_list( isset( $in['title_strip_patterns'] ) ? $in['title_strip_patterns'] : array() );
-		$out['title_brand_case']       = ! empty( $in['title_brand_case'] );
-		$out['description_remove']     = self::pattern_list( isset( $in['description_remove'] ) ? $in['description_remove'] : array() );
+		$out['title_strip_patterns']      = self::pattern_list( isset( $in['title_strip_patterns'] ) ? $in['title_strip_patterns'] : array() );
+		$out['title_brand_case']          = ! empty( $in['title_brand_case'] );
+		$out['description_remove']        = self::pattern_list( isset( $in['description_remove'] ) ? $in['description_remove'] : array() );
 		$out['description_remove_emails'] = ! empty( $in['description_remove_emails'] );
-		$out['field_rules']            = array();
+		$out['field_rules']               = array();
 		if ( isset( $in['field_rules'] ) && is_array( $in['field_rules'] ) ) {
 			foreach ( $in['field_rules'] as $rule ) {
 				if ( ! is_array( $rule ) || empty( $rule['field'] ) ) {
@@ -488,7 +488,7 @@ final class Feeds {
 				}
 			}
 		}
-		$out['title_type_map']         = array();
+		$out['title_type_map'] = array();
 		if ( isset( $in['title_type_map'] ) && is_array( $in['title_type_map'] ) ) {
 			foreach ( $in['title_type_map'] as $term_id => $label ) {
 				$label = sanitize_text_field( (string) $label );
@@ -497,10 +497,10 @@ final class Feeds {
 				}
 			}
 		}
-		$out['mpn_brands']            = self::text_list( isset( $in['mpn_brands'] ) ? $in['mpn_brands'] : array() );
-		$out['brand_priority']        = self::text_list( isset( $in['brand_priority'] ) ? $in['brand_priority'] : array() );
-		$out['brand_from_title']      = ! empty( $in['brand_from_title'] );
-		$out['mpn_only_without_gtin'] = ! empty( $in['mpn_only_without_gtin'] );
+		$out['mpn_brands']             = self::text_list( isset( $in['mpn_brands'] ) ? $in['mpn_brands'] : array() );
+		$out['brand_priority']         = self::text_list( isset( $in['brand_priority'] ) ? $in['brand_priority'] : array() );
+		$out['brand_from_title']       = ! empty( $in['brand_from_title'] );
+		$out['mpn_only_without_gtin']  = ! empty( $in['mpn_only_without_gtin'] );
 		$out['description_min_length'] = isset( $in['description_min_length'] ) ? max( 0, min( 5000, (int) $in['description_min_length'] ) ) : 0;
 		$out['description_attributes'] = ! empty( $in['description_attributes'] );
 		$out['description_fallbacks']  = array();

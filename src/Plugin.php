@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Plugin bootstrap.
  *
@@ -26,6 +26,7 @@ final class Plugin {
 		add_action( 'untrashed_post', array( Feeds::class, 'on_untrash' ) );
 
 		if ( ! class_exists( 'WooCommerce' ) ) {
+			add_action( 'admin_menu', array( __CLASS__, 'missing_woocommerce_menu' ) );
 			add_action( 'admin_notices', array( __CLASS__, 'missing_woocommerce_notice' ) );
 			return;
 		}
@@ -45,45 +46,35 @@ final class Plugin {
 	}
 
 	/**
-	 * Prefer a bundled catalog; fall back from fr_CA to fr_FR.
-	 *
-	 * WordPress does not fall back from a regional locale to the parent
-	 * language. A site in fr_CA would otherwise stay in English when only
-	 * oli-product-feed-fr_FR.mo is present. Uses load_textdomain_mofile
-	 * (WordPress.org handbook) and does not call load_plugin_textdomain().
-	 *
-	 * @param string $mofile Path to the .mo file WordPress wants to load.
-	 * @param string $domain Text domain.
-	 * @return string
+	 * Fallback screen when WooCommerce is not active, so the notice stays on a plugin page.
 	 */
-	public static function load_textdomain_mofile( $mofile, $domain ) {
-		if ( 'oli-product-feed' !== $domain ) {
-			return $mofile;
-		}
-
-		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_user_locale();
-		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain );
-
-		$bundled = OLIPRFE_DIR . 'languages/oli-product-feed-' . $locale . '.mo';
-		if ( is_readable( $bundled ) ) {
-			return $bundled;
-		}
-
-		if ( 'fr_CA' === $locale ) {
-			$fallback = OLIPRFE_DIR . 'languages/oli-product-feed-fr_FR.mo';
-			if ( is_readable( $fallback ) ) {
-				return $fallback;
-			}
-		}
-
-		return $mofile;
+	public static function missing_woocommerce_menu() {
+		add_menu_page(
+			__( 'Oli Product Feed', 'oli-product-feed' ),
+			__( 'Oli Product Feed', 'oli-product-feed' ),
+			'activate_plugins',
+			'oli-product-feed',
+			array( __CLASS__, 'missing_woocommerce_screen' ),
+			'dashicons-rss'
+		);
 	}
 
 	/**
-	 * Admin notice when WooCommerce is missing.
+	 * Empty wrap for the WooCommerce-missing fallback page.
+	 */
+	public static function missing_woocommerce_screen() {
+		echo '<div class="wrap"><h1>' . esc_html__( 'Oli Product Feed', 'oli-product-feed' ) . '</h1></div>';
+	}
+
+	/**
+	 * Admin notice when WooCommerce is missing (plugin screens only).
 	 */
 	public static function missing_woocommerce_notice() {
 		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || false === strpos( (string) $screen->id, 'oli-product-feed' ) ) {
 			return;
 		}
 		echo '<div class="notice notice-error"><p>' . esc_html__( 'Oli Product Feed requires WooCommerce to be installed and active.', 'oli-product-feed' ) . '</p></div>';

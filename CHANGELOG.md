@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-26
+
+- **Fix** (`src/Storage.php`, `src/Admin/Admin.php`): Settings listed feed files with `glob(..., GLOB_BRACE)`. That constant is missing on Alpine/musl PHP and some hosts (`Undefined constant "Oliprfe\Admin\GLOB_BRACE"`, HTTP 500). Listing now uses one `glob()` per extension (`xml`, `csv`, `tsv`, `txt`) and merges the results. No other `GLOB_*` or host-dependent constants in the plugin.
+- **Tests** (`tests/test-generated-files.php`): lists the four extensions, ignores other files, empty folder, and asserts `GLOB_BRACE` is gone from `src/`.
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot`): 0.5.7 → 0.5.8.
+
+## 2026-10-26 (0.5.7)
+
+- **WordPress.org review** (0.3.4 email, Review ID P0TDX382228HGN): remaining directory items plus lessons from a later review.
+- **Translations**: removed bundled `languages/*.po` and `*.mo`; dropped the `load_textdomain_mofile` fallback. WordPress.org loads translations automatically (no `load_plugin_textdomain()`).
+- **Notices** (`src/Plugin.php`): the WooCommerce-missing admin notice is limited to the plugin screens.
+- **Headers**: Author URI is `https://github.com/olivierbigras` (distinct from Plugin URI `https://github.com/olivierbigras/oli-product-feed`). Readme Contributors stay `bigrat95`; Author Olivier Bigras; contact `oli@olivierbigras.com`.
+- **Help text**: store-specific examples replaced with generic placeholders (`ACME BRAND`, `123456 - `, `[Cotton] Shirt`, Google category 166 Apparel).
+- **PHPCS** (`phpcs.xml.dist`): WordPress-Extra reports 0 errors (PSR-4 class filenames kept; `WordPress.Files.FileName` disabled per file).
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot`): 0.5.6 → 0.5.7.
+
 ## 2026-10-21
 
 - **readme.txt** : section `== External services ==` (PayPal donate au clic, liens auteur/GitHub au clic, plateformes shopping qui récupèrent le fichier une fois l’URL soumise). Liens conditions + confidentialité. Section Privacy raccourcie.
@@ -123,7 +139,7 @@ WordPress.org plugin review fixes.
 - Editor: preview column in the attribute mapping, "Submit this feed" help per channel, time zone note, next generation; list search and Errors view.
 - Mapping: source "copy of another feed attribute" (final value, after the brand detection and the field rules), e.g. custom_label_0 = brand; per-product values (`item_overrides`).
 - Descriptions: when the content has no translation in the feed language, the translated meta description is used (call to action removed); the cleanup keeps ", .011" and, in French, the space before ; : ! ?
-- Titles: the type rule is tested on the name in every language (same type in every feed of a product); optional words in brackets in type labels ("[Guitar] Strap").
+- Titles: the type rule is tested on the name in every language (same type in every feed of a product); optional words in brackets in type labels ("[Cotton] Shirt").
 - WordPress serving: the pre-generated file is sent while the plugins load (autoloaded index), with an optional must-use loader (`mu-plugin/oli-product-feed-early.php`); `application/xml`; max-age = min(setting, half the regeneration interval); weak ETags and If-None-Match first; cookies and Link headers removed.
 - Settings: log level (WooCommerce logs), shop manager access, regeneration when products change (at most every 15 minutes), regenerate all active feeds, next schedule check.
 

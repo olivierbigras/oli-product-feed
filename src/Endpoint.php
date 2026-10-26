@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Optional serving of the feed files through WordPress (?oliprfe_feed=<file>): short Cache-Control,
  * X-Robots-Tag noindex, Content-Type, ETag and Last-Modified, whatever the host or CDN does with static files.
@@ -64,10 +64,10 @@ final class Endpoint {
 		if ( empty( $entry['id'] ) || ! in_array( get_post_status( (int) $entry['id'] ), array( 'publish', 'draft' ), true ) ) {
 			return;
 		}
-		$path  = isset( $entry['path'] ) ? (string) $entry['path'] : '';
-		$dir   = isset( $index['dir'] ) ? (string) $index['dir'] : '';
-		$real  = '' !== $path ? realpath( $path ) : false;
-		$base  = '' !== $dir ? realpath( $dir ) : false;
+		$path = isset( $entry['path'] ) ? (string) $entry['path'] : '';
+		$dir  = isset( $index['dir'] ) ? (string) $index['dir'] : '';
+		$real = '' !== $path ? realpath( $path ) : false;
+		$base = '' !== $dir ? realpath( $dir ) : false;
 		// Only a readable file of the plugin's output folder.
 		if ( ! $real || ! $base || 0 !== strpos( $real, $base . DIRECTORY_SEPARATOR ) || ! is_readable( $real ) ) {
 			return;

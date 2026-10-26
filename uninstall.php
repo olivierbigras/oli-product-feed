@@ -84,7 +84,7 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 			if ( ! is_array( $oliprfe_config ) ) {
 				$oliprfe_config = json_decode( (string) get_post_meta( $oliprfe_id, '_oli_pf_config', true ), true );
 			}
-			$oliprfe_slug   = is_array( $oliprfe_config ) && ! empty( $oliprfe_config['file_slug'] ) ? sanitize_file_name( $oliprfe_config['file_slug'] ) : 'feed-' . (int) $oliprfe_id;
+			$oliprfe_slug = is_array( $oliprfe_config ) && ! empty( $oliprfe_config['file_slug'] ) ? sanitize_file_name( $oliprfe_config['file_slug'] ) : 'feed-' . (int) $oliprfe_id;
 			foreach ( array( 'xml', 'csv', 'tsv', 'txt' ) as $oliprfe_ext ) {
 				$oliprfe_names[] = $oliprfe_slug . '.' . $oliprfe_ext;
 			}

@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Prices of a product for a feed.
  *
@@ -59,7 +59,7 @@ final class Pricing {
 				'sale_to'   => null,
 			)
 		);
-		$now = time();
+		$now    = time();
 		// A sale that is over, or that is not lower than the regular price, is ignored.
 		if ( null !== $prices['sale'] && ( ! is_numeric( $prices['sale'] ) || (float) $prices['sale'] <= 0 || (float) $prices['sale'] >= (float) $prices['regular'] || ( $prices['sale_to'] && (int) $prices['sale_to'] < $now ) ) ) {
 			$prices['sale']      = null;

@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Oli Product Feed 0.5.6\n"
+"Project-Id-Version: Oli Product Feed 0.5.8\n"
 "Report-Msgid-Bugs-To: https://github.com/olivierbigras/oli-product-feed/issues\n"
 "Last-Translator: Olivier Bigras <oli@olivierbigras.com>\n"
 "Language-Team: Olivier Bigras <oli@olivierbigras.com>\n"
@@ -36,7 +36,7 @@ msgstr ""
 
 #. Author URI of the plugin
 #: oli-product-feed.php
-msgid "https://olivierbigras.com"
+msgid "https://github.com/olivierbigras"
 msgstr ""
 
 #: src/Admin/Admin.php:83
@@ -1023,7 +1023,7 @@ msgid "Brand spelling"
 msgstr ""
 
 #: src/Admin/Editor.php:712
-msgid "Write brand names as their brand term (\"TV JONES\" becomes \"TV Jones\")"
+msgid "Write brand names as their brand term (\"ACME BRAND\" becomes \"Acme Brand\")"
 msgstr ""
 
 #: src/Admin/Editor.php:713
@@ -1031,7 +1031,7 @@ msgid "Remove from variation values"
 msgstr ""
 
 #: src/Admin/Editor.php:713
-msgid "Regular expressions, one per line, case-insensitive (for example ^\\d{6}\\s*[-–]\\s* removes a SKU prefix such as \"023936 - \")."
+msgid "Regular expressions, one per line, case-insensitive (for example ^\\d{6}\\s*[-–]\\s* removes a SKU prefix such as \"123456 - \")."
 msgstr ""
 
 #: src/Admin/Editor.php:720
@@ -1280,7 +1280,7 @@ msgid "Default Google category"
 msgstr ""
 
 #: src/Admin/Editor.php:1001
-msgid "Numeric ID from the Google product taxonomy (for example 80 for Guitars). Used when no product category below has one."
+msgid "Numeric ID from the Google product taxonomy (for example 166 for Apparel). Used when no product category below has one."
 msgstr ""
 
 #: src/Admin/Editor.php:1003
@@ -1288,7 +1288,7 @@ msgid "Per product category: Google category ID and the {type} used by the title
 msgstr ""
 
 #: src/Admin/Editor.php:1004
-msgid "The type is left out when the name already contains it. Words in brackets are optional: \"[Guitar] Strap\" adds \"Guitar Strap\", or nothing when the name already says \"Strap\"."
+msgid "The type is left out when the name already contains it. Words in brackets are optional: \"[Cotton] Shirt\" adds \"Cotton Shirt\", or nothing when the name already says \"Shirt\"."
 msgstr ""
 
 #: src/Admin/Editor.php:1005
