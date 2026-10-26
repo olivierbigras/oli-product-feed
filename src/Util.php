@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Small helpers (text cleaning, GTIN check, terms).
  *
@@ -23,7 +23,7 @@ final class Util {
 	 */
 	public static function clean_text( $text, $limit = 0 ) {
 		$text = strip_shortcodes( (string) $text );
-		$text = preg_replace( '/<(br|\/p|\/li|\/h[1-6]|\/div)[^>]*>/i', "$0 ", $text );
+		$text = preg_replace( '/<(br|\/p|\/li|\/h[1-6]|\/div)[^>]*>/i', '$0 ', $text );
 		$text = wp_strip_all_tags( $text );
 		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 		// Entities that were double encoded (&amp;#8211;).

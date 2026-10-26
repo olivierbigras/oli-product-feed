@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Feed editor: renders the add/edit form and turns the posted form into a feed configuration.
  *
@@ -89,7 +89,10 @@ final class Editor {
 	public static function render( $feed_id, array $errors = array(), array $posted = array() ) {
 		$feed = $feed_id ? Feeds::get( $feed_id ) : null;
 		if ( $posted ) {
-			$feed = array_merge( $feed ? $feed : array(), Feeds::sanitize( $posted ), array(
+			$feed = array_merge(
+				$feed ? $feed : array(),
+				Feeds::sanitize( $posted ),
+				array(
 					'name'   => isset( $posted['name'] ) ? $posted['name'] : '',
 					'status' => ! empty( $posted['active'] ) ? 'publish' : 'draft',
 				)
@@ -163,61 +166,88 @@ final class Editor {
 	 */
 	private static function allowed_html() {
 		$attrs = array(
-			'class'             => true,
-			'id'                => true,
-			'name'              => true,
-			'value'             => true,
-			'type'              => true,
-			'for'               => true,
-			'href'              => true,
-			'title'             => true,
-			'target'            => true,
-			'rel'               => true,
-			'checked'           => true,
-			'selected'          => true,
-			'disabled'          => true,
-			'readonly'          => true,
-			'hidden'            => true,
-			'open'              => true,
-			'min'               => true,
-			'max'               => true,
-			'step'              => true,
-			'rows'              => true,
-			'cols'              => true,
-			'size'              => true,
-			'placeholder'       => true,
-			'pattern'           => true,
-			'list'              => true,
-			'autocomplete'      => true,
-			'spellcheck'        => true,
-			'role'              => true,
-			'scope'             => true,
-			'colspan'           => true,
-			'aria-label'        => true,
-			'aria-labelledby'   => true,
-			'aria-describedby'  => true,
-			'aria-hidden'       => true,
-			'aria-invalid'      => true,
-			'aria-current'      => true,
-			'aria-live'         => true,
-			'data-src'          => true,
-			'data-target'       => true,
-			'data-confirm'      => true,
-			'data-formats'      => true,
-			'data-colname'      => true,
+			'class'                   => true,
+			'id'                      => true,
+			'name'                    => true,
+			'value'                   => true,
+			'type'                    => true,
+			'for'                     => true,
+			'href'                    => true,
+			'title'                   => true,
+			'target'                  => true,
+			'rel'                     => true,
+			'checked'                 => true,
+			'selected'                => true,
+			'disabled'                => true,
+			'readonly'                => true,
+			'hidden'                  => true,
+			'open'                    => true,
+			'min'                     => true,
+			'max'                     => true,
+			'step'                    => true,
+			'rows'                    => true,
+			'cols'                    => true,
+			'size'                    => true,
+			'placeholder'             => true,
+			'pattern'                 => true,
+			'list'                    => true,
+			'autocomplete'            => true,
+			'spellcheck'              => true,
+			'role'                    => true,
+			'scope'                   => true,
+			'colspan'                 => true,
+			'aria-label'              => true,
+			'aria-labelledby'         => true,
+			'aria-describedby'        => true,
+			'aria-hidden'             => true,
+			'aria-invalid'            => true,
+			'aria-current'            => true,
+			'aria-live'               => true,
+			'data-src'                => true,
+			'data-target'             => true,
+			'data-confirm'            => true,
+			'data-formats'            => true,
+			'data-colname'            => true,
 			'data-oliprfe-generating' => true,
-			'width'             => true,
-			'height'            => true,
-			'alt'               => true,
-			'src'               => true,
+			'width'                   => true,
+			'height'                  => true,
+			'alt'                     => true,
+			'src'                     => true,
 		);
-		$tags = array(
-			'a', 'br', 'button', 'caption', 'code', 'details', 'div', 'em', 'fieldset',
-			'h2', 'h3', 'img', 'input', 'label', 'legend', 'li', 'option', 'p', 'progress',
-			'select', 'span', 'strong', 'summary', 'table', 'tbody', 'td', 'textarea',
-			'th', 'thead', 'tr', 'ul',
+		$tags  = array(
+			'a',
+			'br',
+			'button',
+			'caption',
+			'code',
+			'details',
+			'div',
+			'em',
+			'fieldset',
+			'h2',
+			'h3',
+			'img',
+			'input',
+			'label',
+			'legend',
+			'li',
+			'option',
+			'p',
+			'progress',
+			'select',
+			'span',
+			'strong',
+			'summary',
+			'table',
+			'tbody',
+			'td',
+			'textarea',
+			'th',
+			'thead',
+			'tr',
+			'ul',
 		);
-		$out = array();
+		$out   = array();
 		foreach ( $tags as $tag ) {
 			$out[ $tag ] = $attrs;
 		}
@@ -399,7 +429,16 @@ final class Editor {
 		}
 		echo '</div><div id="major-publishing-actions">';
 		if ( $feed_id ) {
-			$delete = wp_nonce_url( add_query_arg( array( 'action' => 'oliprfe_delete_feed', 'feed' => $feed_id ), admin_url( 'admin-post.php' ) ), 'oliprfe_delete_feed_' . $feed_id );
+			$delete = wp_nonce_url(
+				add_query_arg(
+					array(
+						'action' => 'oliprfe_delete_feed',
+						'feed'   => $feed_id,
+					),
+					admin_url( 'admin-post.php' )
+				),
+				'oliprfe_delete_feed_' . $feed_id
+			);
 			echo '<div id="delete-action"><a class="submitdelete deletion oliprfe-confirm" href="' . esc_url( $delete ) . '" data-confirm="' . esc_attr__( 'Delete this feed and its file?', 'oli-product-feed' ) . '">' . esc_html__( 'Delete feed', 'oli-product-feed' ) . '</a></div>';
 		}
 		echo '<div id="publishing-action"><button type="submit" class="button" name="generate" value="1">' . esc_html__( 'Save and generate now', 'oli-product-feed' ) . '</button> ';
@@ -576,7 +615,7 @@ final class Editor {
 			}
 			$html = '';
 			foreach ( $by_parent[ $parent ] as $term ) {
-				$html .= '<li><label class="selectit"><input type="checkbox" name="' . esc_attr( $name ) . '[]" value="' . esc_attr( (string) $term->term_id ) . '"' . checked( in_array( (int) $term->term_id, $selected, true ), true, false ) . '> ' . esc_html( html_entity_decode( $term->name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) . '</label>';
+				$html    .= '<li><label class="selectit"><input type="checkbox" name="' . esc_attr( $name ) . '[]" value="' . esc_attr( (string) $term->term_id ) . '"' . checked( in_array( (int) $term->term_id, $selected, true ), true, false ) . '> ' . esc_html( html_entity_decode( $term->name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) . '</label>';
 				$children = $walk( (int) $term->term_id );
 				$html    .= '' !== $children ? '<ul class="children">' . $children . '</ul>' : '';
 				$html    .= '</li>';
@@ -601,11 +640,11 @@ final class Editor {
 			'backorder'    => __( 'Backorder', 'oli-product-feed' ),
 			'preorder'     => __( 'Preorder', 'oli-product-feed' ),
 		);
-		$rules[] = array();
-		$rules[] = array();
-		$html    = '<table class="widefat oliprfe-rules"><thead><tr><th scope="col">' . esc_html__( 'Meta key', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Value (empty: any value)', 'oli-product-feed' ) . '</th>';
-		$html   .= $with_availability ? '<th scope="col">' . esc_html__( 'Availability', 'oli-product-feed' ) . '</th>' : '';
-		$html   .= '</tr></thead><tbody>';
+		$rules[]        = array();
+		$rules[]        = array();
+		$html           = '<table class="widefat oliprfe-rules"><thead><tr><th scope="col">' . esc_html__( 'Meta key', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Value (empty: any value)', 'oli-product-feed' ) . '</th>';
+		$html          .= $with_availability ? '<th scope="col">' . esc_html__( 'Availability', 'oli-product-feed' ) . '</th>' : '';
+		$html          .= '</tr></thead><tbody>';
 		foreach ( array_values( $rules ) as $i => $rule ) {
 			$html .= '<tr><td>' . self::text( $name . '[' . $i . '][meta]', '', isset( $rule['meta'] ) ? $rule['meta'] : '', 'code', ' aria-label="' . esc_attr__( 'Meta key', 'oli-product-feed' ) . '"' ) . '</td>';
 			$html .= '<td>' . self::text( $name . '[' . $i . '][value]', '', isset( $rule['value'] ) ? $rule['value'] : '', '', ' aria-label="' . esc_attr__( 'Value', 'oli-product-feed' ) . '"' ) . '</td>';
@@ -660,8 +699,8 @@ final class Editor {
 			self::checkbox( 'feed[backorder_lead_enabled]', ! empty( $feed['backorder_lead_enabled'] ), __( 'Set an availability date for products on backorder and for out-of-stock products included in this feed', 'oli-product-feed' ) ),
 			__( 'Google, Microsoft (Bing) and Meta. In-stock items are unchanged. A per-product override (days or a date) can be set on the product edit screen.', 'oli-product-feed' )
 		);
-		$lead  = '<input type="number" min="1" max="3650" class="small-text" id="oliprfe-backorder_lead_days" name="feed[backorder_lead_days]" value="' . esc_attr( (string) ( isset( $feed['backorder_lead_days'] ) ? $feed['backorder_lead_days'] : 21 ) ) . '"> ';
-		$lead .= esc_html__( 'days from the generation date (default 21, about 2–3 weeks)', 'oli-product-feed' );
+		$lead      = '<input type="number" min="1" max="3650" class="small-text" id="oliprfe-backorder_lead_days" name="feed[backorder_lead_days]" value="' . esc_attr( (string) ( isset( $feed['backorder_lead_days'] ) ? $feed['backorder_lead_days'] : 21 ) ) . '"> ';
+		$lead     .= esc_html__( 'days from the generation date (default 21, about 2–3 weeks)', 'oli-product-feed' );
 		$hide_lead = empty( $feed['backorder_lead_enabled'] );
 		self::row( __( 'Lead time (days)', 'oli-product-feed' ), 'oliprfe-backorder_lead_days', $lead, __( 'Written as g:availability_date in ISO 8601 with the site time zone, recalculated at each generation.', 'oli-product-feed' ), 'oliprfe-for-backorder', $hide_lead );
 		self::row(
@@ -709,8 +748,8 @@ final class Editor {
 		}
 		$html .= '</tbody></table>';
 		self::row( __( 'Type by name', 'oli-product-feed' ), '', $html, __( 'Before the category table: the first rule whose pattern (regular expression) matches the product name gives the {type}, for products of these categories (empty: all).', 'oli-product-feed' ) );
-		self::row( __( 'Brand spelling', 'oli-product-feed' ), '', self::checkbox( 'feed[title_brand_case]', $feed['title_brand_case'], __( 'Write brand names as their brand term ("TV JONES" becomes "TV Jones")', 'oli-product-feed' ) ) );
-		self::row( __( 'Remove from variation values', 'oli-product-feed' ), 'oliprfe-title_strip_patterns', '<textarea name="feed[title_strip_patterns]" id="oliprfe-title_strip_patterns" rows="2" class="large-text code">' . esc_textarea( implode( "\n", $feed['title_strip_patterns'] ) ) . '</textarea>', __( 'Regular expressions, one per line, case-insensitive (for example ^\d{6}\s*[-–]\s* removes a SKU prefix such as "023936 - ").', 'oli-product-feed' ) );
+		self::row( __( 'Brand spelling', 'oli-product-feed' ), '', self::checkbox( 'feed[title_brand_case]', $feed['title_brand_case'], __( 'Write brand names as their brand term ("ACME BRAND" becomes "Acme Brand")', 'oli-product-feed' ) ) );
+		self::row( __( 'Remove from variation values', 'oli-product-feed' ), 'oliprfe-title_strip_patterns', '<textarea name="feed[title_strip_patterns]" id="oliprfe-title_strip_patterns" rows="2" class="large-text code">' . esc_textarea( implode( "\n", $feed['title_strip_patterns'] ) ) . '</textarea>', __( 'Regular expressions, one per line, case-insensitive (for example ^\d{6}\s*[-–]\s* removes a SKU prefix such as "123456 - ").', 'oli-product-feed' ) );
 		$keys = array();
 		foreach ( $feed['description_fallbacks'] as $spec ) {
 			if ( 'meta' === $spec['type'] ) {
@@ -855,7 +894,7 @@ final class Editor {
 	 * @param bool                     $removable Custom row.
 	 */
 	private static function mapping_row( $field, $label, $spec, $hint, $removable ) {
-		$spec = $spec ? wp_parse_args(
+		$spec  = $spec ? wp_parse_args(
 			$spec,
 			array(
 				'type'      => 'auto',
@@ -998,10 +1037,10 @@ final class Editor {
 	private static function box_categories( array $feed ) {
 		self::open_box( 'oliprfe-categories', __( 'Categories', 'oli-product-feed' ) );
 		echo '<table class="form-table" role="presentation"><tbody>';
-		self::row( __( 'Default Google category', 'oli-product-feed' ), 'oliprfe-google_category_default', self::text( 'feed[google_category_default]', 'oliprfe-google_category_default', $feed['google_category_default'], 'regular-text code' ), __( 'Numeric ID from the Google product taxonomy (for example 80 for Guitars). Used when no product category below has one.', 'oli-product-feed' ) );
+		self::row( __( 'Default Google category', 'oli-product-feed' ), 'oliprfe-google_category_default', self::text( 'feed[google_category_default]', 'oliprfe-google_category_default', $feed['google_category_default'], 'regular-text code' ), __( 'Numeric ID from the Google product taxonomy (for example 166 for Apparel). Used when no product category below has one.', 'oli-product-feed' ) );
 		echo '</tbody></table>';
 		echo '<p>' . esc_html__( 'Per product category: Google category ID and the {type} used by the title template. The deepest category with a value wins.', 'oli-product-feed' ) . '</p>';
-		echo '<p class="description">' . esc_html__( 'The type is left out when the name already contains it. Words in brackets are optional: "[Guitar] Strap" adds "Guitar Strap", or nothing when the name already says "Strap".', 'oli-product-feed' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'The type is left out when the name already contains it. Words in brackets are optional: "[Cotton] Shirt" adds "Cotton Shirt", or nothing when the name already says "Shirt".', 'oli-product-feed' ) . '</p>';
 		echo '<table class="widefat striped oliprfe-categories"><thead><tr><th scope="col">' . esc_html__( 'Product category', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Google category ID', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Type for the title', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
 		$terms = get_terms(
 			array(
@@ -1009,7 +1048,7 @@ final class Editor {
 				'hide_empty' => false,
 			)
 		);
-		$rows = array();
+		$rows  = array();
 		foreach ( is_wp_error( $terms ) ? array() : $terms as $term ) {
 			$path = array_reverse( array_map( 'intval', get_ancestors( $term->term_id, 'product_cat', 'taxonomy' ) ) );
 			$name = array();
@@ -1017,7 +1056,7 @@ final class Editor {
 				$a      = get_term( $ancestor, 'product_cat' );
 				$name[] = $a && ! is_wp_error( $a ) ? $a->name : '';
 			}
-			$name[]                     = $term->name;
+			$name[]                          = $term->name;
 			$rows[ implode( ' > ', $name ) ] = $term;
 		}
 		ksort( $rows, SORT_NATURAL | SORT_FLAG_CASE );
@@ -1079,7 +1118,7 @@ final class Editor {
 			'daily'      => __( 'Every day', 'oli-product-feed' ),
 			'weekly'     => __( 'Every week', 'oli-product-feed' ),
 		);
-		$radios = '<fieldset><legend class="screen-reader-text">' . esc_html__( 'Regenerate', 'oli-product-feed' ) . '</legend>';
+		$radios      = '<fieldset><legend class="screen-reader-text">' . esc_html__( 'Regenerate', 'oli-product-feed' ) . '</legend>';
 		foreach ( $frequencies as $value => $label ) {
 			$radios .= '<label><input type="radio" name="feed[frequency]" value="' . esc_attr( $value ) . '"' . checked( $feed['frequency'], $value, false ) . '> ' . esc_html( $label ) . '</label><br>';
 		}
@@ -1089,11 +1128,16 @@ final class Editor {
 		for ( $h = 0; $h < 24; $h++ ) {
 			$hours[ (string) $h ] = sprintf( '%02d:00', $h );
 		}
-		self::row( __( 'Start hour', 'oli-product-feed' ), 'oliprfe-start_hour', self::select( 'feed[start_hour]', 'oliprfe-start_hour', $hours, (string) $feed['start_hour'] ), __( 'Daily and weekly feeds start at this hour of the site time zone (off-peak hours are best).', 'oli-product-feed' ) . ' ' . sprintf(
+		self::row(
+			__( 'Start hour', 'oli-product-feed' ),
+			'oliprfe-start_hour',
+			self::select( 'feed[start_hour]', 'oliprfe-start_hour', $hours, (string) $feed['start_hour'] ),
+			__( 'Daily and weekly feeds start at this hour of the site time zone (off-peak hours are best).', 'oli-product-feed' ) . ' ' . sprintf(
 			/* translators: %s: time zone name. */
-			__( 'Site time zone: %s.', 'oli-product-feed' ),
-			wp_timezone_string()
-		) );
+				__( 'Site time zone: %s.', 'oli-product-feed' ),
+				wp_timezone_string()
+			)
+		);
 		self::row( __( 'Batch size', 'oli-product-feed' ), 'oliprfe-batch_size', '<input type="number" min="10" max="1000" step="10" class="small-text" id="oliprfe-batch_size" name="feed[batch_size]" value="' . esc_attr( (string) $feed['batch_size'] ) . '"> ' . esc_html__( 'products per batch', 'oli-product-feed' ) );
 		echo '</tbody></table>';
 		self::close_box();
@@ -1106,7 +1150,7 @@ final class Editor {
 	 * @return array<string,mixed>
 	 */
 	public static function parse( array $post ) {
-		$get = static function ( $key, $default = '' ) use ( $post ) {
+		$get   = static function ( $key, $default = '' ) use ( $post ) {
 			return isset( $post[ $key ] ) ? $post[ $key ] : $default;
 		};
 		$lines = static function ( $text ) {
@@ -1139,27 +1183,27 @@ final class Editor {
 
 		$filters = is_array( $get( 'filters', array() ) ) ? $get( 'filters', array() ) : array();
 		$config  = array(
-			'name'                    => (string) $get( 'name' ),
-			'active'                  => ! empty( $post['active'] ),
-			'channel'                 => (string) $get( 'channel', 'google' ),
-			'format'                  => (string) $get( 'format', 'xml' ),
-			'file_slug'               => (string) $get( 'file_slug' ),
-			'language'                => (string) $get( 'language' ),
-			'country'                 => (string) $get( 'country' ),
-			'currency'                => (string) $get( 'currency' ),
-			'price_source'            => (string) $get( 'price_source', 'woocommerce' ),
-			'price_source_options'    => array(),
-			'min_price'               => (string) $get( 'min_price' ),
-			'variations'              => ! empty( $post['variations'] ),
-			'frequency'               => (string) $get( 'frequency', 'daily' ),
-			'start_hour'              => (string) $get( 'start_hour', '-1' ),
-			'batch_size'              => (int) $get( 'batch_size', 100 ),
-			'image_size'              => (string) $get( 'image_size', 'full' ),
-			'max_additional_images'   => (int) $get( 'max_additional_images', 10 ),
-			'force_https'             => ! empty( $post['force_https'] ),
-			'link_args'               => Util::query_pairs( $get( 'link_args' ) ),
-			'utm'                     => is_array( $get( 'utm', array() ) ) ? $get( 'utm', array() ) : array(),
-			'filters'                 => array(
+			'name'                        => (string) $get( 'name' ),
+			'active'                      => ! empty( $post['active'] ),
+			'channel'                     => (string) $get( 'channel', 'google' ),
+			'format'                      => (string) $get( 'format', 'xml' ),
+			'file_slug'                   => (string) $get( 'file_slug' ),
+			'language'                    => (string) $get( 'language' ),
+			'country'                     => (string) $get( 'country' ),
+			'currency'                    => (string) $get( 'currency' ),
+			'price_source'                => (string) $get( 'price_source', 'woocommerce' ),
+			'price_source_options'        => array(),
+			'min_price'                   => (string) $get( 'min_price' ),
+			'variations'                  => ! empty( $post['variations'] ),
+			'frequency'                   => (string) $get( 'frequency', 'daily' ),
+			'start_hour'                  => (string) $get( 'start_hour', '-1' ),
+			'batch_size'                  => (int) $get( 'batch_size', 100 ),
+			'image_size'                  => (string) $get( 'image_size', 'full' ),
+			'max_additional_images'       => (int) $get( 'max_additional_images', 10 ),
+			'force_https'                 => ! empty( $post['force_https'] ),
+			'link_args'                   => Util::query_pairs( $get( 'link_args' ) ),
+			'utm'                         => is_array( $get( 'utm', array() ) ) ? $get( 'utm', array() ) : array(),
+			'filters'                     => array(
 				'categories_include' => isset( $filters['categories_include'] ) ? (array) $filters['categories_include'] : array(),
 				'categories_exclude' => isset( $filters['categories_exclude'] ) ? (array) $filters['categories_exclude'] : array(),
 				'stock_statuses'     => isset( $filters['stock_statuses'] ) ? (array) $filters['stock_statuses'] : array(),
@@ -1172,24 +1216,24 @@ final class Editor {
 				'price_min'          => isset( $filters['price_min'] ) ? (string) $filters['price_min'] : '',
 				'price_max'          => isset( $filters['price_max'] ) ? (string) $filters['price_max'] : '',
 			),
-			'exclude_rules'           => $rules( $get( 'exclude_rules', array() ), false ),
-			'availability_rules'      => $rules( $get( 'availability_rules', array() ), true ),
-			'backorder_lead_enabled'  => ! empty( $post['backorder_lead_enabled'] ),
-			'backorder_lead_days'     => (int) $get( 'backorder_lead_days', 21 ),
-			'backorder_as_preorder'   => ! empty( $post['backorder_as_preorder'] ),
+			'exclude_rules'               => $rules( $get( 'exclude_rules', array() ), false ),
+			'availability_rules'          => $rules( $get( 'availability_rules', array() ), true ),
+			'backorder_lead_enabled'      => ! empty( $post['backorder_lead_enabled'] ),
+			'backorder_lead_days'         => (int) $get( 'backorder_lead_days', 21 ),
+			'backorder_as_preorder'       => ! empty( $post['backorder_as_preorder'] ),
 			'backorder_min_handling_time' => (string) $get( 'backorder_min_handling_time' ),
 			'backorder_max_handling_time' => (string) $get( 'backorder_max_handling_time' ),
-			'title_template'          => (string) $get( 'title_template' ),
-			'title_brand_prefix'      => ! empty( $post['title_brand_prefix'] ),
-			'title_type_map'          => is_array( $get( 'title_type_map', array() ) ) ? $get( 'title_type_map', array() ) : array(),
-			'description_min_length'  => (int) $get( 'description_min_length', 0 ),
-			'description_fallbacks'   => array(),
-			'description_attributes'  => ! empty( $post['description_attributes'] ),
-			'description_remove'      => (string) $get( 'description_remove' ),
-			'description_remove_emails' => ! empty( $post['description_remove_emails'] ),
-			'title_strip_patterns'    => (string) $get( 'title_strip_patterns' ),
-			'title_brand_case'        => ! empty( $post['title_brand_case'] ),
-			'title_type_rules'        => array_values(
+			'title_template'              => (string) $get( 'title_template' ),
+			'title_brand_prefix'          => ! empty( $post['title_brand_prefix'] ),
+			'title_type_map'              => is_array( $get( 'title_type_map', array() ) ) ? $get( 'title_type_map', array() ) : array(),
+			'description_min_length'      => (int) $get( 'description_min_length', 0 ),
+			'description_fallbacks'       => array(),
+			'description_attributes'      => ! empty( $post['description_attributes'] ),
+			'description_remove'          => (string) $get( 'description_remove' ),
+			'description_remove_emails'   => ! empty( $post['description_remove_emails'] ),
+			'title_strip_patterns'        => (string) $get( 'title_strip_patterns' ),
+			'title_brand_case'            => ! empty( $post['title_brand_case'] ),
+			'title_type_rules'            => array_values(
 				array_filter(
 					(array) $get( 'title_type_rules', array() ),
 					static function ( $row ) {
@@ -1197,19 +1241,19 @@ final class Editor {
 					}
 				)
 			),
-			'field_rules'             => array(),
-			'mpn_brands'              => (string) $get( 'mpn_brands' ),
-			'mpn_only_without_gtin'   => ! empty( $post['mpn_only_without_gtin'] ),
-			'brand_priority'          => (string) $get( 'brand_priority' ),
-			'brand_from_title'        => ! empty( $post['brand_from_title'] ),
-			'google_category_default' => (string) $get( 'google_category_default' ),
-			'google_category_map'     => is_array( $get( 'google_category_map', array() ) ) ? $get( 'google_category_map', array() ) : array(),
-			'google_category_items'   => $lines( $get( 'google_category_items' ) ),
-			'item_overrides'          => array(),
-			'mapping'                 => array(),
-			'columns'                 => array(),
-			'xml_root'                => (string) $get( 'xml_root', 'products' ),
-			'xml_item'                => (string) $get( 'xml_item', 'product' ),
+			'field_rules'                 => array(),
+			'mpn_brands'                  => (string) $get( 'mpn_brands' ),
+			'mpn_only_without_gtin'       => ! empty( $post['mpn_only_without_gtin'] ),
+			'brand_priority'              => (string) $get( 'brand_priority' ),
+			'brand_from_title'            => ! empty( $post['brand_from_title'] ),
+			'google_category_default'     => (string) $get( 'google_category_default' ),
+			'google_category_map'         => is_array( $get( 'google_category_map', array() ) ) ? $get( 'google_category_map', array() ) : array(),
+			'google_category_items'       => $lines( $get( 'google_category_items' ) ),
+			'item_overrides'              => array(),
+			'mapping'                     => array(),
+			'columns'                     => array(),
+			'xml_root'                    => (string) $get( 'xml_root', 'products' ),
+			'xml_item'                    => (string) $get( 'xml_item', 'product' ),
 		);
 		foreach ( preg_split( '/\r\n|\r|\n/', (string) $get( 'columns' ) ) as $line ) {
 			$parts = array_map( 'trim', explode( '=', $line, 2 ) );
@@ -1249,7 +1293,7 @@ final class Editor {
 					$map[ trim( $parts[0] ) ] = trim( $parts[1] );
 				}
 			}
-			$spec = array(
+			$spec                        = array(
 				'type'      => (string) $row['type'],
 				'key'       => isset( $row['key'] ) ? (string) $row['key'] : '',
 				'value'     => isset( $row['value'] ) ? (string) $row['value'] : '',
@@ -1279,7 +1323,7 @@ final class Editor {
 			}
 			$words = array();
 			foreach ( array_filter( array_map( 'trim', explode( ';', isset( $row['words'] ) ? (string) $row['words'] : '' ) ) ) as $pair ) {
-				$parts                       = explode( '=', $pair, 2 );
+				$parts                      = explode( '=', $pair, 2 );
 				$words[ trim( $parts[0] ) ] = isset( $parts[1] ) ? trim( $parts[1] ) : trim( $parts[0] );
 			}
 			$config['field_rules'][] = array(

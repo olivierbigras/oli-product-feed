@@ -14,7 +14,7 @@
 #     CHANGELOG.md
 #     LICENSE
 #     assets/…
-#     languages/…   (*.pot, *.po, compiled *.mo)
+#     languages/…   (*.pot only; WordPress.org serves translations)
 #     src/…
 #
 # Development files are omitted: tests, .git, node_modules, vendor,
@@ -35,12 +35,10 @@ if [[ ! -f "$PLUGIN_FILE" ]]; then
 	exit 1
 fi
 
-for cmd in zip msgfmt; do
-	if ! command -v "$cmd" >/dev/null 2>&1; then
-		echo "error: ${cmd} is required" >&2
-		exit 1
-	fi
-done
+if ! command -v zip >/dev/null 2>&1; then
+	echo "error: zip is required" >&2
+	exit 1
+fi
 
 VERSION="$(sed -n 's/^ \* Version:[[:space:]]*//p' "$PLUGIN_FILE" | head -n 1 | tr -d '\r')"
 STABLE="$(sed -n 's/^Stable tag:[[:space:]]*//p' "$README_FILE" | head -n 1 | tr -d '\r')"
@@ -59,19 +57,6 @@ if [[ "$VERSION" != "$STABLE" ]]; then
 	echo "error: plugin header Version (${VERSION}) != readme.txt Stable tag (${STABLE})" >&2
 	exit 1
 fi
-
-shopt -s nullglob
-po_files=("${ROOT}/languages/"*.po)
-if [[ ${#po_files[@]} -eq 0 ]]; then
-	echo "warning: no .po files in languages/" >&2
-else
-	for po in "${po_files[@]}"; do
-		mo="${po%.po}.mo"
-		echo "msgfmt $(basename "$po") -> $(basename "$mo")"
-		msgfmt -o "$mo" "$po"
-	done
-fi
-shopt -u nullglob
 
 DEFAULT_OUT="${ROOT}/dist/${SLUG}-${VERSION}.zip"
 OUT="${1:-$DEFAULT_OUT}"
@@ -113,8 +98,8 @@ done < <(find "$DEST" \( \
 	-o -name 'composer.json' -o -name 'composer.lock' \
 	-o -name 'phpunit.xml' -o -name 'phpunit.xml.dist' \
 	-o -name 'phpcs.xml' -o -name 'phpcs.xml.dist' \
-	-o -name 'package.json' -o -name 'package-lock.json' \
-	-o -name '.DS_Store' \
+	-o 	-name 'package.json' -o -name 'package-lock.json' \
+	-o -name '.DS_Store' -o -name '*.po' -o -name '*.mo' \
 	\) -print0)
 
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then

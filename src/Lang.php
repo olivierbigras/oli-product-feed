@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Language layer: TranslatePress adapter (strings and URLs). Without a multilingual plugin, values are returned untouched.
  *
@@ -79,7 +79,7 @@ final class Lang {
 	 * @return bool
 	 */
 	public static function needs_translation( $language ) {
-		return '' !== $language && self::has_translatepress() && $language !== self::default_language();
+		return '' !== $language && self::has_translatepress() && self::default_language() !== $language;
 	}
 
 	/**
@@ -99,9 +99,9 @@ final class Lang {
 			trp_switch_language( $language );
 			$snapshot['used_trp'] = true;
 		} elseif ( '' !== $language && self::has_translatepress() ) {
-			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
-			$snapshot['trp_prev'] = isset( $TRP_LANGUAGE ) ? $TRP_LANGUAGE : null;
-			$TRP_LANGUAGE         = $language; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
+			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- TranslatePress current-language global.
+			$snapshot['trp_prev'] = isset( $TRP_LANGUAGE ) ? $TRP_LANGUAGE : null; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- TranslatePress current-language global.
+			$TRP_LANGUAGE         = $language; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- TranslatePress current-language global.
 			$snapshot['used_trp'] = 'manual';
 			if ( function_exists( 'switch_to_locale' ) && switch_to_locale( $language ) ) {
 				$snapshot['used_locale'] = true;
@@ -127,8 +127,8 @@ final class Lang {
 		if ( true === $snapshot['used_trp'] && function_exists( 'trp_restore_language' ) ) {
 			trp_restore_language();
 		} elseif ( 'manual' === $snapshot['used_trp'] ) {
-			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
-			$TRP_LANGUAGE = $snapshot['trp_prev']; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
+			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- TranslatePress current-language global.
+			$TRP_LANGUAGE = $snapshot['trp_prev']; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- TranslatePress current-language global.
 			if ( $snapshot['used_locale'] && function_exists( 'restore_previous_locale' ) ) {
 				restore_previous_locale();
 			}

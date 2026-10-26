@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Product IDs of a feed.
  *
@@ -99,17 +99,17 @@ final class Query {
 			return $product_ids;
 		}
 
-		$children = get_posts(
+		$children  = get_posts(
 			array(
-				'post_type'        => 'product_variation',
-				'post_status'      => 'publish',
-				'posts_per_page'   => -1,
-				'fields'           => 'ids',
-				'cache_results'    => false,
-				'orderby'          => 'menu_order ID',
-				'order'            => 'ASC',
-				'post_parent__in'  => $variable_ids,
-				'no_found_rows'    => true,
+				'post_type'       => 'product_variation',
+				'post_status'     => 'publish',
+				'posts_per_page'  => -1,
+				'fields'          => 'ids',
+				'cache_results'   => false,
+				'orderby'         => 'menu_order ID',
+				'order'           => 'ASC',
+				'post_parent__in' => $variable_ids,
+				'no_found_rows'   => true,
 			)
 		);
 		$by_parent = array();

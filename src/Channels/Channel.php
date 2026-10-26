@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Base class of a destination channel (Google, Pinterest, Meta…).
  *
@@ -79,13 +79,37 @@ abstract class Channel {
 	 */
 	public function default_mapping() {
 		return array(
-			'id'    => array( 'type' => 'field', 'key' => 'id' ),
-			'brand' => array( 'type' => 'taxonomy', 'key' => 'product_brand', 'mode' => 'first', 'parent' => true ),
-			'gtin'  => array( 'type' => 'field', 'key' => 'gtin' ),
-			'mpn'   => array( 'type' => 'field', 'key' => 'sku' ),
+			'id'    => array(
+				'type' => 'field',
+				'key'  => 'id',
+			),
+			'brand' => array(
+				'type'   => 'taxonomy',
+				'key'    => 'product_brand',
+				'mode'   => 'first',
+				'parent' => true,
+			),
+			'gtin'  => array(
+				'type' => 'field',
+				'key'  => 'gtin',
+			),
+			'mpn'   => array(
+				'type' => 'field',
+				'key'  => 'sku',
+			),
 			// Variant attributes, detected automatically (first attribute found; one value only).
-			'color' => array( 'type' => 'attribute', 'key' => 'pa_color|pa_colour|color|colour', 'translate' => true, 'single' => true ),
-			'size'  => array( 'type' => 'attribute', 'key' => 'pa_size|size', 'translate' => true, 'single' => true ),
+			'color' => array(
+				'type'      => 'attribute',
+				'key'       => 'pa_color|pa_colour|color|colour',
+				'translate' => true,
+				'single'    => true,
+			),
+			'size'  => array(
+				'type'      => 'attribute',
+				'key'       => 'pa_size|size',
+				'translate' => true,
+				'single'    => true,
+			),
 		);
 	}
 
@@ -342,7 +366,7 @@ abstract class Channel {
 				$single = (string) $single;
 				// CDATA for free text, and for any value holding markup characters (no "&amp;" in the file).
 				$body = ( in_array( $field, $this->xml_cdata_fields(), true ) || preg_match( '/[&<>]/', $single ) ) ? self::cdata( $single ) : self::xml_text( $single );
-				$out   .= "\t\t<" . $tag . '>' . $body . '</' . $tag . ">\n";
+				$out .= "\t\t<" . $tag . '>' . $body . '</' . $tag . ">\n";
 			}
 		}
 		return $out . "\t</item>\n";
@@ -408,7 +432,7 @@ abstract class Channel {
 				$out[] = str_replace( array( "\t", "\r", "\n" ), ' ', $cell );
 			} else {
 				$cell  = str_replace( array( "\r", "\n" ), ' ', $cell );
-				$out[] = preg_match( '/[",]/', $cell ) || '' !== $cell && ( ' ' === $cell[0] || ' ' === substr( $cell, -1 ) ) ? '"' . str_replace( '"', '""', $cell ) . '"' : $cell;
+				$out[] = ( preg_match( '/[",]/', $cell ) || ( '' !== $cell && ( ' ' === $cell[0] || ' ' === substr( $cell, -1 ) ) ) ) ? '"' . str_replace( '"', '""', $cell ) . '"' : $cell;
 			}
 		}
 		return implode( 'csv' !== $format ? "\t" : ',', $out ) . "\n";

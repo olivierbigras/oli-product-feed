@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<ruleset name="Oli Product Feed">
+	<description>WordPress-Extra on the PSR-4 plugin sources.</description>
+	<file>.</file>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/dist/*</exclude-pattern>
+	<arg name="extensions" value="php"/>
+	<arg value="sp"/>
+	<rule ref="WordPress-Extra">
+		<!-- Autoload maps Oliprfe\Foo to src/Foo.php; class-foo.php would break it. -->
+		<exclude name="WordPress.Files.FileName"/>
+	</rule>
+</ruleset>

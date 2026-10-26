@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * One-time copy of identifiers stored under the pre-0.3.5 `oli_pf_` prefix.
  *

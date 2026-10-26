@@ -1,11 +1,14 @@
 === Oli Product Feed ===
 Contributors: bigrat95
+Author: Olivier Bigras
+Author URI: https://github.com/olivierbigras
+Author Email: oli@olivierbigras.com
 Donate link: https://www.paypal.com/donate/?hosted_button_id=29SAPKFAHMTNW
 Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerce
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,9 +65,8 @@ Optional Donate / support links (Plugins screen, a dismissible notice on the plu
 
 = Author and source links =
 
-The plugin header links to the author’s site (`https://olivierbigras.com`) and to the public repository (`https://github.com/olivierbigras/oli-product-feed`). Nothing is fetched unless someone clicks those links.
+The plugin header links to the author’s GitHub profile (`https://github.com/olivierbigras`) and to the public repository (`https://github.com/olivierbigras/oli-product-feed`). Nothing is fetched unless someone clicks those links. Contact: oli@olivierbigras.com.
 
-* olivierbigras.com: https://olivierbigras.com
 * GitHub terms: https://docs.github.com/site-policy/github-terms/github-terms-of-service
 * GitHub privacy: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
 
@@ -122,6 +124,12 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 3. Settings.
 
 == Changelog ==
+
+= 0.5.7 =
+* WordPress.org review: bundled .po/.mo files and the leftover textdomain loader are removed; translations come from translate.wordpress.org.
+* Admin notices stay on the plugin screens only.
+* Author URI is the GitHub profile (distinct from the Plugin URI repository URL).
+* Help text uses generic placeholders instead of store-specific examples.
 
 = 0.5.6 =
 * Docs: External services section (PayPal donate, author/source links, shopping platforms that fetch the feed).
@@ -219,6 +227,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.7 =
+WordPress.org review: no bundled translations, notices only on plugin screens, distinct Author URI, generic help-text examples.
 
 = 0.5.6 =
 External services documented. Admin CSS/HTML uses the `oliprfe-` prefix. Feeds and settings stored under `oli_pf_` before 0.3.5 are copied to `oliprfe_` on update.

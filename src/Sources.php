@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:disable WordPress.Files.FileName -- PSR-4 autoload (Oliprfe\Foo -> src/Foo.php).
 /**
  * Value sources used by the attribute mapping.
  *
@@ -188,7 +188,7 @@ final class Sources {
 			}
 			$holder = $parent ? $parent : $product;
 			foreach ( $holder->get_attributes() as $name => $attribute ) {
-				if ( is_object( $attribute ) && ( $name === $spec['key'] || $name === sanitize_title( $spec['key'] ) || $attribute->get_name() === $spec['key'] ) ) {
+				if ( is_object( $attribute ) && ( $spec['key'] === $name || sanitize_title( $spec['key'] ) === $name || $spec['key'] === $attribute->get_name() ) ) {
 					return count( $attribute->get_options() );
 				}
 			}
