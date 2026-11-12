@@ -238,9 +238,9 @@ final class Util {
 			if ( ! is_string( $raw ) || '' === $raw ) {
 				$raw = home_url();
 			}
-			$home_host = 'https' === wp_parse_url( $raw, PHP_URL_SCHEME ) ? wp_parse_url( $raw, PHP_URL_HOST ) : '';
+			$home_host = 'https' === wp_parse_url( $raw, \PHP_URL_SCHEME ) ? wp_parse_url( $raw, \PHP_URL_HOST ) : '';
 		}
-		if ( '' !== $home_host && 0 === strpos( $url, 'http://' ) && wp_parse_url( $url, PHP_URL_HOST ) === $home_host ) {
+		if ( '' !== $home_host && 0 === strpos( $url, 'http://' ) && wp_parse_url( $url, \PHP_URL_HOST ) === $home_host ) {
 			$url = 'https://' . substr( $url, 7 );
 		}
 		return $url;

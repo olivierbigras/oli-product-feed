@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -123,6 +123,11 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.5.8 =
+* Fix: Namespaced files now qualify global PHP constants (`\GLOB_BRACE`, `\DIRECTORY_SEPARATOR`, `\PHP_URL_*`, `\FILE_APPEND`, `\LOCK_EX`, `\ABSPATH`) so they resolve correctly.
+* Fix: `GLOB_BRACE` replaced with portable code (separate `glob()` calls) for Alpine/musl/Solaris compatibility where `GLOB_BRACE` is undefined.
+* Fix: Prefix migration and Action Scheduler calls now run on `init` (priority 5, after `action_scheduler_init` at priority 1) to avoid `_doing_it_wrong` notices.
+
 = 0.5.7 =
 * Packaging: `.distignore` and `.gitattributes` `export-ignore` omit tests, tooling, composer/phpunit/phpcs/npm manifests and internal Markdown from the distributable ZIP. `readme.txt` stays.
 
@@ -223,6 +228,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Upgrade Notice ==
 
+= 0.5.8 =
+Fixes PHP namespace constant resolution issues and startup timing for clean debug.log on upgrade.
+
 = 0.5.7 =
 Packaging only: development files are omitted from the distributable ZIP. No functional change.
 
@@ -246,6 +254,9 @@ Optional per-feed query string on item links. Existing feeds without extra param
 
 = 0.5.0 =
 Optional per-feed minimum price. Existing feeds without a threshold are unchanged.
+
+= 0.4.1 =
+TranslatePress fix: fr_CA feeds no longer write doubled language slugs or http:// URLs.
 
 = 0.4.0 =
 Backorder availability dates for Google, Bing and Meta, and a TranslatePress language fix so French (Canada) feeds no longer stay in English.

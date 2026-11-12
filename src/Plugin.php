@@ -18,7 +18,7 @@ final class Plugin {
 	 * Boots the plugin (plugins_loaded).
 	 */
 	public static function boot() {
-		PrefixMigrate::maybe_run();
+		add_action( 'init', array( __CLASS__, 'on_init' ), 5 );
 		add_action( 'init', array( Feeds::class, 'register_post_type' ) );
 		add_action( 'wp_trash_post', array( Feeds::class, 'on_trash' ) );
 		add_action( 'transition_post_status', array( Feeds::class, 'on_status' ), 10, 3 );
@@ -45,6 +45,13 @@ final class Plugin {
 	}
 
 	/**
+	 * Init: prefix migration (on init, after action_scheduler_init at priority 1).
+	 */
+	public static function on_init() {
+		PrefixMigrate::maybe_run();
+	}
+
+	/**
 	 * Prefer a bundled catalog; fall back from fr_CA to fr_FR.
 	 *
 	 * WordPress does not fall back from a regional locale to the parent
@@ -62,7 +69,7 @@ final class Plugin {
 		}
 
 		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_user_locale();
-		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain );
+		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter for translation locale.
 
 		$bundled = OLIPRFE_DIR . 'languages/oli-product-feed-' . $locale . '.mo';
 		if ( is_readable( $bundled ) ) {
@@ -90,11 +97,10 @@ final class Plugin {
 	}
 
 	/**
-	 * Activation: copy any pre-0.3.5 `oli_pf_` options (the output folder is created on the
-	 * first generation, so that a custom output folder setting is respected).
+	 * Activation: schedule the prefix migration to run on the next init (Action Scheduler is not yet available).
 	 */
 	public static function activate() {
-		PrefixMigrate::maybe_run();
+		// The migration runs on the next request, on init (after action_scheduler_init).
 	}
 
 	/**

@@ -499,7 +499,7 @@ final class Admin {
 		if ( 'list' === $context ) {
 			// Short distinct label: the file name (static file) or the feed slug (WordPress serving); full URL in the title.
 			$config = Feeds::get( $feed_id );
-			$label  = Endpoint::enabled() && $config ? '?' . $config['file_slug'] : basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+			$label  = Endpoint::enabled() && $config ? '?' . $config['file_slug'] : basename( (string) wp_parse_url( $url, \PHP_URL_PATH ) );
 			$html   = '<div class="oliprfe-feed-url"><a href="' . esc_url( $url ) . '" class="oliprfe-url-link" title="' . esc_attr( $url ) . '" target="_blank" rel="noopener">' . esc_html( $label ) . '<span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'oli-product-feed' ) . '</span></a>' . $button . '</div>';
 			echo wp_kses( $html, $allowed );
 			echo '<div class="oliprfe-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '" hidden></div><span class="oliprfe-copy-hint" hidden></span>';
@@ -548,8 +548,13 @@ final class Admin {
 	private static function render_settings() {
 		$s     = Settings::all();
 		$base  = Storage::base();
-		$files = glob( trailingslashit( $base['dir'] ) . '*.{xml,csv,tsv,txt}', GLOB_BRACE );
-		$files = is_array( $files ) ? $files : array();
+		// Portable alternative to GLOB_BRACE (not available on Alpine/musl, Solaris).
+		$files = array_merge(
+			glob( trailingslashit( $base['dir'] ) . '*.xml' ) ?: array(),
+			glob( trailingslashit( $base['dir'] ) . '*.csv' ) ?: array(),
+			glob( trailingslashit( $base['dir'] ) . '*.tsv' ) ?: array(),
+			glob( trailingslashit( $base['dir'] ) . '*.txt' ) ?: array()
+		);
 		$size  = 0;
 		foreach ( $files as $file ) {
 			$size += (int) filesize( $file );
