@@ -247,6 +247,9 @@ Optional per-feed query string on item links. Existing feeds without extra param
 = 0.5.0 =
 Optional per-feed minimum price. Existing feeds without a threshold are unchanged.
 
+= 0.4.1 =
+TranslatePress fix: fr_CA feeds no longer write doubled language slugs or http:// URLs.
+
 = 0.4.0 =
 Backorder availability dates for Google, Bing and Meta, and a TranslatePress language fix so French (Canada) feeds no longer stay in English.
 
