@@ -896,7 +896,7 @@ final class ItemBuilder {
 		if ( 0 === strpos( set_url_scheme( $url, 'https' ), $base_url ) ) {
 			$file = get_attached_file( $id );
 			if ( 'full' !== $size ) {
-				$file = trailingslashit( dirname( (string) $file ) ) . basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+				$file = trailingslashit( dirname( (string) $file ) ) . basename( (string) wp_parse_url( $url, \PHP_URL_PATH ) );
 			}
 			if ( $file && ! file_exists( $file ) ) {
 				return '';

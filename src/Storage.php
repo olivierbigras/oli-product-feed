@@ -146,7 +146,7 @@ final class Storage {
 		$folder  = null === $folder ? self::folder() : (string) $folder;
 		$uploads = wp_upload_dir( null, false );
 		$url     = $uploads['baseurl'] . '/' . $folder;
-		if ( 'https' === wp_parse_url( home_url(), PHP_URL_SCHEME ) ) {
+		if ( 'https' === wp_parse_url( home_url(), \PHP_URL_SCHEME ) ) {
 			$url = set_url_scheme( $url, 'https' );
 		}
 		return array(

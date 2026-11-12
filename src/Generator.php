@@ -364,6 +364,6 @@ final class Generator {
 	 */
 	private static function write( $path, $data, $append ) {
 		// Direct file access: the feed is a static file streamed in batches; WP_Filesystem has no append mode.
-		return file_put_contents( $path, $data, $append ? FILE_APPEND | LOCK_EX : LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		return file_put_contents( $path, $data, $append ? \FILE_APPEND | \LOCK_EX : \LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 	}
 }

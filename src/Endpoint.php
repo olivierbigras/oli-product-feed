@@ -69,7 +69,7 @@ final class Endpoint {
 		$real  = '' !== $path ? realpath( $path ) : false;
 		$base  = '' !== $dir ? realpath( $dir ) : false;
 		// Only a readable file of the plugin's output folder.
-		if ( ! $real || ! $base || 0 !== strpos( $real, $base . DIRECTORY_SEPARATOR ) || ! is_readable( $real ) ) {
+		if ( ! $real || ! $base || 0 !== strpos( $real, $base . \DIRECTORY_SEPARATOR ) || ! is_readable( $real ) ) {
 			return;
 		}
 		self::send( $real, isset( $entry['format'] ) ? (string) $entry['format'] : 'xml', isset( $entry['max_age'] ) ? (int) $entry['max_age'] : 0 );
@@ -129,7 +129,7 @@ final class Endpoint {
 	 */
 	public static function url( $file_slug ) {
 		$home = home_url( '/' );
-		if ( 'https' === wp_parse_url( $home, PHP_URL_SCHEME ) || is_ssl() ) {
+		if ( 'https' === wp_parse_url( $home, \PHP_URL_SCHEME ) || is_ssl() ) {
 			$home = set_url_scheme( $home, 'https' );
 		}
 		return add_query_arg( self::QUERY_VAR, rawurlencode( $file_slug ), $home );
