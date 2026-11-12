@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -123,6 +123,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.5.7 =
+* Packaging: `.distignore` and `.gitattributes` `export-ignore` omit tests, tooling, composer/phpunit/phpcs/npm manifests and internal Markdown from the distributable ZIP. `readme.txt` stays.
+
 = 0.5.6 =
 * Docs: External services section (PayPal donate, author/source links, shopping platforms that fetch the feed).
 * Prefix: leftover admin CSS/HTML/JS `opf-` identifiers renamed to `oliprfe-`.
@@ -219,6 +222,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.5.7 =
+Packaging only: development files are omitted from the distributable ZIP. No functional change.
 
 = 0.5.6 =
 External services documented. Admin CSS/HTML uses the `oliprfe-` prefix. Feeds and settings stored under `oli_pf_` before 0.3.5 are copied to `oliprfe_` on update.

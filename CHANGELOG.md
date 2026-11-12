@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.7 (2026-10-21)
+
+- **Emballage** (`.distignore`, `.gitattributes`) : le ZIP distribuable (`git archive` / `wp dist-archive`) exclut `tests/`, `bin/`, `scripts/`, `.github/`, `phpcs.xml*`, `phpunit.xml*`, `composer.json` / `composer.lock`, `package*.json`, `node_modules/`, `.gitignore`, `.distignore`, `.gitattributes` et les `*.md` internes (`readme.txt` conservé).
+- **Version** (`oli-product-feed.php`, `readme.txt`, `languages/*.pot` / `*.po`) : 0.5.6 → 0.5.7.
+
 ## 2026-10-21
 
 - **readme.txt** : section `== External services ==` (PayPal donate au clic, liens auteur/GitHub au clic, plateformes shopping qui récupèrent le fichier une fois l’URL soumise). Liens conditions + confidentialité. Section Privacy raccourcie.

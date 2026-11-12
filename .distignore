@@ -1,0 +1,15 @@
+# Omit development files from wp dist-archive / distributable ZIPs.
+/tests
+/bin
+/scripts
+/.github
+/node_modules
+phpcs.xml*
+phpunit.xml*
+composer.json
+composer.lock
+package*.json
+.gitignore
+.distignore
+.gitattributes
+*.md

@@ -1,0 +1,15 @@
+# Omit development files from `git archive` / distributable ZIPs.
+/tests export-ignore
+/bin export-ignore
+/scripts export-ignore
+/.github export-ignore
+/node_modules export-ignore
+phpcs.xml* export-ignore
+phpunit.xml* export-ignore
+composer.json export-ignore
+composer.lock export-ignore
+package*.json export-ignore
+.gitignore export-ignore
+.distignore export-ignore
+.gitattributes export-ignore
+*.md export-ignore
