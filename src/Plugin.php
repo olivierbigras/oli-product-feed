@@ -62,7 +62,7 @@ final class Plugin {
 		}
 
 		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_user_locale();
-		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain );
+		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter for translation locale.
 
 		$bundled = OLIPRFE_DIR . 'languages/oli-product-feed-' . $locale . '.mo';
 		if ( is_readable( $bundled ) ) {
