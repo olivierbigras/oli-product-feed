@@ -7,8 +7,10 @@
 .oliprfe-status .dashicons{font-size:18px;width:18px;height:18px}
 .oliprfe-is-ok{color:#007017}.oliprfe-is-error{color:#b32d2e}.oliprfe-is-warn{color:#8a5a00}.oliprfe-is-off{color:#50575e;font-weight:400}
 .oliprfe-wrap .oliprfe-meta{display:block;color:#50575e}
-.oliprfe-wrap a.oliprfe-meta{color:var(--wp-admin-theme-color,#2271b1)}
-.oliprfe-progress{display:block;width:100%;max-width:220px;height:8px;margin:4px 0;accent-color:var(--wp-admin-theme-color,#2271b1)}
+.oliprfe-wrap,.oliprfe-dialog{--c:var(--wp-admin-theme-color,#2271b1)}
+.oliprfe-wrap a.oliprfe-meta{color:var(--c)}
+.oliprfe-wrap :is(.oliprfe-meta,td)>a{text-decoration:underline}
+.oliprfe-progress{display:block;width:100%;max-width:220px;height:8px;margin:4px 0;accent-color:var(--c)}
 .oliprfe-url{display:flex;gap:4px;align-items:center;max-width:100%}
 .oliprfe-url code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;padding:2px 4px}
 .no-js .oliprfe-copy{display:none}
@@ -20,7 +22,7 @@
 .oliprfe-steps{display:flex;flex-wrap:wrap;gap:4px 20px;margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
 .oliprfe-steps a{text-decoration:none;color:#50575e}
 .oliprfe-steps a::before{counter-increment:s;content:counter(s) ".\00a0"}
-.oliprfe-steps [aria-current]{color:#1d2327;font-weight:600;box-shadow:0 2px 0 var(--wp-admin-theme-color,#2271b1)}
+.oliprfe-steps [aria-current]{color:#1d2327;font-weight:600;box-shadow:0 2px 0 var(--c)}
 .oliprfe-mapping td,.oliprfe-mapping th{vertical-align:middle}
 .oliprfe-mapping th[scope=rowgroup]{background:#f0f0f1;font-weight:600}
 .oliprfe-mapping select,.oliprfe-mapping input[type=text]{width:100%;max-width:none}
@@ -42,7 +44,7 @@
 .oliprfe-dialog footer{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:20px}
 .wp-core-ui .button.oliprfe-danger:is(*,:hover,:focus){color:#b32d2e;border-color:#b32d2e}
 .oliprfe-wrap [aria-disabled=true]{opacity:.6;cursor:not-allowed}
-.oliprfe-wrap :is(a,button,summary):focus-visible,.oliprfe-dialog button:focus-visible,.oliprfe-error-summary:focus{outline:2px solid var(--wp-admin-theme-color,#2271b1);outline-offset:2px;box-shadow:0 0 0 4px #fff}
+.oliprfe-wrap :is(a,button,summary):focus-visible,.oliprfe-dialog button:focus-visible,.oliprfe-error-summary:focus{outline:2px solid var(--c);outline-offset:2px;box-shadow:0 0 0 4px #fff}
 .oliprfe-wrap details{margin:4px 0}
 .oliprfe-wrap [aria-invalid=true]{border-color:#d63638;box-shadow:0 0 0 1px #d63638}
 .oliprfe-field-error{color:#b32d2e;margin:4px 0 0;font-weight:500}
