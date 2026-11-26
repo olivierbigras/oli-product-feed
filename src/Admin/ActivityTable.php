@@ -90,12 +90,21 @@ final class ActivityTable extends \WP_List_Table {
 	}
 
 	/**
-	 * Primary column (first column: WordPress hides the columns after it on small screens).
+	 * Table classes (oliprfe-log: small-screen rules of admin.css).
+	 *
+	 * @return string[]
+	 */
+	protected function get_table_classes() {
+		return array_merge( parent::get_table_classes(), array( 'oliprfe-log' ) );
+	}
+
+	/**
+	 * Primary column: the event (on small screens the date, feed and author are under "Show more details").
 	 *
 	 * @return string
 	 */
 	protected function get_default_primary_column_name() {
-		return 'date';
+		return 'event';
 	}
 
 	/**
@@ -115,7 +124,7 @@ final class ActivityTable extends \WP_List_Table {
 		$total   = count( $entries );
 		$page    = $this->get_pagenum();
 		$this->items           = array_slice( $entries, ( $page - 1 ) * self::PER_PAGE, self::PER_PAGE );
-		$this->_column_headers = array( $this->get_columns(), array(), array(), 'date' );
+		$this->_column_headers = array( $this->get_columns(), array(), array(), 'event' );
 		$this->set_pagination_args(
 			array(
 				'total_items' => $total,
@@ -172,7 +181,7 @@ final class ActivityTable extends \WP_List_Table {
 	public function column_feed( $item ) {
 		$id = (int) $item['f'];
 		if ( ! $id ) {
-			return '—';
+			return '<span aria-hidden="true">—</span><span class="screen-reader-text">' . esc_html__( 'No feed', 'oli-product-feed' ) . '</span>';
 		}
 		if ( Feeds::get( $id ) ) {
 			return '<a href="' . esc_url( Admin::url( array(
@@ -236,6 +245,6 @@ final class ActivityTable extends \WP_List_Table {
 			$user = get_userdata( (int) $by );
 			return esc_html( $user ? $user->display_name : '#' . (int) $by );
 		}
-		return '—';
+		return '<span aria-hidden="true">—</span><span class="screen-reader-text">' . esc_html__( 'Unknown', 'oli-product-feed' ) . '</span>';
 	}
 }
