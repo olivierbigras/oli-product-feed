@@ -116,6 +116,9 @@
 		var list = dialog.querySelector( '.oliprfe-delete-list' );
 		dialog.querySelector( 'h2' ).textContent = plural.title[ n ] || '';
 		dialog.querySelector( '.oliprfe-dialog-delete' ).textContent = plural.button[ n ] || '';
+		if ( plural.desc && plural.desc[ n ] ) {
+			dialog.querySelector( '#oliprfe-delete-desc' ).textContent = plural.desc[ n ];
+		}
 		list.textContent = '';
 		feeds.forEach( function ( feed ) {
 			var li = document.createElement( 'li' );

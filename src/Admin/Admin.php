@@ -290,6 +290,7 @@ final class Admin {
 		$out = array(
 			'title'  => array(),
 			'button' => array(),
+			'desc'   => array(),
 		);
 		$max = max( 1, count( Feeds::all_ids() ) );
 		for ( $n = 1; $n <= $max; $n++ ) {
@@ -297,8 +298,24 @@ final class Admin {
 			$out['title'][ $n ] = sprintf( _n( 'Delete %d feed?', 'Delete %d feeds?', $n, 'oli-product-feed' ), $n );
 			/* translators: %d: number of feeds. */
 			$out['button'][ $n ] = sprintf( _n( 'Delete %d feed', 'Delete %d feeds', $n, 'oli-product-feed' ), $n );
+			$out['desc'][ $n ]   = self::delete_consequence( $n );
 		}
 		return $out;
+	}
+
+	/**
+	 * Consequence sentence of the delete dialog and page, singular or plural.
+	 *
+	 * @param int $n Number of feeds.
+	 * @return string
+	 */
+	private static function delete_consequence( $n ) {
+		return _n(
+			'Its file is deleted too. Platforms that fetch this URL will get an error and may pause your products.',
+			'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.',
+			$n,
+			'oli-product-feed'
+		);
 	}
 
 	/**
@@ -716,7 +733,7 @@ final class Admin {
 		?>
 		<dialog class="oliprfe-dialog" id="oliprfe-delete-dialog" aria-labelledby="oliprfe-delete-title" aria-describedby="oliprfe-delete-desc">
 			<h2 id="oliprfe-delete-title"></h2>
-			<p id="oliprfe-delete-desc"><?php esc_html_e( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ); ?></p>
+			<p id="oliprfe-delete-desc"><?php echo esc_html( self::delete_consequence( 2 ) ); ?></p>
 			<ul class="ul-disc oliprfe-delete-list"></ul>
 			<p><?php esc_html_e( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ); ?></p>
 			<footer>
@@ -1017,7 +1034,7 @@ final class Admin {
 		$title  = sprintf( _n( 'Delete %d feed?', 'Delete %d feeds?', $n, 'oli-product-feed' ), $n );
 		/* translators: %d: number of feeds. */
 		$delete = sprintf( _n( 'Delete %d feed', 'Delete %d feeds', $n, 'oli-product-feed' ), $n );
-		$html   = '<h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ) . '</p><ul>' . $list . '</ul><p>' . esc_html__( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ) . '</p>';
+		$html   = '<h1>' . esc_html( $title ) . '</h1><p>' . esc_html( self::delete_consequence( $n ) ) . '</p><ul>' . $list . '</ul><p>' . esc_html__( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ) . '</p>';
 		if ( 1 === $n ) {
 			$html .= '<p><a class="button" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Cancel', 'oli-product-feed' ) . '</a> <a class="button" href="' . esc_url( self::action_url( 'oliprfe_deactivate_feed', $ids[0] ) ) . '">' . esc_html__( 'Deactivate instead', 'oli-product-feed' ) . '</a> <a class="button" href="' . esc_url( add_query_arg( 'confirm', '1', self::action_url( 'oliprfe_delete_feed', $ids[0] ) ) ) . '">' . esc_html( $delete ) . '</a></p>';
 		} else {
