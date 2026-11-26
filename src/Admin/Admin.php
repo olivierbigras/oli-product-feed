@@ -26,6 +26,11 @@ final class Admin {
 	const SLUG = 'oli-product-feed';
 
 	/**
+	 * User meta: the multilingual notice was hidden by this user.
+	 */
+	const HIDE_MULTILINGUAL = 'oliprfe_hide_multilingual';
+
+	/**
 	 * Hooks.
 	 */
 	public static function init() {
@@ -41,6 +46,7 @@ final class Admin {
 		add_action( 'admin_post_oliprfe_activate_feed', array( __CLASS__, 'handle_activate' ) );
 		add_action( 'admin_post_oliprfe_deactivate_feed', array( __CLASS__, 'handle_deactivate' ) );
 		add_action( 'admin_post_oliprfe_cancel_generation', array( __CLASS__, 'handle_cancel' ) );
+		add_action( 'admin_post_oliprfe_hide_notice', array( __CLASS__, 'handle_hide_notice' ) );
 		add_action( 'wp_ajax_oliprfe_feed_status', array( __CLASS__, 'ajax_status' ) );
 		add_action( 'wp_ajax_oliprfe_match_count', array( __CLASS__, 'ajax_match_count' ) );
 		add_action( 'wp_ajax_oliprfe_preview_row', array( __CLASS__, 'ajax_preview_row' ) );
@@ -465,8 +471,10 @@ final class Admin {
 				)
 			) . '</p></div>';
 		}
-		if ( ! \Oliprfe\Lang::has_translatepress() && 'feeds' === ( isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'feeds' ) && ! isset( $_GET['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<div class="notice notice-info"><p>' . esc_html__( 'No multilingual plugin detected: feeds use the site language. With TranslatePress, you can create one feed per language.', 'oli-product-feed' ) . '</p></div>';
+		// Information only (the Add New Feed screen says it too): Feeds list with feeds, until the user hides it.
+		if ( ! \Oliprfe\Lang::has_translatepress() && 'feeds' === ( isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'feeds' ) && ! isset( $_GET['action'] ) && Feeds::all_ids() && ! get_user_meta( get_current_user_id(), self::HIDE_MULTILINGUAL, true ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$hide = wp_nonce_url( add_query_arg( 'action', 'oliprfe_hide_notice', admin_url( 'admin-post.php' ) ), 'oliprfe_hide_notice' );
+			echo '<div class="notice notice-info is-dismissible" data-oliprfe-hide="' . esc_url( $hide ) . '"><p>' . esc_html__( 'No multilingual plugin detected: feeds use the site language. With TranslatePress, you can create one feed per language.', 'oli-product-feed' ) . ' <a href="' . esc_url( $hide ) . '">' . esc_html__( 'Do not show again', 'oli-product-feed' ) . '</a></p></div>';
 		}
 	}
 
@@ -1127,6 +1135,20 @@ final class Admin {
 	public static function handle_deactivate() {
 		self::set_active( self::checked_feed( 'oliprfe_deactivate_feed' ), false );
 		self::back( 'deactivated' );
+	}
+
+	/**
+	 * Hides the multilingual notice for the current user ("Do not show again", or its dismiss button).
+	 */
+	public static function handle_hide_notice() {
+		self::guard();
+		check_admin_referer( 'oliprfe_hide_notice' );
+		update_user_meta( get_current_user_id(), self::HIDE_MULTILINGUAL, 1 );
+		if ( ! empty( $_GET['ajax'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked above.
+			wp_die( '', '', array( 'response' => 204 ) );
+		}
+		wp_safe_redirect( self::url() );
+		exit;
 	}
 
 	/**

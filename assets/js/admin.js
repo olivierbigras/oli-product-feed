@@ -201,6 +201,14 @@
 		}
 	} );
 
+	/* ---- Multilingual notice: its dismiss button hides it for this user too ---- */
+	document.addEventListener( 'click', function ( event ) {
+		var notice = event.target.closest ? event.target.closest( '[data-oliprfe-hide] .notice-dismiss' ) : null;
+		if ( notice && window.fetch ) {
+			window.fetch( notice.parentNode.getAttribute( 'data-oliprfe-hide' ) + '&ajax=1', { credentials: 'same-origin' } );
+		}
+	} );
+
 	/* ---- Generation progress (polls every 3 s while a feed is generating, no reload) ---- */
 	var milestones = {};
 	var done = {};
