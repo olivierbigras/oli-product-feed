@@ -25,6 +25,7 @@
 - **Phrase de suppression au singulier** (`src/Admin/Admin.php`, `assets/js/admin.js`) : « Its file is deleted too. Platforms that fetch this URL… » pour un seul flux, « Their files… these URLs… » pour plusieurs (`_n()`), dans le dialogue (texte rempli par le script selon le nombre) et dans la page sans JS. fr : « Son fichier est aussi supprimé. Les plateformes qui récupèrent cette URL… ».
 - **Espaces insécables** (P3-4 de la revue du lot 5, `languages/*.po`, `*.mo`) : U+00A0 avant « : » en fr_CA et fr_FR, et avant « ; ? ! » en fr_FR, dans les `msgstr` seulement (88 chaînes fr_CA, 95 fr_FR). .pot : 619 chaînes ; fr_CA et fr_FR 619/619.
 - **Plugin Check à 0** (`src/Plugin.php`) : j’ai documenté par un `phpcs:ignore` l’appel du filtre du cœur `plugin_locale` (mêmes arguments que `load_plugin_textdomain()`) ; aucune logique changée. Plugin Check sur le ZIP : « No errors found ».
+- **Colonne Target : langue du site, pas celle de l’admin** (`src/Admin/ListTable.php`) : pour un flux réglé sur la langue du site, j’affichais la langue de l’utilisateur connecté (`determine_locale()`) ; un admin en fr_CA voyait « fr » pour un flux généré en anglais. J’affiche maintenant la langue de la génération, celle du site (`get_locale()`). L’écart venait de la 0.6.0 (la 0.5.7 affichait « — »). Test : admin fr_CA, site en_CA → « en » ; admin en_US, site fr_CA → « fr ».
 
 ### Décisions Q1-Q6 (2026-11-25) : taxonomie Google non embarquée
 

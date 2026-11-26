@@ -309,13 +309,14 @@ final class ListTable extends \WP_List_Table {
 	}
 
 	/**
-	 * Language code of a feed (the site language when the feed has none).
+	 * Language code of a feed: its own language, or the site language (get_locale(), as the generation uses it),
+	 * never the language of the admin user.
 	 *
 	 * @param array<string,mixed> $item Feed.
 	 * @return string
 	 */
 	private static function language_code( array $item ) {
-		$locale = '' !== $item['language'] ? $item['language'] : determine_locale();
+		$locale = '' !== $item['language'] ? $item['language'] : get_locale();
 		return strtolower( (string) preg_replace( '/[_-].*$/', '', $locale ) );
 	}
 
