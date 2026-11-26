@@ -123,7 +123,7 @@ final class ListTable extends \WP_List_Table {
 		$error = self::has_error( $feed_id );
 		switch ( $view ) {
 			case 'active':
-				return 'publish' === get_post_status( $feed_id ) && ! $error;
+				return 'publish' === get_post_status( $feed_id );
 			case 'errors':
 				return $error;
 			case 'inactive':

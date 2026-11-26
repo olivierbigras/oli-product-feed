@@ -198,7 +198,12 @@
 
 	/* ---- Generation progress (polls every 3 s while a feed is generating, no reload) ---- */
 	var milestones = {};
+	var done = {};
 	function finish( feed ) {
+		if ( done[ feed.id ] ) {
+			return;
+		}
+		done[ feed.id ] = true;
 		var row = document.querySelector( '[data-oliprfe-row="' + feed.id + '"]' );
 		if ( row && feed.cells ) {
 			Object.keys( feed.cells ).forEach( function ( col ) {
@@ -248,6 +253,12 @@
 					if ( bar ) { bar.value = feed.percent; }
 					if ( text ) { text.textContent = feed.progressText; }
 					if ( note ) { note.textContent = feed.noticeText; }
+					/* Spoken once at the start (first refresh), at 25, 50 and 75 %, and at the end: wp.a11y.speak() only. */
+					if ( ! ( feed.id in milestones ) ) {
+						milestones[ feed.id ] = [ 75, 50, 25 ].filter( function ( step ) { return feed.percent >= step; } )[0] || 0;
+						speak( feed.noticeText );
+						return;
+					}
 					[ 75, 50, 25 ].some( function ( step ) {
 						if ( feed.percent >= step && ( milestones[ feed.id ] || 0 ) < step ) {
 							milestones[ feed.id ] = step;

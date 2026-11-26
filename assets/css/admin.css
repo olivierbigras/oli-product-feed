@@ -18,7 +18,7 @@
 .oliprfe-panel h2{margin:0 0 8px;padding:0;font-size:14px}
 .oliprfe-steps{display:flex;flex-wrap:wrap;gap:4px 20px;margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
 .oliprfe-steps a{text-decoration:none;color:#50575e}
-.oliprfe-steps a::before{counter-increment:s;content:counter(s) ". "}
+.oliprfe-steps a::before{counter-increment:s;content:counter(s) ".\00a0"}
 .oliprfe-steps [aria-current]{color:#1d2327;font-weight:600;box-shadow:0 2px 0 var(--wp-admin-theme-color,#2271b1)}
 .oliprfe-mapping td,.oliprfe-mapping th{vertical-align:middle}
 .oliprfe-mapping th[scope=rowgroup]{background:#f0f0f1;font-weight:600}
@@ -39,7 +39,7 @@
 .oliprfe-dialog::backdrop{background:rgba(0,0,0,.6)}
 .oliprfe-dialog h2{margin:0 0 12px;font-size:18px}
 .oliprfe-dialog footer{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:20px}
-.oliprfe-danger,.oliprfe-danger:hover{color:#b32d2e;border-color:#b32d2e}
+.wp-core-ui .button.oliprfe-danger,.wp-core-ui .button.oliprfe-danger:hover,.wp-core-ui .button.oliprfe-danger:focus{color:#b32d2e;border-color:#b32d2e}
 .oliprfe-wrap [aria-disabled=true]{opacity:.6;cursor:not-allowed}
 .oliprfe-wrap a:focus-visible,.oliprfe-wrap button:focus-visible,.oliprfe-wrap summary:focus-visible,.oliprfe-dialog button:focus-visible{outline:2px solid var(--wp-admin-theme-color,#2271b1);outline-offset:2px;box-shadow:0 0 0 4px #fff}
 .oliprfe-wrap details{margin:4px 0}

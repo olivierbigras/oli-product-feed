@@ -263,8 +263,7 @@ final class Editor {
 			$radios .= '<p><label><input type="radio" name="feed[channel]" value="' . esc_attr( $id ) . '" data-short="' . esc_attr( self::channel_short( $id ) ) . '"' . checked( $feed['channel'], $id, false ) . '> <strong>' . esc_html( $channel->label() ) . '</strong> <span class="description">' . esc_html( implode( ', ', $formats ) ) . '</span></label></p>';
 		}
 		$radios .= '</fieldset>';
-		self::row( __( 'Channel', 'oli-product-feed' ), '', $radios );
-		self::error( $errors, 'channel' );
+		self::row( __( 'Channel', 'oli-product-feed' ), '', $radios, '', '', false, $errors, 'channel' );
 
 		$languages = Lang::languages();
 		if ( $languages ) {
@@ -496,8 +495,10 @@ final class Editor {
 	 * @param string $desc     Description.
 	 * @param string $tr_class Optional class on the row.
 	 * @param bool   $hidden   Hidden attribute.
+	 * @param array<string,string> $errors    Field errors.
+	 * @param string               $error_key Error of this field, shown in its cell (after the description).
 	 */
-	private static function row( $label, $for, $html, $desc = '', $tr_class = '', $hidden = false ) {
+	private static function row( $label, $for, $html, $desc = '', $tr_class = '', $hidden = false, array $errors = array(), $error_key = '' ) {
 		echo '<tr' . ( '' !== $tr_class ? ' class="' . esc_attr( $tr_class ) . '"' : '' ) . ( $hidden ? ' hidden' : '' ) . '><th scope="row">';
 		if ( '' !== $for ) {
 			echo '<label for="' . esc_attr( $for ) . '">' . esc_html( $label ) . '</label>';
@@ -507,6 +508,9 @@ final class Editor {
 		echo '</th><td>' . wp_kses( $html, self::allowed_html() );
 		if ( '' !== $desc ) {
 			echo '<p class="description">' . esc_html( $desc ) . '</p>';
+		}
+		if ( '' !== $error_key ) {
+			self::error( $errors, $error_key );
 		}
 		echo '</td></tr>';
 	}
@@ -762,8 +766,7 @@ final class Editor {
 		echo '<tr class="oliprfe-for-generic"' . esc_attr( $generic ) . '><th scope="row"><label for="oliprfe-xml_root">' . esc_html__( 'XML elements', 'oli-product-feed' ) . '</label></th><td>';
 		echo wp_kses( self::text( 'feed[xml_root]', 'oliprfe-xml_root', $feed['xml_root'], 'code' ) . ' ' . self::text( 'feed[xml_item]', 'oliprfe-xml_item', $feed['xml_item'], 'code', ' aria-label="' . esc_attr__( 'Product element', 'oli-product-feed' ) . '"' ), self::allowed_html() );
 		echo '<p class="description">' . esc_html__( 'Root element and product element of the XML file (for example products and product).', 'oli-product-feed' ) . '</p></td></tr>';
-		self::row( __( 'File name', 'oli-product-feed' ), 'oliprfe-file_slug', self::text( 'feed[file_slug]', 'oliprfe-file_slug', $feed['file_slug'], 'regular-text code', self::invalid( $errors, 'file_slug' ) ), __( 'Letters, digits and dashes. The extension is added. Keep it stable: the platforms fetch this URL.', 'oli-product-feed' ) );
-		self::error( $errors, 'file_slug' );
+		self::row( __( 'File name', 'oli-product-feed' ), 'oliprfe-file_slug', self::text( 'feed[file_slug]', 'oliprfe-file_slug', $feed['file_slug'], 'regular-text code', self::invalid( $errors, 'file_slug' ) ), __( 'Letters, digits and dashes. The extension is added. Keep it stable: the platforms fetch this URL.', 'oli-product-feed' ), '', false, $errors, 'file_slug' );
 
 		$languages = Lang::languages();
 		if ( $languages ) {

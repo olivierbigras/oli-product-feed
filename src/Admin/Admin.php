@@ -120,9 +120,8 @@ final class Admin {
 	 * @return string[]
 	 */
 	public static function action_links( $links ) {
-		$feeds  = '<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Feeds', 'oli-product-feed' ) . '</a>';
-		$donate = '<a href="' . esc_url( OLIPRFE_DONATE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Donate', 'oli-product-feed' ) . '</a>';
-		array_unshift( $links, $feeds, $donate );
+		$feeds = '<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Feeds', 'oli-product-feed' ) . '</a>';
+		array_unshift( $links, $feeds );
 		return $links;
 	}
 
@@ -654,7 +653,7 @@ final class Admin {
 		$stats = Overview::stats();
 		self::notices();
 		Overview::error_notice( $stats['errors'] );
-		echo '<div class="oliprfe-run-notices" aria-live="polite">';
+		echo '<div class="oliprfe-run-notices">';
 		foreach ( $stats['running'] as $running ) {
 			echo Overview::running_notice( $running ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Overview::running_notice().
 		}

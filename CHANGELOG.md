@@ -2,6 +2,15 @@
 
 ## 0.6.0 — refonte de l’interface admin (en cours, branche `ui/native-refonte-060`)
 
+### Repasse P2 des lots 1 et 2 (2026-11-25, revue du Designer)
+
+- **Vues** (`src/Admin/ListTable.php`) : la vue Active compte maintenant tous les flux activés (publiés), comme la tuile « N of M » ; Errors reste un sous-ensemble et peut chevaucher Active ou Inactive, comme les vues de WordPress (P2-1).
+- **Dialogue** (`assets/css/admin.css`) : le bouton « Delete N feeds » est enfin rouge (`#b32d2e`) : la règle `.wp-core-ui .button.oliprfe-danger` (+ `:hover`, `:focus`) l’emporte sur le bleu de WordPress (P2-2).
+- **Erreurs de champ** (`src/Admin/Editor.php`) : `row()` prend l’erreur du champ et l’écrit dans sa cellule, après la description ; avant, le `<p>` d’erreur tombait entre deux `<tr>` et le navigateur le sortait de la table, loin du champ (File name, Channel) (P2-3).
+- **Annonces** (`src/Admin/Admin.php`, `assets/js/admin.js`) : j’ai retiré `aria-live` du conteneur des notices de génération ; seul `wp.a11y.speak()` parle, une fois au départ, à 25, 50 et 75 %, et une seule fois à la fin (P2-4).
+- **Don** (`src/Admin/Admin.php`, `readme.txt`) : le lien Donate reste seulement dans la méta de la ligne de l’extension (retiré des liens d’action) ; la section External services du readme ne parle plus de notice ni de pied de page.
+- **Étapes** (`assets/css/admin.css`) : espace insécable après le numéro (« 2. Products » ne se colle plus sous 782 px) (P3-1).
+
 ### Lot 2 (2026-11-25) : éditeur en 5 sections, assistant léger
 
 - **Éditeur en 5 sections** (`src/Admin/Editor.php`) : j’ai regroupé les 7 boîtes en 5 sections numérotées, une `postbox` chacune avec un `h2` focalisable : 1 Channel and target, 2 Products (filtres + titres et descriptions), 3 Mapping, 4 Categories and links (catégories + liens et images), 5 Schedule (avec la taille des lots). Les anciennes boîtes deviennent des sous-parties (`h3`) ; leurs identifiants et tous les champs `feed[…]` sont gardés tels quels (63 noms, comparés un par un avec la 0.5.7).

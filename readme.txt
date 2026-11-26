@@ -55,7 +55,7 @@ The plugin itself does not call a remote API, does not load a remote script or f
 
 = PayPal (donate) =
 
-Optional Donate / support links (Plugins screen, a dismissible notice on the plugin screens, the plugin footer, and the WordPress.org Donate link) open `https://www.paypal.com/donate/` in the browser when someone clicks them. No server-side request is made. PayPal may then see the visitor’s IP address, browser data and, if they complete a donation, the amount and the payment details they enter.
+Optional Donate links (the plugin row on the Plugins screen and the WordPress.org Donate link) open `https://www.paypal.com/donate/` in the browser when someone clicks them. No server-side request is made. PayPal may then see the visitor’s IP address, browser data and, if they complete a donation, the amount and the payment details they enter.
 
 * Terms: https://www.paypal.com/legalhub/useragreement-full
 * Privacy: https://www.paypal.com/legalhub/privacy-full
