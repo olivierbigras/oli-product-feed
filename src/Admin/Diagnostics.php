@@ -76,10 +76,8 @@ final class Diagnostics {
 		$ok   = Admin::last_success( $feed_id );
 		self::picker( $ids, $feed_id, $ok );
 		if ( isset( $last['status'] ) && 'error' === $last['status'] ) {
-			echo '<div class="notice notice-error inline"><p><strong>' . esc_html__( 'The last generation failed:', 'oli-product-feed' ) . '</strong> ' . esc_html( isset( $last['message'] ) ? (string) $last['message'] : '' ) . ' <a href="' . esc_url( Admin::url( array(
-				'action' => 'edit',
-				'feed'   => $feed_id,
-			) ) ) . '">' . esc_html__( 'Edit feed', 'oli-product-feed' ) . '</a></p></div>';
+			$failure = self::failure( $feed_id, $last );
+			echo '<div class="notice notice-error inline"><p><strong>' . esc_html__( 'The last generation failed:', 'oli-product-feed' ) . '</strong> ' . esc_html( isset( $last['message'] ) ? (string) $last['message'] : '' ) . ( '' !== $failure['note'] ? ' ' . esc_html( $failure['note'] ) : '' ) . ' <a href="' . esc_url( $failure['link'][0] ) . '"' . ( $failure['button'] ? ' class="button"' : '' ) . '>' . esc_html( $failure['link'][1] ) . '</a></p></div>';
 		}
 		if ( ! isset( $ok['items'] ) ) {
 			echo '<p>' . esc_html__( 'This feed has not been generated yet: generate it to see why products are excluded.', 'oli-product-feed' ) . '</p>';
@@ -270,7 +268,7 @@ final class Diagnostics {
 			echo '<p>' . esc_html__( 'No product was excluded.', 'oli-product-feed' ) . '</p>';
 			return;
 		}
-		echo '<table class="widefat striped oliprfe-dry"><thead><tr><th scope="col">' . esc_html__( 'Reason', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'How to fix', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Reason', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'How to fix', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
 		foreach ( $excluded as $code => $info ) {
 			$code = (string) $code;
 			echo '<tr><td>' . esc_html( self::label( $code ) ) . '<br><code>' . esc_html( $code ) . '</code></td><td>' . self::view_link( $feed_id, $code, (int) $info['count'] ) . '</td><td>' . self::fix_cell( $feed_id, self::fix( $code ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in view_link() and fix_cell().
@@ -357,9 +355,9 @@ final class Diagnostics {
 			echo '<p>' . esc_html__( 'No warning.', 'oli-product-feed' ) . '</p>';
 			return;
 		}
-		echo '<table class="widefat striped oliprfe-dry"><thead><tr><th scope="col">' . esc_html__( 'Warning', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'How to fix', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Warning', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'How to fix', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
 		foreach ( $warnings as $row ) {
-			$count = $row['ids'] ? self::view_link( $feed_id, $row['code'], $row['count'] ) : esc_html( number_format_i18n( $row['count'] ) );
+			$count = $row['ids'] ? self::view_link( $feed_id, $row['code'], $row['count'] ) : esc_html( number_format_i18n( $row['count'] ) ) . ' <span class="oliprfe-meta">' . esc_html__( '(list not kept)', 'oli-product-feed' ) . '</span>';
 			echo '<tr><td>' . esc_html( $row['text'] ) . '<span class="oliprfe-meta">' . esc_html( $row['help'] ) . '</span></td><td>' . $count . '</td><td>' . self::fix_cell( $feed_id, array( __( 'Review the mapping', 'oli-product-feed' ), $row['section'] ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above and in fix_cell().
 		}
 		echo '</tbody></table>';
@@ -385,7 +383,7 @@ final class Diagnostics {
 			'recommended' => __( 'Recommended', 'oli-product-feed' ),
 		);
 		echo '<h2>' . esc_html__( 'Empty values by attribute', 'oli-product-feed' ) . '</h2>';
-		echo '<table class="widefat striped oliprfe-dry"><thead><tr><th scope="col">' . esc_html__( 'Attribute', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Level', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products with an empty value', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped"><thead><tr><th scope="col">' . esc_html__( 'Attribute', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Level', 'oli-product-feed' ) . '</th><th scope="col">' . esc_html__( 'Products with an empty value', 'oli-product-feed' ) . '</th></tr></thead><tbody>';
 		foreach ( $empty as $field => $count ) {
 			$level = isset( $fields[ $field ]['level'] ) && isset( $levels[ $fields[ $field ]['level'] ] ) ? $levels[ $fields[ $field ]['level'] ] : __( 'Optional', 'oli-product-feed' );
 			$url   = Admin::url(
@@ -478,7 +476,8 @@ final class Diagnostics {
 				'text'  => sprintf( __( '%1$s runs. Next schedule check: %2$s.', 'oli-product-feed' ), $runner, wp_date( $format, $next ) ),
 			);
 		}
-		$folder   = Storage::folder();
+		$base     = Storage::base();
+		$folder   = $base['dir'];
 		$relative = self::relative( $folder );
 		$problem  = Storage::problem();
 		$settings = array( Admin::url( array( 'tab' => 'settings' ) ), __( 'Settings › Feed files', 'oli-product-feed' ) );
@@ -488,7 +487,7 @@ final class Diagnostics {
 				'text'  => Storage::folder_message( self::relative( $problem['folder'] ), $problem['reason'] ),
 				'link'  => $settings,
 			);
-		} elseif ( is_dir( $folder ) && ! wp_is_writable( $folder ) ) {
+		} elseif ( self::folder_bad() ) {
 			$out[] = array(
 				'state' => 'error',
 				/* translators: %s: folder. */
@@ -512,11 +511,12 @@ final class Diagnostics {
 			__( 'Edit feed', 'oli-product-feed' ),
 		);
 		if ( isset( $last['status'] ) && 'error' === $last['status'] ) {
-			$out[] = array(
-				'state' => 'error',
+			$failure = self::failure( $feed_id, $last );
+			$out[]   = array(
+				'state' => $failure['button'] ? 'warn' : 'error',
 				/* translators: 1: file name, 2: error message. */
-				'text'  => sprintf( __( '%1$s: the last generation failed (%2$s). The previous file stays online.', 'oli-product-feed' ), $name, isset( $last['message'] ) ? $last['message'] : '' ),
-				'link'  => $edit,
+				'text'  => sprintf( __( '%1$s: the last generation failed. %2$s The previous file stays online.', 'oli-product-feed' ), $name, isset( $last['message'] ) ? $last['message'] : '' ) . ( '' !== $failure['note'] ? ' ' . $failure['note'] : '' ),
+				'link'  => $failure['link'],
 			);
 		} elseif ( file_exists( $path ) ) {
 			$out[] = array(
@@ -578,6 +578,60 @@ final class Diagnostics {
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * Is the output folder unusable right now (refused, or not writable)?
+	 *
+	 * @return bool
+	 */
+	private static function folder_bad() {
+		if ( Storage::problem() ) {
+			return true;
+		}
+		$base = Storage::base();
+		return is_dir( $base['dir'] ) && ! wp_is_writable( $base['dir'] );
+	}
+
+	/**
+	 * What to do after a failed generation: a folder failure links to Settings › Feed files while the
+	 * folder is still unusable, or offers "Generate now" once it is writable again; any other failure
+	 * links to the feed editor.
+	 *
+	 * @param int                 $feed_id Feed ID.
+	 * @param array<string,mixed> $last    Last run (error).
+	 * @return array{note:string,link:array{0:string,1:string},button:bool}
+	 */
+	public static function failure( $feed_id, array $last ) {
+		$code   = isset( $last['code'] ) ? (string) $last['code'] : '';
+		$folder = in_array( $code, array( 'oliprfe_dir', 'oliprfe_write' ), true ) || ( '' === $code && false !== stripos( isset( $last['message'] ) ? (string) $last['message'] : '', 'folder' ) );
+		if ( $folder && self::folder_bad() ) {
+			return array(
+				'note'   => '',
+				'link'   => array( Admin::url( array( 'tab' => 'settings' ) ), __( 'Settings › Feed files', 'oli-product-feed' ) ),
+				'button' => false,
+			);
+		}
+		if ( $folder ) {
+			return array(
+				'note'   => __( 'The folder is writable now: generate the feed again.', 'oli-product-feed' ),
+				'link'   => array( Admin::action_url( 'oliprfe_generate', $feed_id ), __( 'Generate now', 'oli-product-feed' ) ),
+				'button' => true,
+			);
+		}
+		return array(
+			'note'   => '',
+			'link'   => array(
+				Admin::url(
+					array(
+						'action' => 'edit',
+						'feed'   => $feed_id,
+					)
+				),
+				__( 'Edit feed', 'oli-product-feed' ),
+			),
+			'button' => false,
+		);
 	}
 
 	/**

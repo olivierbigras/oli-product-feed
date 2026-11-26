@@ -419,6 +419,7 @@ final class Generator {
 				'status'  => 'error',
 				'time'    => time(),
 				'message' => $message,
+				'code'    => $code, // Diagnostics: a folder failure links to the settings.
 			)
 		);
 		Activity::add( 'failed', $feed_id, array( 'message' => $message ) );
