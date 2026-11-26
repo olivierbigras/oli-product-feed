@@ -129,6 +129,8 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * Feeds list: row actions Edit, Generate now, Preview, Duplicate, Delete; bulk actions Generate now, Activate, Deactivate, Delete.
 * Delete: a dialog replaces the browser confirmation, lists the feeds and their files, and offers "Deactivate instead" so the feed URL keeps working.
 * Generation: the row shows the progress and is refreshed every 3 seconds without reloading the page; a notice and a screen reader announcement report the result; a running generation can be cancelled.
+* Feed editor: five numbered sections (Channel and target, Products, Mapping, Categories and links, Schedule) with section links and previous / next buttons; one section at a time with JavaScript, all sections stacked without it. Validation errors open the section of the field.
+* Add New Feed: one screen (channel, language, country, currency, suggested name); the feed is created inactive with the channel defaults and opens on its mapping.
 * Removed: the support notice and the support footer on the plugin screens (the donate link stays in the plugin row and in this readme).
 * Fix: the Settings tab no longer fails on PHP builds without GLOB_BRACE.
 * Data: feeds, their configuration, the settings and the feed URLs are unchanged.

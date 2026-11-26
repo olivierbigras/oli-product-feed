@@ -46,25 +46,28 @@
 .oliprfe-wrap [aria-invalid=true]{border-color:#d63638;box-shadow:0 0 0 1px #d63638}
 .oliprfe-field-error{color:#b32d2e;margin:4px 0 0;font-weight:500}
 .oliprfe-error-summary:focus{outline:2px solid var(--wp-admin-theme-color,#2271b1);outline-offset:2px}
-.oliprfe-feed-url{display:flex;gap:4px;align-items:center;margin-top:6px}
-.oliprfe-feed-url input{flex:1 1 auto;min-width:0;font-size:12px}
-.oliprfe-wrap .misc-pub-section>.dashicons{color:#8c8f94;margin-right:3px}
 .oliprfe-checklist .tabs-panel{max-height:160px}
 .oliprfe-inline-radios{display:flex;flex-wrap:wrap;gap:0 20px;margin-top:0}
 .oliprfe-rules{max-width:720px}.oliprfe-rules input[type=text],.oliprfe-rules select{width:100%}
 .oliprfe-categories input.small-text{width:7em}
 .oliprfe-match{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0}
 .oliprfe-submit-bottom{display:none}
+.oliprfe-section[hidden]{display:none}
+.oliprfe-part h3{margin:24px 0 0;font-size:14px}
+.oliprfe-section-nav{display:flex;gap:8px;margin:16px 0 4px}
+.oliprfe-section-nav :last-child{margin-left:auto}
+.oliprfe-generate{margin:0;padding:8px 10px}
 @media (min-width:851px){.oliprfe-sticky{position:sticky;top:48px}}
 @media (max-width:850px){.oliprfe-wrap .oliprfe-submit-bottom{display:block}}
 @media (max-width:782px){
-#wpbody .oliprfe-wrap .button,.oliprfe-wrap .row-actions a,.oliprfe-wrap summary,.oliprfe-wrap .subsubsub a,.oliprfe-wrap .nav-tab,body .oliprfe-dialog .button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+#wpbody .oliprfe-wrap .button,.oliprfe-steps a,.oliprfe-generate button,.oliprfe-wrap .row-actions a,.oliprfe-wrap summary,.oliprfe-wrap .subsubsub a,.oliprfe-wrap .nav-tab,body .oliprfe-dialog .button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
 .oliprfe-wrap .row-actions{position:static;display:flex;flex-wrap:wrap;gap:0 12px}
 .oliprfe-wrap .row-actions span{font-size:13px}
 .oliprfe-stats li{flex-basis:calc(50% - 6px)}
 .oliprfe-panel{padding:12px}
 .oliprfe-url code{max-width:180px}
 .oliprfe-dialog footer .button{flex:1 1 100%}
+.oliprfe-rules{display:block;overflow-x:auto}
 .oliprfe-mapping thead{display:none}
 .oliprfe-mapping tr,.oliprfe-mapping th,.oliprfe-mapping td{display:block;width:auto!important}
 .oliprfe-mapping td[data-colname]::before{content:attr(data-colname);display:block;font-weight:600}

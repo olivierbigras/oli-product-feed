@@ -106,7 +106,6 @@ final class Editor {
 
 		echo '<div class="wrap oliprfe-wrap">';
 		Admin::heading( $title, (bool) $feed_id );
-		Admin::tabs( 'feeds' );
 		Admin::notices();
 		if ( $errors ) {
 			echo '<div class="notice notice-error oliprfe-error-summary" tabindex="-1"><p><strong>' . esc_html__( 'The feed was not saved. Fix the following:', 'oli-product-feed' ) . '</strong></p><ul>';
@@ -115,9 +114,10 @@ final class Editor {
 			}
 			echo '</ul></div>';
 		}
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" novalidate>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" novalidate class="oliprfe-editor">';
 		echo '<input type="hidden" name="action" value="oliprfe_save_feed">';
 		echo '<input type="hidden" name="feed_id" value="' . esc_attr( (string) (int) $feed_id ) . '">';
+		echo '<input type="hidden" name="oliprfe_section" value="">';
 		wp_nonce_field( 'oliprfe_save_feed_' . (int) $feed_id );
 
 		echo '<div id="poststuff"><div id="post-body" class="metabox-holder columns-2">';
@@ -125,23 +125,251 @@ final class Editor {
 		echo '<div id="titlediv"><div id="titlewrap"><label class="screen-reader-text" for="oliprfe-name">' . esc_html__( 'Feed name', 'oli-product-feed' ) . '</label>';
 		echo wp_kses( '<input type="text" name="feed[name]" id="oliprfe-name" size="30" value="' . esc_attr( $feed['name'] ) . '" spellcheck="true" autocomplete="off" placeholder="' . esc_attr__( 'Feed name', 'oli-product-feed' ) . '"' . self::invalid( $errors, 'name' ) . '>', self::allowed_html() );
 		self::error( $errors, 'name' );
-		echo '</div></div></div>';
+		echo '</div></div>';
+		self::steps();
+		echo '</div>';
 
 		echo '<div id="postbox-container-1" class="postbox-container"><div class="oliprfe-sticky">';
 		self::sidebar( $feed, (int) $feed_id );
 		echo '</div></div>';
 
 		echo '<div id="postbox-container-2" class="postbox-container">';
+		self::open_section( 'target' );
 		self::box_target( $feed, $errors );
+		self::close_section( 'target' );
+		self::open_section( 'products' );
 		self::box_filters( $feed );
 		self::box_texts( $feed );
+		self::close_section( 'products' );
+		self::open_section( 'mapping' );
 		self::box_mapping( $feed, $channel );
+		self::close_section( 'mapping' );
+		self::open_section( 'categories' );
 		self::box_categories( $feed );
 		self::box_links( $feed );
+		self::close_section( 'categories' );
+		self::open_section( 'schedule' );
 		self::box_schedule( $feed );
-		echo '<p class="oliprfe-submit-bottom"><button type="submit" class="button button-primary button-large" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></p>';
+		self::close_section( 'schedule' );
+		echo '<p class="oliprfe-submit-bottom"><button type="submit" class="button button-large" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></p>';
 		echo '</div></div><br class="clear"></div></form>';
 		echo '</div>';
+	}
+
+	/**
+	 * Short channel name used in the suggested feed name.
+	 *
+	 * @param string $id Channel ID.
+	 * @return string
+	 */
+	private static function channel_short( $id ) {
+		$short = array(
+			'google'    => 'Google',
+			'meta'      => 'Meta',
+			'pinterest' => 'Pinterest',
+			'tiktok'    => 'TikTok',
+			'microsoft' => 'Microsoft',
+			'generic'   => __( 'Generic', 'oli-product-feed' ),
+		);
+		if ( isset( $short[ $id ] ) ) {
+			return $short[ $id ];
+		}
+		$channel = Registry::get( $id );
+		return $channel ? $channel->label() : $id;
+	}
+
+	/**
+	 * Display name of the site language (without a multilingual plugin).
+	 *
+	 * @return string
+	 */
+	private static function site_language() {
+		$locale = get_locale();
+		$code   = strtolower( substr( $locale, 0, 2 ) );
+		if ( class_exists( '\\Locale' ) ) {
+			$name = \Locale::getDisplayLanguage( $locale, $locale );
+			if ( is_string( $name ) && '' !== $name && $name !== $locale ) {
+				return function_exists( 'mb_convert_case' ) ? mb_convert_case( mb_substr( $name, 0, 1 ), MB_CASE_TITLE ) . mb_substr( $name, 1 ) : $name;
+			}
+		}
+		$names = array(
+			'de' => 'Deutsch',
+			'en' => 'English',
+			'es' => 'Español',
+			'fr' => 'Français',
+			'it' => 'Italiano',
+			'nl' => 'Nederlands',
+			'pt' => 'Português',
+		);
+		return isset( $names[ $code ] ) ? $names[ $code ] : $locale;
+	}
+
+	/**
+	 * Suggested feed name: "{Channel} — {Language} ({Country})".
+	 *
+	 * @param array<string,mixed> $config Configuration (channel, language, country).
+	 * @return string
+	 */
+	public static function suggested_name( array $config ) {
+		$languages = Lang::languages();
+		$language  = isset( $languages[ $config['language'] ] ) ? $languages[ $config['language'] ] : self::site_language();
+		$countries = function_exists( 'WC' ) ? WC()->countries->get_countries() : array();
+		$name      = self::channel_short( (string) $config['channel'] ) . ' — ' . $language;
+		$country   = isset( $countries[ $config['country'] ] ) ? ' (' . html_entity_decode( $countries[ $config['country'] ], ENT_QUOTES, 'UTF-8' ) . ')' : '';
+		if ( '' !== $country && substr( $name, -strlen( $country ) ) !== $country ) {
+			$name .= $country;
+		}
+		return $name;
+	}
+
+	/**
+	 * Light wizard (one screen): channel, language, country, currency and name. Everything else
+	 * gets the defaults of the channel and can be changed in the editor afterwards.
+	 *
+	 * @param array<string,string> $errors Field errors.
+	 * @param array<string,mixed>  $posted Values to show again after an error.
+	 */
+	public static function render_new( array $errors = array(), array $posted = array() ) {
+		$defaults = array(
+			'channel'  => 'google',
+			'language' => Lang::default_language(),
+			'country'  => function_exists( 'WC' ) ? (string) WC()->countries->get_base_country() : '',
+			'currency' => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'USD',
+			'name'     => '',
+		);
+		$feed     = array_merge( $defaults, array_intersect_key( $posted, $defaults ) );
+		$store    = $defaults['currency'];
+
+		echo '<div class="wrap oliprfe-wrap">';
+		Admin::heading( __( 'Add New Feed', 'oli-product-feed' ), false );
+		Admin::notices();
+		if ( $errors ) {
+			echo '<div class="notice notice-error oliprfe-error-summary" tabindex="-1"><p><strong>' . esc_html__( 'The feed was not created. Fix the following:', 'oli-product-feed' ) . '</strong></p><ul>';
+			foreach ( $errors as $key => $message ) {
+				echo '<li><a href="#oliprfe-' . esc_attr( $key ) . '">' . esc_html( $message ) . '</a></li>';
+			}
+			echo '</ul></div>';
+		}
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" novalidate class="oliprfe-wizard oliprfe-panel">';
+		echo '<input type="hidden" name="action" value="oliprfe_create_feed">';
+		wp_nonce_field( 'oliprfe_create_feed' );
+		echo '<h2>' . esc_html__( 'Start a feed', 'oli-product-feed' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Four choices, then everything else has a working default. You can change all of it later.', 'oli-product-feed' ) . '</p>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		$radios = '<fieldset id="oliprfe-channel" tabindex="-1"' . self::invalid( $errors, 'channel' ) . '><legend class="screen-reader-text">' . esc_html__( 'Channel', 'oli-product-feed' ) . '</legend>';
+		foreach ( Registry::all() as $id => $channel ) {
+			$formats = array_map( 'strtoupper', $channel->formats() );
+			$radios .= '<p><label><input type="radio" name="feed[channel]" value="' . esc_attr( $id ) . '" data-short="' . esc_attr( self::channel_short( $id ) ) . '"' . checked( $feed['channel'], $id, false ) . '> <strong>' . esc_html( $channel->label() ) . '</strong> <span class="description">' . esc_html( implode( ', ', $formats ) ) . '</span></label></p>';
+		}
+		$radios .= '</fieldset>';
+		self::row( __( 'Channel', 'oli-product-feed' ), '', $radios );
+		self::error( $errors, 'channel' );
+
+		$languages = Lang::languages();
+		if ( $languages ) {
+			$plain   = $languages;
+			$default = Lang::default_language();
+			if ( isset( $languages[ $default ] ) ) {
+				/* translators: %s: language name. */
+				$languages[ $default ] = sprintf( __( '%s — default language', 'oli-product-feed' ), $languages[ $default ] );
+			}
+			self::row( __( 'Language', 'oli-product-feed' ), 'oliprfe-language', self::select( 'feed[language]', 'oliprfe-language', $languages, $feed['language'], ' data-short="' . esc_attr( (string) wp_json_encode( $plain ) ) . '"' ), __( 'With TranslatePress, create one feed per language.', 'oli-product-feed' ) );
+		} else {
+			$html = '<input type="hidden" name="feed[language]" value=""><span id="oliprfe-language" data-short="' . esc_attr( self::site_language() ) . '">' . esc_html(
+				sprintf(
+					/* translators: %s: language name. */
+					__( 'Site language (%s)', 'oli-product-feed' ),
+					self::site_language()
+				)
+			) . '</span>';
+			self::row( __( 'Language', 'oli-product-feed' ), '', $html, __( 'With TranslatePress, create one feed per language.', 'oli-product-feed' ) );
+		}
+
+		$countries = array( '' => __( '— Choose a country —', 'oli-product-feed' ) ) + WC()->countries->get_countries();
+		echo '<tr><th scope="row"><label for="oliprfe-country">' . esc_html__( 'Country', 'oli-product-feed' ) . ' <span class="oliprfe-meta">' . esc_html__( '(required)', 'oli-product-feed' ) . '</span></label></th><td>';
+		echo wp_kses( self::select( 'feed[country]', 'oliprfe-country', $countries, $feed['country'], ' aria-required="true"' . self::invalid( $errors, 'country' ) ), self::allowed_html() );
+		self::error( $errors, 'country' );
+		echo '</td></tr>';
+
+		$currencies = get_woocommerce_currencies();
+		foreach ( $currencies as $code => $name ) {
+			$currencies[ $code ] = $code . ' — ' . $name . ( $code === $store ? ' ' . __( '(store currency)', 'oli-product-feed' ) : '' );
+		}
+		self::row( __( 'Currency', 'oli-product-feed' ), 'oliprfe-currency', self::select( 'feed[currency]', 'oliprfe-currency', $currencies, $feed['currency'] ) );
+
+		$suggested = self::suggested_name( $feed );
+		self::row( __( 'Feed name', 'oli-product-feed' ), 'oliprfe-name', self::text( 'feed[name]', 'oliprfe-name', '' !== $feed['name'] ? $feed['name'] : $suggested, 'regular-text', ' data-short="' . esc_attr( '' !== $feed['name'] && $feed['name'] !== $suggested ? 'edited' : 'auto' ) . '"' ), __( 'Suggested from your choices.', 'oli-product-feed' ) );
+		echo '</tbody></table>';
+
+		echo '<p class="submit"><button type="submit" class="button button-primary button-large">' . esc_html__( 'Create feed', 'oli-product-feed' ) . '</button> <a class="button button-large" href="' . esc_url( Admin::url() ) . '">' . esc_html__( 'Cancel', 'oli-product-feed' ) . '</a></p>';
+		echo '<p class="description">' . esc_html__( 'The feed is saved inactive. Review it, then generate it.', 'oli-product-feed' ) . '</p>';
+		echo '</form></div>';
+	}
+
+	/**
+	 * The 5 sections of the editor, in order (anchor => title).
+	 *
+	 * @return array<string,string>
+	 */
+	public static function sections() {
+		return array(
+			'target'     => __( 'Channel and target', 'oli-product-feed' ),
+			'products'   => __( 'Products', 'oli-product-feed' ),
+			'mapping'    => __( 'Mapping', 'oli-product-feed' ),
+			'categories' => __( 'Categories and links', 'oli-product-feed' ),
+			'schedule'   => __( 'Schedule', 'oli-product-feed' ),
+		);
+	}
+
+	/**
+	 * Section links under the title (anchors: without JavaScript the sections stay stacked).
+	 */
+	private static function steps() {
+		echo '<nav aria-label="' . esc_attr__( 'Feed sections', 'oli-product-feed' ) . '"><ol class="oliprfe-steps">';
+		foreach ( self::sections() as $id => $label ) {
+			echo '<li><a href="#' . esc_attr( $id ) . '">' . esc_html( $label ) . '</a></li>';
+		}
+		echo '</ol></nav>';
+	}
+
+	/**
+	 * Current section title (used to skip a sub-heading that repeats it).
+	 *
+	 * @var string
+	 */
+	private static $section = '';
+
+	/**
+	 * Opens a numbered section (one postbox).
+	 *
+	 * @param string $id Section anchor.
+	 */
+	private static function open_section( $id ) {
+		$sections      = self::sections();
+		$number        = array_search( $id, array_keys( $sections ), true ) + 1;
+		self::$section = $sections[ $id ];
+		echo '<div id="' . esc_attr( $id ) . '" class="postbox oliprfe-section" data-oliprfe-section="' . esc_attr( $id ) . '"><div class="postbox-header"><h2 class="hndle" tabindex="-1">' . esc_html( $number . '. ' . $sections[ $id ] ) . '</h2></div><div class="inside">';
+	}
+
+	/**
+	 * Closes a section with the previous / next links.
+	 *
+	 * @param string $id Section anchor.
+	 */
+	private static function close_section( $id ) {
+		$keys = array_keys( self::sections() );
+		$all  = self::sections();
+		$pos  = array_search( $id, $keys, true );
+		echo '<p class="oliprfe-section-nav">';
+		if ( $pos > 0 ) {
+			echo '<a class="button" href="#' . esc_attr( $keys[ $pos - 1 ] ) . '" data-oliprfe-go="' . esc_attr( $keys[ $pos - 1 ] ) . '"><span aria-hidden="true">← </span>' . esc_html( $all[ $keys[ $pos - 1 ] ] ) . '</a> ';
+		}
+		if ( $pos < count( $keys ) - 1 ) {
+			echo '<a class="button" href="#' . esc_attr( $keys[ $pos + 1 ] ) . '" data-oliprfe-go="' . esc_attr( $keys[ $pos + 1 ] ) . '">' . esc_html( $all[ $keys[ $pos + 1 ] ] ) . '<span aria-hidden="true"> →</span></a>';
+		}
+		echo '</p></div></div>';
+		self::$section = '';
 	}
 
 	/**
@@ -203,6 +431,9 @@ final class Editor {
 			'data-target'       => true,
 			'data-confirm'      => true,
 			'data-formats'      => true,
+			'data-short'        => true,
+			'aria-required'     => true,
+			'tabindex'          => true,
 			'data-colname'      => true,
 			'data-oliprfe-generating' => true,
 			'width'             => true,
@@ -237,20 +468,23 @@ final class Editor {
 	}
 
 	/**
-	 * Opens a postbox.
+	 * Opens a part of a section (a former box of the editor, with its sub-heading).
 	 *
-	 * @param string $id    Box ID.
+	 * @param string $id    Part ID.
 	 * @param string $title Title.
 	 */
 	private static function open_box( $id, $title ) {
-		echo '<div id="' . esc_attr( $id ) . '" class="postbox"><div class="postbox-header"><h2 class="hndle">' . esc_html( $title ) . '</h2></div><div class="inside">';
+		echo '<div id="' . esc_attr( $id ) . '" class="oliprfe-part">';
+		if ( $title !== self::$section ) {
+			echo '<h3>' . esc_html( $title ) . '</h3>';
+		}
 	}
 
 	/**
-	 * Closes a postbox.
+	 * Closes a part of a section.
 	 */
 	private static function close_box() {
-		echo '</div></div>';
+		echo '</div>';
 	}
 
 	/**
@@ -361,47 +595,59 @@ final class Editor {
 		echo '<div id="misc-publishing-actions">';
 		echo wp_kses( '<div class="misc-pub-section">' . self::checkbox( 'feed[active]', 'publish' === $feed['status'], __( 'Active (generated on schedule)', 'oli-product-feed' ) ) . '</div>', self::allowed_html() );
 		if ( $feed_id ) {
-			$last = Feeds::last_run( $feed_id );
-			echo '<div class="misc-pub-section"><span class="dashicons dashicons-flag" aria-hidden="true"></span> ' . esc_html__( 'Status:', 'oli-product-feed' ) . ' ';
+			$last    = Feeds::last_run( $feed_id );
+			$success = Admin::last_success( $feed_id );
+			$format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+			echo '<div class="misc-pub-section">' . esc_html__( 'Status:', 'oli-product-feed' ) . ' ';
 			echo wp_kses_post( Admin::status_badge( $feed_id ) );
 			echo '</div>';
+			if ( $success ) {
+				$excluded = max( 0, (int) $success['candidates'] - (int) $success['items'] );
+				echo '<div class="misc-pub-section">' . esc_html(
+					sprintf(
+						/* translators: %s: number of items. */
+						__( 'Items: %s', 'oli-product-feed' ),
+						number_format_i18n( (int) $success['items'] )
+					)
+				);
+				if ( $excluded ) {
+					echo ' (<a href="' . esc_url( Admin::diag_url( $feed_id ) ) . '">' . esc_html(
+						sprintf(
+							/* translators: %s: number of excluded products. */
+							_n( '%s excluded', '%s excluded', $excluded, 'oli-product-feed' ),
+							number_format_i18n( $excluded )
+						)
+					) . '</a>)';
+				}
+				echo '</div>';
+			}
 			if ( ! empty( $last['time'] ) ) {
-				echo '<div class="misc-pub-section"><span class="dashicons dashicons-calendar-alt" aria-hidden="true"></span> ' . esc_html(
+				echo '<div class="misc-pub-section">' . esc_html(
 					sprintf(
 						/* translators: %s: date and time. */
-						__( 'Last generated: %s', 'oli-product-feed' ),
-						wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $last['time'] )
+						__( 'Last: %s', 'oli-product-feed' ),
+						wp_date( $format, (int) $last['time'] )
 					)
 				) . '</div>';
 			}
-			$next = Scheduler::next_run( $feed, $last );
-			echo '<div class="misc-pub-section"><span class="dashicons dashicons-clock" aria-hidden="true"></span> ' . esc_html(
+			$next = 'publish' === $feed['status'] ? Scheduler::next_run( $feed, $last ) : 0;
+			echo '<div class="misc-pub-section">' . esc_html(
 				$next ? sprintf(
 					/* translators: %s: date and time. */
-					__( 'Next generation: %s', 'oli-product-feed' ),
-					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $next )
-				) : __( 'Next generation: manual', 'oli-product-feed' )
+					__( 'Next: %s', 'oli-product-feed' ),
+					wp_date( $format, $next )
+				) : ( 'publish' === $feed['status'] ? __( 'Next: manual only', 'oli-product-feed' ) : __( 'Next: not scheduled (inactive)', 'oli-product-feed' ) )
 			) . '</div>';
-			if ( isset( $last['items'] ) ) {
-				echo '<div class="misc-pub-section"><span class="dashicons dashicons-products" aria-hidden="true"></span> ' . esc_html(
-					sprintf(
-						/* translators: 1: items in the feed, 2: excluded products. */
-						__( 'Items: %1$s (excluded: %2$s)', 'oli-product-feed' ),
-						number_format_i18n( (int) $last['items'] ),
-						number_format_i18n( (int) $last['candidates'] - (int) $last['items'] )
-					)
-				) . '</div>';
-			}
-			echo '<div class="misc-pub-section"><span class="dashicons dashicons-admin-links" aria-hidden="true"></span> ' . esc_html__( 'Feed URL:', 'oli-product-feed' );
-			Admin::feed_url_field( $feed_id, 'side' );
+			echo '<div class="misc-pub-section">';
+			Admin::feed_url_field( $feed_id, 'list' );
 			echo '</div>';
 		}
 		echo '</div><div id="major-publishing-actions">';
 		if ( $feed_id ) {
 			echo '<div id="delete-action"><a class="submitdelete deletion" ' . Admin::delete_attrs( $feed_id ) . '>' . esc_html__( 'Delete feed', 'oli-product-feed' ) . '</a></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Admin::delete_attrs().
 		}
-		echo '<div id="publishing-action"><button type="submit" class="button" name="generate" value="1">' . esc_html__( 'Save and generate now', 'oli-product-feed' ) . '</button> ';
-		echo '<button type="submit" class="button button-primary" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></div><div class="clear"></div></div>';
+		echo '<div id="publishing-action"><button type="submit" class="button button-primary" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></div><div class="clear"></div></div>';
+		echo '<p class="oliprfe-generate"><button type="submit" class="button-link" name="generate" value="1">' . esc_html__( 'Save and generate now', 'oli-product-feed' ) . '</button></p>';
 		echo '</div></div></div>';
 
 		$channel = Registry::get( $feed['channel'] );
@@ -491,7 +737,7 @@ final class Editor {
 
 		$radios = '<fieldset><legend class="screen-reader-text">' . esc_html__( 'Channel', 'oli-product-feed' ) . '</legend>';
 		foreach ( Registry::all() as $id => $channel ) {
-			$radios .= '<p><label><input type="radio" name="feed[channel]" value="' . esc_attr( $id ) . '" data-formats="' . esc_attr( implode( ',', $channel->formats() ) ) . '"' . checked( $feed['channel'], $id, false ) . '> ' . esc_html( $channel->label() ) . '</label><br><span class="description">' . esc_html( strtoupper( implode( ', ', $channel->formats() ) ) ) . '</span></p>';
+			$radios .= '<p><label><input type="radio" name="feed[channel]" value="' . esc_attr( $id ) . '" data-formats="' . esc_attr( implode( ',', $channel->formats() ) ) . '"' . checked( $feed['channel'], $id, false ) . '> ' . esc_html( $channel->label() ) . ' <span class="description">' . esc_html( strtoupper( implode( ', ', $channel->formats() ) ) ) . '</span></label></p>';
 		}
 		$radios .= '</fieldset>';
 		self::row( __( 'Channel', 'oli-product-feed' ), '', $radios, __( 'Changing the channel resets the attribute list below after saving.', 'oli-product-feed' ) );

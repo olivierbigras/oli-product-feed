@@ -1,6 +1,6 @@
 /**
  * Oli Product Feed admin script (plugin screens only, no jQuery).
- * Copy URL, delete dialog, attribute mapping, schedule, channel formats, match count, error summary and generation progress.
+ * Copy URL, delete dialog, error summary and generation progress (the feed editor has its own editor.js).
  * Strings come from wp_localize_script( 'oliprfe-admin', 'oliprfeAdmin', { i18n, plural, ajaxUrl, nonce } ).
  */
 ( function () {
@@ -14,10 +14,6 @@
 		copyFailed: 'Press Ctrl+C (Cmd+C on a Mac) to copy the selected URL.',
 		generated: 'Feed generated.',
 		failed: 'Feed generation failed.',
-		badName: 'Use lowercase letters, digits and underscores.',
-		exists: 'This attribute is already in the list.',
-		counting: 'Counting…',
-		countError: 'The count failed.',
 		selectOne: 'Select at least one feed.'
 	}, cfg.i18n || {} );
 	var plural = cfg.plural || { title: {}, button: {} };
@@ -200,92 +196,6 @@
 		}
 	} );
 
-	/* ---- Mapping: the source type shows the matching control (others hidden + disabled) ---- */
-	document.addEventListener( 'change', function ( event ) {
-		var select = event.target;
-		if ( ! select.classList || ! select.classList.contains( 'oliprfe-src-type' ) ) {
-			return;
-		}
-		var row = select.closest( 'tr' );
-		row.querySelectorAll( '[data-src]' ).forEach( function ( control ) {
-			var on = control.getAttribute( 'data-src' ) === select.value;
-			control.hidden   = ! on;
-			control.disabled = ! on;
-		} );
-	} );
-
-	/* ---- Schedule: the start hour only applies to daily and weekly feeds ---- */
-	function syncHour() {
-		var checked = document.querySelector( 'input[name="feed[frequency]"]:checked' );
-		var hour    = document.getElementById( 'oliprfe-start_hour' );
-		if ( checked && hour ) {
-			hour.disabled = [ 'daily', 'weekly' ].indexOf( checked.value ) < 0;
-		}
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( 'feed[frequency]' === event.target.name ) {
-			syncHour();
-		}
-	} );
-
-	/* ---- Custom mapping rows: add from the <template>, remove ---- */
-	function addRow() {
-		var input    = document.getElementById( 'oliprfe-add-attr' );
-		var template = document.getElementById( 'oliprfe-row-template' );
-		var body     = document.querySelector( '.oliprfe-custom-rows' );
-		if ( ! input || ! template || ! body ) {
-			return;
-		}
-		var name = input.value.trim().toLowerCase();
-		if ( ! /^[a-z0-9_]+$/.test( name ) ) {
-			speak( i18n.badName );
-			input.setAttribute( 'aria-invalid', 'true' );
-			input.focus();
-			return;
-		}
-		if ( document.querySelector( '[name="feed[mapping][' + name + '][type]"]' ) ) {
-			speak( i18n.exists );
-			input.setAttribute( 'aria-invalid', 'true' );
-			input.focus();
-			return;
-		}
-		input.removeAttribute( 'aria-invalid' );
-		var holder = document.createElement( 'tbody' );
-		holder.innerHTML = template.innerHTML.split( '__FIELD__' ).join( name );
-		var row = holder.querySelector( 'tr' );
-		body.appendChild( row );
-		input.value = '';
-		var first = row.querySelector( 'select, input' );
-		if ( first ) {
-			first.focus();
-		}
-	}
-	document.addEventListener( 'click', function ( event ) {
-		var target = event.target.closest ? event.target.closest( '.oliprfe-add-row, .oliprfe-remove-row' ) : null;
-		if ( ! target ) {
-			return;
-		}
-		event.preventDefault();
-		if ( target.classList.contains( 'oliprfe-add-row' ) ) {
-			addRow();
-			return;
-		}
-		var row = target.closest( 'tr' );
-		if ( row ) {
-			row.parentNode.removeChild( row );
-			var add = document.getElementById( 'oliprfe-add-attr' );
-			if ( add ) {
-				add.focus();
-			}
-		}
-	} );
-	document.addEventListener( 'keydown', function ( event ) {
-		if ( 'oliprfe-add-attr' === event.target.id && 'Enter' === event.key ) {
-			event.preventDefault();
-			addRow();
-		}
-	} );
-
 	/* ---- Generation progress (polls every 3 s while a feed is generating, no reload) ---- */
 	var milestones = {};
 	function finish( feed ) {
@@ -352,65 +262,6 @@
 			.catch( function () { window.setTimeout( poll, 10000 ); } );
 	}
 
-	/* ---- Channel: formats of the channel only, generic settings ---- */
-	function syncChannel() {
-		var radio  = document.querySelector( 'input[name="feed[channel]"]:checked' );
-		var select = document.getElementById( 'oliprfe-format' );
-		if ( ! radio || ! select ) {
-			return;
-		}
-		var formats = ( radio.getAttribute( 'data-formats' ) || '' ).split( ',' );
-		Array.prototype.forEach.call( select.options, function ( option ) {
-			option.disabled = formats.indexOf( option.value ) === -1;
-		} );
-		if ( select.selectedOptions.length && select.selectedOptions[0].disabled ) {
-			select.value = formats[0];
-		}
-		document.querySelectorAll( '.oliprfe-for-generic' ).forEach( function ( row ) {
-			row.hidden = radio.value !== 'generic';
-		} );
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( event.target.name === 'feed[channel]' ) {
-			syncChannel();
-		}
-	} );
-
-	/* ---- Backorder lead time: extra fields only when the option is on ---- */
-	function syncBackorder() {
-		var on = document.querySelector( 'input[name="feed[backorder_lead_enabled]"]' );
-		document.querySelectorAll( '.oliprfe-for-backorder' ).forEach( function ( row ) {
-			row.hidden = ! on || ! on.checked;
-		} );
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( 'feed[backorder_lead_enabled]' === event.target.name ) {
-			syncBackorder();
-		}
-	} );
-
-	/* ---- Number of products matching the filters (unsaved form) ---- */
-	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.oliprfe-match-refresh' );
-		if ( ! button || ! cfg.ajaxUrl ) {
-			return;
-		}
-		var form = button.closest( 'form' );
-		var text = form.querySelector( '.oliprfe-match-text' );
-		var data = new FormData( form );
-		data.set( 'action', 'oliprfe_match_count' );
-		data.set( '_ajax_nonce', cfg.nonce || '' );
-		data.delete( '_wpnonce' );
-		button.disabled  = true;
-		text.textContent = i18n.counting;
-		window.fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data } )
-			.then( function ( r ) { return r.json(); } )
-			.then( function ( json ) {
-				text.textContent = json && json.success ? json.data.text : i18n.countError;
-			} )
-			.catch( function () { text.textContent = i18n.countError; } )
-			.then( function () { button.disabled = false; } );
-	} );
 
 	document.addEventListener( 'DOMContentLoaded', function () {
 		live = document.createElement( 'div' );
@@ -419,14 +270,13 @@
 		live.setAttribute( 'aria-atomic', 'true' );
 		document.body.appendChild( live );
 
-		/* The error summary gets the focus first. */
+		window.setTimeout( poll, 3000 );
+	} );
+	/* The error summary gets the focus first (after WordPress has moved the notices). */
+	window.addEventListener( 'load', function () {
 		var summary = document.querySelector( '.oliprfe-error-summary' );
 		if ( summary ) {
 			summary.focus();
 		}
-		syncHour();
-		syncChannel();
-		syncBackorder();
-		window.setTimeout( poll, 3000 );
 	} );
 }() );

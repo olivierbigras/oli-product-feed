@@ -7,6 +7,7 @@
 
 namespace Oliprfe\Admin;
 
+use Oliprfe\Channels\Registry;
 use Oliprfe\Endpoint;
 use Oliprfe\Feeds;
 use Oliprfe\Generator;
@@ -30,6 +31,7 @@ final class Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 60 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_action( 'admin_post_oliprfe_save_feed', array( __CLASS__, 'handle_save' ) );
+		add_action( 'admin_post_oliprfe_create_feed', array( __CLASS__, 'handle_create' ) );
 		add_action( 'admin_post_oliprfe_delete_feed', array( __CLASS__, 'handle_delete' ) );
 		add_action( 'admin_post_oliprfe_duplicate_feed', array( __CLASS__, 'handle_duplicate' ) );
 		add_action( 'admin_post_oliprfe_generate', array( __CLASS__, 'handle_generate' ) );
@@ -237,6 +239,10 @@ final class Admin {
 		}
 		wp_enqueue_style( 'oliprfe-admin', OLIPRFE_URL . 'assets/css/admin.css', array(), OLIPRFE_VERSION );
 		wp_enqueue_script( 'oliprfe-admin', OLIPRFE_URL . 'assets/js/admin.js', array( 'wp-a11y' ), OLIPRFE_VERSION, true );
+		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen routing.
+		if ( 'new' === $action || 'edit' === $action ) {
+			wp_enqueue_script( 'oliprfe-editor', OLIPRFE_URL . 'assets/js/editor.js', array( 'wp-a11y', 'oliprfe-admin' ), OLIPRFE_VERSION, true );
+		}
 		wp_localize_script(
 			'oliprfe-admin',
 			'oliprfeAdmin',
@@ -301,7 +307,15 @@ final class Admin {
 			self::render_pending_tab( $tab );
 			return;
 		}
-		if ( 'new' === $action || ( 'edit' === $action && $feed && Feeds::get( $feed ) ) ) {
+		if ( 'new' === $action ) {
+			$form = get_transient( 'oliprfe_form_' . get_current_user_id() );
+			if ( is_array( $form ) ) {
+				delete_transient( 'oliprfe_form_' . get_current_user_id() );
+			}
+			Editor::render_new( is_array( $form ) ? $form['errors'] : array(), is_array( $form ) ? $form['config'] : array() );
+			return;
+		}
+		if ( 'edit' === $action && $feed && Feeds::get( $feed ) ) {
 			$form = get_transient( 'oliprfe_form_' . get_current_user_id() );
 			if ( is_array( $form ) ) {
 				delete_transient( 'oliprfe_form_' . get_current_user_id() );
@@ -372,6 +386,7 @@ final class Admin {
 		$messages = array(
 			'saved'          => array( 'success', __( 'Feed saved.', 'oli-product-feed' ) ),
 			'saved_queued'   => array( 'success', __( 'Feed saved. Generation started in the background.', 'oli-product-feed' ) ),
+			'created'        => array( 'success', __( 'Feed created (inactive). Review the mapping, then generate it.', 'oli-product-feed' ) ),
 			'deleted'        => array( 'success', __( 'Feed deleted.', 'oli-product-feed' ) ),
 			'duplicated'     => array( 'success', __( 'Feed duplicated (inactive). Review it, then generate it.', 'oli-product-feed' ) ),
 			'queued'         => array( 'info', __( 'Generation started in the background.', 'oli-product-feed' ) ),
@@ -784,9 +799,10 @@ final class Admin {
 	 *
 	 * @param string              $notice Notice code.
 	 * @param array<string,mixed> $args   Extra arguments.
+	 * @param string              $fragment Editor section to reopen (anchor), or ''.
 	 */
-	private static function back( $notice, array $args = array() ) {
-		wp_safe_redirect( self::url( array_merge( $args, array( 'oliprfe_notice' => $notice ) ) ) );
+	private static function back( $notice, array $args = array(), $fragment = '' ) {
+		wp_safe_redirect( self::url( array_merge( $args, array( 'oliprfe_notice' => $notice ) ) ) . ( '' !== $fragment ? '#' . $fragment : '' ) );
 		exit;
 	}
 
@@ -848,12 +864,80 @@ final class Admin {
 		if ( ! empty( $_POST['generate'] ) ) {
 			$notice = is_wp_error( Scheduler::queue( $saved ) ) ? 'running' : 'saved_queued';
 		}
+		$section = isset( $_POST['oliprfe_section'] ) ? sanitize_key( wp_unslash( $_POST['oliprfe_section'] ) ) : '';
 		self::back(
 			$notice,
 			array(
 				'action' => 'edit',
 				'feed'   => $saved,
+			),
+			isset( Editor::sections()[ $section ] ) ? $section : ''
+		);
+	}
+
+	/**
+	 * Creates a feed from the light wizard (channel, language, country, currency, name): inactive,
+	 * with the defaults of the channel, then opens its mapping.
+	 */
+	public static function handle_create() {
+		self::guard();
+		check_admin_referer( 'oliprfe_create_feed' );
+		$raw     = isset( $_POST['feed'] ) && is_array( $_POST['feed'] ) ? wp_unslash( $_POST['feed'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only the keys below are read, each one sanitized.
+		$keys    = array( 'channel', 'language', 'country', 'currency', 'name' );
+		$picked  = array();
+		$channel = Registry::get( isset( $raw['channel'] ) ? sanitize_key( (string) $raw['channel'] ) : '' );
+		foreach ( $keys as $key ) {
+			$picked[ $key ] = isset( $raw[ $key ] ) ? sanitize_text_field( (string) $raw[ $key ] ) : '';
+		}
+		$config = Feeds::sanitize(
+			array(
+				'channel'  => $picked['channel'],
+				'format'   => $channel ? (string) current( $channel->formats() ) : '',
+				'language' => $picked['language'],
+				'country'  => $picked['country'],
+				'currency' => $picked['currency'],
 			)
+		);
+		$config['name']   = '' !== trim( $picked['name'] ) ? $picked['name'] : Editor::suggested_name( $config );
+		$config['active'] = false;
+		$errors           = array();
+		if ( ! $channel ) {
+			$errors['channel'] = __( 'Choose a channel.', 'oli-product-feed' );
+		}
+		if ( '' === $config['country'] ) {
+			$errors['country'] = __( 'Choose the country this feed targets.', 'oli-product-feed' );
+		}
+		if ( $errors ) {
+			set_transient(
+				'oliprfe_form_' . get_current_user_id(),
+				array(
+					'errors' => $errors,
+					'config' => array_merge( $config, array( 'name' => $picked['name'] ) ),
+				),
+				10 * MINUTE_IN_SECONDS
+			);
+			wp_safe_redirect( self::url( array( 'action' => 'new' ) ) );
+			exit;
+		}
+		$slug = sanitize_title( $config['name'] );
+		$base = $slug;
+		$i    = 2;
+		while ( '' !== $slug && Feeds::find_by_slug( $slug ) ) {
+			$slug = $base . '-' . $i;
+			++$i;
+		}
+		$config['file_slug'] = $slug;
+		$saved               = Feeds::save( $config, 0 );
+		if ( is_wp_error( $saved ) ) {
+			self::back( 'error' );
+		}
+		self::back(
+			'created',
+			array(
+				'action' => 'edit',
+				'feed'   => $saved,
+			),
+			'mapping'
 		);
 	}
 
