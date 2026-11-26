@@ -126,7 +126,7 @@ final class Cli {
 	 */
 	public function run_due() {
 		$delay = Scheduler::tick_delay();
-		if ( $delay > HOUR_IN_SECONDS ) {
+		if ( $delay > \HOUR_IN_SECONDS ) {
 			\WP_CLI::warning( sprintf( 'The scheduled tick is %d minutes late: WP-Cron (or the Action Scheduler queue runner) does not run on this site.', (int) round( $delay / 60 ) ) );
 		}
 		$done = Scheduler::run_due();
@@ -144,7 +144,7 @@ final class Cli {
 	 * @param array $args Feed ID.
 	 */
 	public function status( $args ) {
-		\WP_CLI::line( (string) wp_json_encode( Feeds::last_run( absint( $args[0] ) ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
+		\WP_CLI::line( (string) wp_json_encode( Feeds::last_run( absint( $args[0] ) ), \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE ) );
 	}
 
 	/**
@@ -168,7 +168,7 @@ final class Cli {
 				$out[] = $feed;
 			}
 		}
-		\WP_CLI::line( (string) wp_json_encode( $out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
+		\WP_CLI::line( (string) wp_json_encode( $out, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE ) );
 	}
 
 	/**
@@ -228,6 +228,6 @@ final class Cli {
 				\WP_CLI::error( $saved->get_error_message() . ' ' . sprintf( __( 'The feeds stay in wp-content/uploads/%s.', 'oli-product-feed' ), Storage::folder() ) );
 			}
 		}
-		\WP_CLI::line( (string) wp_json_encode( Settings::all(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+		\WP_CLI::line( (string) wp_json_encode( Settings::all(), \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES ) );
 	}
 }

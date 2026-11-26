@@ -24,7 +24,7 @@ final class Feeds {
 	 * Registers the private post type.
 	 */
 	public static function register_post_type() {
-		register_post_type(
+		register_post_type( // phpcs:ignore WordPress.NamingConventions.ValidPostTypeSlug.NotStringLiteral -- Slug is the oliprfe_feed class constant.
 			self::POST_TYPE,
 			array(
 				'labels'          => array(

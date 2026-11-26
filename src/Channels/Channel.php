@@ -50,7 +50,7 @@ abstract class Channel {
 	 * @param string $format csv|tsv|txt.
 	 * @return string
 	 */
-	public function column_name( $field, $format ) {
+	public function column_name( $field, $format ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Overrides receive $format; the base column name is the field.
 		return $field;
 	}
 
@@ -153,7 +153,7 @@ abstract class Channel {
 			return '';
 		}
 		$from = $from ? $from : time();
-		$to   = $to ? $to : $from + 10 * YEAR_IN_SECONDS;
+		$to   = $to ? $to : $from + 10 * \YEAR_IN_SECONDS;
 		return wp_date( 'Y-m-d\TH:iO', $from ) . '/' . wp_date( 'Y-m-d\TH:iO', $to );
 	}
 
@@ -380,7 +380,7 @@ abstract class Channel {
 	 * @return string
 	 */
 	public static function xml_text( $text ) {
-		return htmlspecialchars( self::xml_clean( $text ), ENT_XML1 | ENT_QUOTES, 'UTF-8' );
+		return htmlspecialchars( self::xml_clean( $text ), \ENT_XML1 | \ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**
@@ -408,7 +408,8 @@ abstract class Channel {
 				$out[] = str_replace( array( "\t", "\r", "\n" ), ' ', $cell );
 			} else {
 				$cell  = str_replace( array( "\r", "\n" ), ' ', $cell );
-				$out[] = preg_match( '/[",]/', $cell ) || '' !== $cell && ( ' ' === $cell[0] || ' ' === substr( $cell, -1 ) ) ? '"' . str_replace( '"', '""', $cell ) . '"' : $cell;
+				$needs_quotes = ( preg_match( '/[",]/', $cell ) || ( '' !== $cell && ( ' ' === $cell[0] || ' ' === substr( $cell, -1 ) ) ) );
+				$out[]        = $needs_quotes ? '"' . str_replace( '"', '""', $cell ) . '"' : $cell;
 			}
 		}
 		return implode( 'csv' !== $format ? "\t" : ',', $out ) . "\n";

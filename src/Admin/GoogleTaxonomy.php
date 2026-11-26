@@ -40,7 +40,7 @@ final class GoogleTaxonomy {
 			 * @param string $locale Admin locale (for example fr_FR or en_US).
 			 */
 			$file        = (string) apply_filters( 'oliprfe_google_taxonomy_file', '', determine_locale() );
-			$lines       = '' !== $file && is_readable( $file ) ? file( $file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) : array();
+			$lines       = '' !== $file && is_readable( $file ) ? file( $file, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES ) : array();
 			foreach ( (array) $lines as $line ) {
 				if ( preg_match( '/^(\d+) - (.+)$/', $line, $m ) ) {
 					self::$paths[ (int) $m[1] ] = $m[2];

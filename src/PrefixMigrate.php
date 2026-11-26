@@ -23,14 +23,14 @@ final class PrefixMigrate {
 	const NEW_CPT  = 'oliprfe_feed';
 
 	/**
-	 * Runs once after an update (or on activation). Safe when there is nothing to copy.
+	 * Runs once. Called on init priority 5, after Action Scheduler. Safe when there is nothing to copy.
 	 */
 	public static function maybe_run() {
 		if ( get_option( self::FLAG ) ) {
 			return;
 		}
 		self::run();
-		update_option( self::FLAG, OLIPRFE_VERSION, false );
+		update_option( self::FLAG, \OLIPRFE_VERSION, false );
 	}
 
 	/**
@@ -90,7 +90,7 @@ final class PrefixMigrate {
 			$value = get_transient( $old );
 			if ( false !== $value ) {
 				$ttl = self::transient_ttl( $old );
-				set_transient( $new, $value, $ttl > 0 ? $ttl : HOUR_IN_SECONDS );
+				set_transient( $new, $value, $ttl > 0 ? $ttl : \HOUR_IN_SECONDS );
 			}
 			delete_transient( $old );
 		}

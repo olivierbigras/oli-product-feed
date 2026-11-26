@@ -99,9 +99,10 @@ final class Lang {
 			trp_switch_language( $language );
 			$snapshot['used_trp'] = true;
 		} elseif ( '' !== $language && self::has_translatepress() ) {
-			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
-			$snapshot['trp_prev'] = isset( $TRP_LANGUAGE ) ? $TRP_LANGUAGE : null;
-			$TRP_LANGUAGE         = $language; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress stores the active language in this global. Read through $GLOBALS so this file does not declare it.
+			$snapshot['trp_prev'] = isset( $GLOBALS['TRP_LANGUAGE'] ) ? $GLOBALS['TRP_LANGUAGE'] : null;
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global, restored in restore_language().
+			$GLOBALS['TRP_LANGUAGE'] = $language;
 			$snapshot['used_trp'] = 'manual';
 			if ( function_exists( 'switch_to_locale' ) && switch_to_locale( $language ) ) {
 				$snapshot['used_locale'] = true;
@@ -127,8 +128,8 @@ final class Lang {
 		if ( true === $snapshot['used_trp'] && function_exists( 'trp_restore_language' ) ) {
 			trp_restore_language();
 		} elseif ( 'manual' === $snapshot['used_trp'] ) {
-			global $TRP_LANGUAGE; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
-			$TRP_LANGUAGE = $snapshot['trp_prev']; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- TranslatePress current-language global.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Restore the TranslatePress current-language global captured above.
+			$GLOBALS['TRP_LANGUAGE'] = $snapshot['trp_prev'];
 			if ( $snapshot['used_locale'] && function_exists( 'restore_previous_locale' ) ) {
 				restore_previous_locale();
 			}
@@ -208,7 +209,7 @@ final class Lang {
 			return $text;
 		}
 		$candidates = array( $text );
-		$encoded    = htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+		$encoded    = htmlspecialchars( $text, \ENT_QUOTES, 'UTF-8' );
 		if ( $encoded !== $text ) {
 			$candidates[] = $encoded;
 		}

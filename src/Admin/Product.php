@@ -61,7 +61,7 @@ final class Product {
 		if ( ! isset( $_POST['oliprfe_availability'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce verifies the product save nonce.
 			return;
 		}
-		if ( ! current_user_can( 'edit_product', $product->get_id() ) ) {
+		if ( ! current_user_can( 'edit_product', $product->get_id() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce meta capability for this product.
 			return;
 		}
 		$value = Availability::sanitize_override( wp_unslash( $_POST['oliprfe_availability'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Availability::sanitize_override().
@@ -108,7 +108,7 @@ final class Product {
 	 */
 	public static function save_variation( $variation_id, $loop ) {
 		$variation_id = (int) $variation_id;
-		if ( ! current_user_can( 'edit_product', $variation_id ) ) {
+		if ( ! current_user_can( 'edit_product', $variation_id ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown -- WooCommerce meta capability for this variation.
 			return;
 		}
 		if ( ! isset( $_POST['oliprfe_availability_var'][ $loop ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WooCommerce verifies the variation save nonce.

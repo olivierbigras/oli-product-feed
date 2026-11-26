@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -132,8 +132,12 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.6.1 =
+* Fix: namespaced PHP files fully qualify global constants, so those constants resolve in the global namespace.
+* Fix: the one-time prefix migration runs on init at priority 5, after Action Scheduler is ready. It no longer runs during boot or activation, which avoids a doing-it-wrong notice on upgrade.
+
 = 0.6.0 =
-* Admin (in progress): native WordPress screens in four tabs (Feeds, Diagnostics, Activity log, Settings).
+* Native WordPress admin screens in four tabs (Feeds, Diagnostics, Activity log, Settings).
 * Feeds list: summary tiles (active feeds, items, excluded products, feeds with an error), six columns (Name, Target, Items, Status, Last generated, Feed URL), views All / Active / Errors / Inactive, channel filter, sorting, and Screen Options (columns, feeds per page).
 * Feeds list: row actions Edit, Generate now, Preview, Duplicate, Delete; bulk actions Generate now, Activate, Deactivate, Delete.
 * Delete: a dialog replaces the browser confirmation, lists the feeds and their files, and offers "Deactivate instead" so the feed URL keeps working.
@@ -163,13 +167,13 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * Docs: parameter keys are lowercased (`sanitize_key`).
 
 = 0.5.4 =
-* Maintenance : liens GitHub mis à jour vers github.com/olivierbigras (compte renommé, anciennement bigrat95). Aucun changement fonctionnel.
+* Maintenance: GitHub links updated to github.com/olivierbigras after the account rename. No functional change.
 
 = 0.5.3 =
-* Traductions FR de toute l’interface (liste, éditeur, canaux, notices, CLI, métabox produit). Fichiers fr_FR et fr_CA bundlés (français québécois : courriel, etc.). Repli fr_CA → fr_FR si le catalogue canadien est absent.
+* French translations for the whole interface (list, editor, channels, notices, CLI, product metabox). Bundled fr_FR and fr_CA catalogs (Canadian French). Falls back from fr_CA to fr_FR when the Canadian catalog is missing.
 
 = 0.5.2 =
-* Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+* French translations for the Minimum price and Extra link parameters settings.
 
 = 0.5.1 =
 * NEW: Per-feed “Parameters added to links” query string (for example `wcpbc-manual-country=US`). Added to each item `g:link` and to `mobile_link` when it is set, not to `image_link`. Existing query parameters are kept. Empty: off. Filter: `oliprfe_link_args`.
@@ -250,6 +254,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Upgrade Notice ==
 
+= 0.6.1 =
+Fixes constant resolution in namespaced code and runs the one-time prefix migration on init, after Action Scheduler is ready.
+
 = 0.6.0 =
 New native admin screens. Feeds, settings and feed URLs are unchanged.
 
@@ -263,13 +270,13 @@ External services documented. Admin CSS/HTML uses the `oliprfe-` prefix. Feeds a
 Link parameter values with `&`, `#` or a space are now encoded. Parameter keys stay lowercased (`sanitize_key`).
 
 = 0.5.4 =
-Maintenance : liens GitHub mis à jour. Aucun changement fonctionnel.
+Maintenance: GitHub links updated. No functional change.
 
 = 0.5.3 =
-Traductions FR de toute l’interface (fr_FR et fr_CA). Repli fr_CA → fr_FR si le catalogue canadien est absent.
+French translations for the whole interface (fr_FR and fr_CA). Falls back from fr_CA to fr_FR when the Canadian catalog is missing.
 
 = 0.5.2 =
-Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+French translations for the Minimum price and Extra link parameters settings.
 
 = 0.5.1 =
 Optional per-feed query string on item links. Existing feeds without extra parameters are unchanged.

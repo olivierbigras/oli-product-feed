@@ -15,7 +15,7 @@ use Oliprfe\Scheduler;
 defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( '\WP_List_Table' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+	require_once \ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
 /**
@@ -330,7 +330,7 @@ final class ListTable extends \WP_List_Table {
 		$countries = function_exists( 'WC' ) && WC()->countries ? WC()->countries->get_countries() : array();
 		$country   = isset( $countries[ $item['country'] ] ) ? $countries[ $item['country'] ] : $item['country'];
 		$text      = implode( ' · ', array_filter( array( self::language_code( $item ), $item['country'], $item['currency'] ) ) );
-		return '<span title="' . esc_attr( html_entity_decode( (string) $country, ENT_QUOTES, 'UTF-8' ) ) . '">' . esc_html( '' !== $text ? $text : '—' ) . '</span>';
+		return '<span title="' . esc_attr( html_entity_decode( (string) $country, \ENT_QUOTES, 'UTF-8' ) ) . '">' . esc_html( '' !== $text ? $text : '—' ) . '</span>';
 	}
 
 	/**

@@ -25,9 +25,9 @@ final class Util {
 		$text = strip_shortcodes( (string) $text );
 		$text = preg_replace( '/<(br|\/p|\/li|\/h[1-6]|\/div)[^>]*>/i', "$0 ", $text );
 		$text = wp_strip_all_tags( $text );
-		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$text = html_entity_decode( $text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 		// Entities that were double encoded (&amp;#8211;).
-		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$text = html_entity_decode( $text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 		$text = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text );
 		$text = preg_replace( '/\s+/u', ' ', $text );
 		$text = trim( (string) $text );
@@ -60,7 +60,7 @@ final class Util {
 		if ( ! preg_match( '/^\d{8}$|^\d{12,14}$/', $gtin ) ) {
 			return false;
 		}
-		$digits = str_split( str_pad( $gtin, 14, '0', STR_PAD_LEFT ) );
+		$digits = str_split( str_pad( $gtin, 14, '0', \STR_PAD_LEFT ) );
 		$check  = (int) array_pop( $digits );
 		$sum    = 0;
 		foreach ( $digits as $i => $digit ) {
@@ -238,9 +238,9 @@ final class Util {
 			if ( ! is_string( $raw ) || '' === $raw ) {
 				$raw = home_url();
 			}
-			$home_host = 'https' === wp_parse_url( $raw, PHP_URL_SCHEME ) ? wp_parse_url( $raw, PHP_URL_HOST ) : '';
+			$home_host = 'https' === wp_parse_url( $raw, \PHP_URL_SCHEME ) ? wp_parse_url( $raw, \PHP_URL_HOST ) : '';
 		}
-		if ( '' !== $home_host && 0 === strpos( $url, 'http://' ) && wp_parse_url( $url, PHP_URL_HOST ) === $home_host ) {
+		if ( '' !== $home_host && 0 === strpos( $url, 'http://' ) && wp_parse_url( $url, \PHP_URL_HOST ) === $home_host ) {
 			$url = 'https://' . substr( $url, 7 );
 		}
 		return $url;

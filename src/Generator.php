@@ -149,7 +149,7 @@ final class Generator {
 			}
 			$state['offset'] += count( $slice );
 
-			if ( defined( 'WP_CLI' ) && WP_CLI && function_exists( 'wp_cache_flush_runtime' ) ) {
+			if ( defined( 'WP_CLI' ) && \WP_CLI && function_exists( 'wp_cache_flush_runtime' ) ) {
 				wp_cache_flush_runtime();
 			}
 
@@ -189,7 +189,7 @@ final class Generator {
 	 */
 	public static function context( array $feed ) {
 		$home                     = Lang::default_home_url();
-		$feed['site_title']       = html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$feed['site_title']       = html_entity_decode( get_bloginfo( 'name' ), \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 		$feed['site_link']        = Lang::feed_url( $home, isset( $feed['language'] ) ? $feed['language'] : '', ! empty( $feed['force_https'] ) );
 		$feed['site_description'] = $feed['name'];
 		return $feed;
@@ -476,6 +476,6 @@ final class Generator {
 	 */
 	private static function write( $path, $data, $append ) {
 		// Direct file access: the feed is a static file streamed in batches; WP_Filesystem has no append mode.
-		return file_put_contents( $path, $data, $append ? FILE_APPEND | LOCK_EX : LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		return file_put_contents( $path, $data, $append ? \FILE_APPEND | \LOCK_EX : \LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 	}
 }
