@@ -229,7 +229,7 @@ final class Admin {
 			'woocommerce',
 			__( 'Product Feeds', 'oli-product-feed' ),
 			__( 'Product Feeds', 'oli-product-feed' ),
-			Settings::capability(),
+			Settings::capability(), // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			self::SLUG,
 			array( __CLASS__, 'render' )
 		);
@@ -322,7 +322,7 @@ final class Admin {
 	 * Router.
 	 */
 	public static function render() {
-		if ( ! current_user_can( Settings::capability() ) ) {
+		if ( ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			return;
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only routing.
@@ -727,7 +727,7 @@ final class Admin {
 	 * Delete dialog (feed list and editor): replaces the browser confirm(). Filled by the script.
 	 */
 	public static function delete_dialog() {
-		if ( ! self::is_plugin_screen() || ! current_user_can( Settings::capability() ) ) {
+		if ( ! self::is_plugin_screen() || ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			return;
 		}
 		?>
@@ -857,7 +857,7 @@ final class Admin {
 	 * Capability check.
 	 */
 	private static function guard() {
-		if ( ! current_user_can( Settings::capability() ) ) {
+		if ( ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			wp_die( esc_html__( 'You are not allowed to do this.', 'oli-product-feed' ), 403 );
 		}
 	}
@@ -1211,7 +1211,7 @@ final class Admin {
 	 */
 	public static function ajax_match_count() {
 		check_ajax_referer( 'oliprfe_feed_status' );
-		if ( ! current_user_can( Settings::capability() ) ) {
+		if ( ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			wp_send_json_error( null, 403 );
 		}
 		$raw  = isset( $_POST['feed'] ) && is_array( $_POST['feed'] ) ? wp_unslash( $_POST['feed'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Feeds::sanitize().
@@ -1247,7 +1247,7 @@ final class Admin {
 	 */
 	private static function ajax_guard() {
 		check_ajax_referer( 'oliprfe_feed_status' );
-		if ( ! current_user_can( Settings::capability() ) ) {
+		if ( ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			wp_send_json_error( null, 403 );
 		}
 	}
@@ -1359,7 +1359,7 @@ final class Admin {
 	 */
 	public static function ajax_status() {
 		check_ajax_referer( 'oliprfe_feed_status' );
-		if ( ! current_user_can( Settings::capability() ) ) {
+		if ( ! current_user_can( Settings::capability() ) ) { // phpcs:ignore WordPress.WP.Capabilities.Undetermined -- manage_woocommerce or manage_options. See Settings::capability().
 			wp_send_json_error( null, 403 );
 		}
 		$ids = isset( $_POST['ids'] ) ? array_filter( array_map( 'absint', explode( ',', sanitize_text_field( wp_unslash( $_POST['ids'] ) ) ) ) ) : array();

@@ -29,7 +29,7 @@ final class Scheduler {
 		add_action( self::BATCH, array( __CLASS__, 'batch' ) );
 		add_action( 'woocommerce_update_product', array( __CLASS__, 'product_changed' ) );
 		add_action( 'woocommerce_update_product_variation', array( __CLASS__, 'product_changed' ) );
-		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) ); // phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval
+		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) ); // phpcs:ignore WordPress.WP.CronInterval.ChangeDetected, WordPress.WP.CronInterval.CronSchedulesInterval -- 15-minute fallback (self::TICK_SECONDS). Action Scheduler is preferred.
 		add_action( 'init', array( __CLASS__, 'ensure_tick' ), 20 ); // After action_scheduler_init (priority 1).
 	}
 
