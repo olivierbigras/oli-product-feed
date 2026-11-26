@@ -1006,12 +1006,13 @@ final class Editor {
 		$groups = array(
 			Channel::REQUIRED    => __( 'Required', 'oli-product-feed' ),
 			Channel::RECOMMENDED => __( 'Recommended', 'oli-product-feed' ),
+			Channel::OPTIONAL    => __( 'Optional', 'oli-product-feed' ),
 		);
 		$fields = $channel->fields();
 		foreach ( $groups as $level => $label ) {
 			echo '<tbody><tr><th scope="rowgroup" colspan="4">' . esc_html( $label ) . '</th></tr>';
 			foreach ( $fields as $field => $def ) {
-				if ( $level !== $def['level'] ) {
+				if ( $level !== ( isset( $groups[ $def['level'] ] ) ? $def['level'] : Channel::OPTIONAL ) ) {
 					continue;
 				}
 				$hint = isset( $auto[ $field ] ) ? $auto[ $field ] : ( isset( $defaults[ $field ] ) ? self::spec_label( $defaults[ $field ] ) : __( 'Not sent', 'oli-product-feed' ) );
@@ -1019,14 +1020,8 @@ final class Editor {
 			}
 			echo '</tbody>';
 		}
-		// Custom: the other attributes of the channel, then the attributes added by hand.
+		// Custom: only the attributes added by hand.
 		echo '<tbody class="oliprfe-custom-rows"><tr><th scope="rowgroup" colspan="4">' . esc_html__( 'Custom', 'oli-product-feed' ) . '</th></tr>';
-		foreach ( $fields as $field => $def ) {
-			if ( Channel::REQUIRED !== $def['level'] && Channel::RECOMMENDED !== $def['level'] ) {
-				$hint = isset( $auto[ $field ] ) ? $auto[ $field ] : ( isset( $defaults[ $field ] ) ? self::spec_label( $defaults[ $field ] ) : __( 'Not sent', 'oli-product-feed' ) );
-				self::mapping_row( $field, $def['label'], isset( $feed['mapping'][ $field ] ) ? $feed['mapping'][ $field ] : null, $hint, false, $checks[ $field ] );
-			}
-		}
 		foreach ( $feed['mapping'] as $field => $spec ) {
 			if ( ! isset( $fields[ $field ] ) ) {
 				self::mapping_row( $field, '', $spec, '', true, isset( $checks[ $field ] ) ? $checks[ $field ] : array() );
@@ -1070,6 +1065,7 @@ final class Editor {
 		$empty = $last && isset( $last['empty'] ) && is_array( $last['empty'] ) ? $last['empty'] : null;
 		$out   = array();
 		// Empty by design for some products (simple products, no sale, no backorder): never a problem.
+		$sent        = array_merge( $channel->default_mapping(), self::automatic_fields() );
 		$conditional = array( 'item_group_id', 'sale_price', 'sale_price_effective_date', 'availability_date', 'identifier_exists', 'min_handling_time', 'max_handling_time' );
 		foreach ( array_merge( $channel->fields(), $feed['mapping'] ) as $field => $unused ) {
 			$def   = $channel->fields();
@@ -1077,7 +1073,8 @@ final class Editor {
 			$spec  = isset( $feed['mapping'][ $field ] ) ? $feed['mapping'][ $field ] : null;
 			$type  = $spec && isset( $spec['type'] ) ? $spec['type'] : 'auto';
 			$count = null !== $empty && isset( $empty[ $field ] ) ? (int) $empty[ $field ] : 0;
-			if ( 'none' === $type ) {
+			if ( 'none' === $type || ( 'auto' === $type && ! isset( $sent[ $field ] ) ) ) {
+				// Not sent: by choice, or the automatic rule has no value for this attribute ("Not sent" hint).
 				$state = 'off';
 			} elseif ( null === $empty ) {
 				$state = 'none';
@@ -1225,7 +1222,7 @@ final class Editor {
 		if ( ! $cols ) {
 			$cols = array_slice( array_keys( $first ), 0, 4 );
 		}
-		$html .= '<table class="widefat striped oliprfe-dry"><thead><tr>';
+		$html .= '<table class="widefat striped oliprfe-dry" tabindex="0" aria-label="' . esc_attr__( 'Preview items', 'oli-product-feed' ) . '"><thead><tr>';
 		foreach ( $cols as $col ) {
 			$html .= '<th scope="col"><code>' . esc_html( $col ) . '</code></th>';
 		}
