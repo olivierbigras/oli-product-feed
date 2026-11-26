@@ -181,7 +181,7 @@
 	}
 	document.addEventListener( 'input', debounce( function ( event ) {
 		var input = event.target;
-		if ( ! input.classList || ! input.classList.contains( 'oliprfe-gcat' ) ) {
+		if ( ! input.classList || ! input.classList.contains( 'oliprfe-gcat' ) || ! input.getAttribute( 'list' ) ) {
 			return;
 		}
 		showPath( input );

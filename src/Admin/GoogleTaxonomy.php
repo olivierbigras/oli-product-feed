@@ -1,6 +1,6 @@
 <?php
 /**
- * Google product taxonomy: local list shipped with the plugin (no network call).
+ * Google product taxonomy: optional local list provided by the site (no network call, nothing bundled).
  *
  * @package Oliprfe
  */
@@ -10,7 +10,11 @@ namespace Oliprfe\Admin;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Lookup and search in data/google-taxonomy-en-US.txt ("ID - Path > Sub").
+ * Lookup and search in a local copy of Google's taxonomy-with-ids file ("ID - Path > Sub").
+ *
+ * The plugin does not ship the file: Google publishes it without a redistribution license. A site can
+ * point the oliprfe_google_taxonomy_file filter to its own copy (for example taxonomy-with-ids.fr-FR.txt);
+ * without it, the category fields take a numeric ID, as in 0.5.7.
  */
 final class GoogleTaxonomy {
 
@@ -29,8 +33,14 @@ final class GoogleTaxonomy {
 	public static function all() {
 		if ( null === self::$paths ) {
 			self::$paths = array();
-			$file        = OLIPRFE_DIR . 'data/google-taxonomy-en-US.txt';
-			$lines       = is_readable( $file ) ? file( $file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) : array();
+			/**
+			 * Local copy of Google's taxonomy-with-ids file ('' : none, the fields take an ID).
+			 *
+			 * @param string $file   Absolute path.
+			 * @param string $locale Admin locale (for example fr_FR or en_US).
+			 */
+			$file        = (string) apply_filters( 'oliprfe_google_taxonomy_file', '', determine_locale() );
+			$lines       = '' !== $file && is_readable( $file ) ? file( $file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) : array();
 			foreach ( (array) $lines as $line ) {
 				if ( preg_match( '/^(\d+) - (.+)$/', $line, $m ) ) {
 					self::$paths[ (int) $m[1] ] = $m[2];
@@ -38,6 +48,15 @@ final class GoogleTaxonomy {
 			}
 		}
 		return self::$paths;
+	}
+
+	/**
+	 * Is a local list available?
+	 *
+	 * @return bool
+	 */
+	public static function available() {
+		return (bool) self::all();
 	}
 
 	/**

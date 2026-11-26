@@ -91,6 +91,15 @@ No outbound request is made from WordPress. Feeds only contain public product da
 
 == Frequently Asked Questions ==
 
+= Can I search Google product categories by name? =
+
+Yes, if you keep a copy of Google's taxonomy file on your server (download taxonomy-with-ids.en-US.txt or the file of your language, for example fr-FR, from the Google Merchant Center help). Point the plugin to it in a small mu-plugin:
+
+`add_filter( 'oliprfe_google_taxonomy_file', function () { return WP_CONTENT_DIR . '/taxonomy-with-ids.en-US.txt'; } );`
+
+The plugin does not include the file because Google does not publish it with a license that allows redistribution. Without it, the category fields take the numeric ID.
+
+
 = The platform still sees an old version of the feed =
 
 Your host or CDN probably caches static files for a long time. In **Settings**, choose **Through WordPress**: the feed is then served with a short cache (one hour by default) and validators, and the URL becomes `/?oliprfe_feed=<file>`.
@@ -133,7 +142,7 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * Add New Feed: one screen (channel, language, country, currency, suggested name); the feed is created inactive with the channel defaults and opens on its mapping.
 * Attribute mapping: four columns (Attribute, Source, Preview, Check), preview with any product, and a Check column that counts the products where each attribute was empty in the last generation, with a notice and a "Show only problems" filter.
 * Preview: a dry run of the first five items (table, warnings and raw file); no file is written.
-* Google category: type words or an ID and pick from the Google product taxonomy shipped with the plugin (no network request).
+* Google category: a numeric ID, as before. A site that keeps its own copy of Google's taxonomy file can enable a local search with the oliprfe_google_taxonomy_file filter (the plugin does not ship the file and makes no network request).
 * Diagnostics tab: last generation of a feed, excluded products by reason (with the products and how to fix), warnings, empty values per attribute, site checks and a plain-text report you can copy (nothing is sent).
 * Activity log tab: generations, failures, queued and cancelled runs, feed changes and saved settings, with who did it (user, schedule or product update); runs kept by earlier versions are imported once. Keeps the last 200 entries by default (Settings > Activity log).
 * Feed editor: the Last runs box is replaced by links to Diagnostics and to the activity of the feed.

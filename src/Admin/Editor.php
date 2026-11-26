@@ -1307,6 +1307,9 @@ final class Editor {
 	 * @return string
 	 */
 	private static function gcat_attrs( $key ) {
+		if ( ! GoogleTaxonomy::available() ) {
+			return ' inputmode="numeric" aria-describedby="oliprfe-gcat-path-' . esc_attr( $key ) . '"';
+		}
 		return ' list="oliprfe-gcat-list" autocomplete="off" inputmode="search" aria-describedby="oliprfe-gcat-path-' . esc_attr( $key ) . '"';
 	}
 
@@ -1319,7 +1322,7 @@ final class Editor {
 	 */
 	private static function gcat_path( $key, $id ) {
 		$path = '' !== (string) $id ? GoogleTaxonomy::path( $id ) : '';
-		if ( '' !== (string) $id && '' === $path ) {
+		if ( '' !== (string) $id && '' === $path && GoogleTaxonomy::available() ) {
 			$path = __( 'Unknown category ID', 'oli-product-feed' );
 		}
 		return '<span class="oliprfe-meta oliprfe-gcat-path" id="oliprfe-gcat-path-' . esc_attr( $key ) . '">' . esc_html( $path ) . '</span>';
@@ -1526,8 +1529,10 @@ final class Editor {
 	private static function box_categories( array $feed ) {
 		self::open_box( 'oliprfe-categories', __( 'Categories', 'oli-product-feed' ) );
 		echo '<table class="form-table" role="presentation"><tbody>';
-		self::row( __( 'Default Google category', 'oli-product-feed' ), 'oliprfe-google_category_default', self::text( 'feed[google_category_default]', 'oliprfe-google_category_default', $feed['google_category_default'], 'regular-text code oliprfe-gcat', self::gcat_attrs( 'default' ) ) . self::gcat_path( 'default', $feed['google_category_default'] ), __( 'Type words (for example guitar) or an ID and pick a category: its ID is saved. Used when no product category below has one.', 'oli-product-feed' ) );
-		echo '<datalist id="oliprfe-gcat-list"></datalist>';
+		self::row( __( 'Default Google category', 'oli-product-feed' ), 'oliprfe-google_category_default', self::text( 'feed[google_category_default]', 'oliprfe-google_category_default', $feed['google_category_default'], 'regular-text code oliprfe-gcat', self::gcat_attrs( 'default' ) ) . self::gcat_path( 'default', $feed['google_category_default'] ) . ( GoogleTaxonomy::available() ? '' : ' <a href="https://support.google.com/merchants/answer/6324436" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Google product categories (Google help)', 'oli-product-feed' ) . '</a>' ), GoogleTaxonomy::available() ? __( 'Type words (for example guitar) or an ID and pick a category: its ID is saved. Used when no product category below has one.', 'oli-product-feed' ) : __( 'Numeric ID of a Google product category. Used when no product category below has one.', 'oli-product-feed' ) );
+		if ( GoogleTaxonomy::available() ) {
+			echo '<datalist id="oliprfe-gcat-list"></datalist>';
+		}
 		echo '</tbody></table>';
 		echo '<p>' . esc_html__( 'Per product category: Google category ID and the {type} used by the title template. The deepest category with a value wins.', 'oli-product-feed' ) . '</p>';
 		echo '<p class="description">' . esc_html__( 'The type is left out when the name already contains it. Words in brackets are optional: "[Guitar] Strap" adds "Guitar Strap", or nothing when the name already says "Strap".', 'oli-product-feed' ) . '</p>';
