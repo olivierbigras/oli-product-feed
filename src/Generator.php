@@ -82,6 +82,8 @@ final class Generator {
 			'excluded' => array(),
 			'warnings' => array(),
 			'empty'    => array(),
+			'warned'   => array(),
+			'by'       => Activity::current_by(),
 			'tmp'      => $tmp,
 			'path'     => $path,
 			'existed'  => file_exists( $path ),
@@ -123,6 +125,7 @@ final class Generator {
 					if ( ! isset( $state['warnings'][ $code ] ) ) {
 						$state['warnings'][ $code ] = array();
 					}
+					$state['warned'][ $code ] = ( isset( $state['warned'][ $code ] ) ? $state['warned'][ $code ] : 0 ) + 1;
 					if ( count( $state['warnings'][ $code ] ) < 50 ) {
 						$state['warnings'][ $code ][] = $id;
 					}
@@ -359,10 +362,12 @@ final class Generator {
 			'excluded'   => $excluded,
 			'warnings'   => $state['warnings'],
 			'empty'      => isset( $state['empty'] ) ? $state['empty'] : array(),
+			'warned'     => isset( $state['warned'] ) ? $state['warned'] : array(),
 			'bytes'      => (int) filesize( $state['path'] ),
 			'url'        => Storage::url_for( $feed_id ),
 		);
 		Feeds::add_log( $feed_id, $entry );
+		Activity::add( 'generated', $feed_id, Activity::run_data( $entry ), isset( $state['by'] ) ? $state['by'] : 'schedule' );
 		Settings::log(
 			'info',
 			sprintf( 'Feed %1$d (%2$s) generated: %3$d items, %4$d excluded, %5$ss.', $feed_id, $feed['file_slug'], $entry['items'], $entry['candidates'] - $entry['items'], $entry['duration'] ),
@@ -416,6 +421,7 @@ final class Generator {
 				'message' => $message,
 			)
 		);
+		Activity::add( 'failed', $feed_id, array( 'message' => $message ) );
 		Settings::log( 'error', sprintf( 'Feed %1$d: %2$s', $feed_id, $message ), array( 'feed_id' => $feed_id ) );
 		return new \WP_Error( $code, $message );
 	}
@@ -439,6 +445,7 @@ final class Generator {
 				'message' => $message,
 			)
 		);
+		Activity::add( 'failed', $feed_id, array( 'message' => $message ), isset( $state['by'] ) ? $state['by'] : 'schedule' );
 		Settings::log( 'error', sprintf( 'Feed %1$d: %2$s', $feed_id, $message ), array( 'feed_id' => $feed_id ) );
 		delete_option( self::STATE_PREFIX . $feed_id );
 		delete_transient( self::LOCK_PREFIX . $feed_id );

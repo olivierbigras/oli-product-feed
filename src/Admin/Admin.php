@@ -7,6 +7,7 @@
 
 namespace Oliprfe\Admin;
 
+use Oliprfe\Activity;
 use Oliprfe\Channels\Registry;
 use Oliprfe\Endpoint;
 use Oliprfe\Feeds;
@@ -310,8 +311,12 @@ final class Admin {
 			self::render_settings();
 			return;
 		}
-		if ( 'diagnostics' === $tab || 'log' === $tab ) {
-			self::render_pending_tab( $tab );
+		if ( 'diagnostics' === $tab ) {
+			Diagnostics::render();
+			return;
+		}
+		if ( 'log' === $tab ) {
+			self::render_log();
 			return;
 		}
 		if ( 'new' === $action ) {
@@ -370,19 +375,25 @@ final class Admin {
 	}
 
 	/**
-	 * Diagnostics and Activity log tabs: their content comes with the next steps of the 0.6 screens.
-	 * Meanwhile the tab explains where the information is today.
-	 *
-	 * @param string $tab diagnostics|log.
+	 * Activity log tab: the runs kept by 0.5.7 in each feed are imported once, then the native table.
 	 */
-	private static function render_pending_tab( $tab ) {
+	private static function render_log() {
+		Activity::import_legacy();
+		$table = new ActivityTable();
+		$table->prepare_items();
 		echo '<div class="wrap oliprfe-wrap">';
 		self::heading( __( 'Product Feeds', 'oli-product-feed' ) );
-		self::tabs( $tab );
+		self::tabs( 'log' );
 		self::notices();
-		echo '<div class="oliprfe-panel"><h2>' . esc_html( 'log' === $tab ? __( 'Activity log', 'oli-product-feed' ) : __( 'Diagnostics', 'oli-product-feed' ) ) . '</h2>';
-		echo '<p>' . esc_html__( 'The last runs of each feed are listed in its editor, under Last runs.', 'oli-product-feed' ) . '</p></div>';
-		echo '</div>';
+		echo '<form method="get"><input type="hidden" name="page" value="' . esc_attr( self::SLUG ) . '"><input type="hidden" name="tab" value="log">';
+		$table->display();
+		echo '</form><p class="description">' . esc_html(
+			sprintf(
+				/* translators: %s: number of entries. */
+				__( 'The last %s entries are kept (Settings › Activity log). Older entries are deleted automatically.', 'oli-product-feed' ),
+				number_format_i18n( Activity::keep() )
+			)
+		) . '</p></div>';
 	}
 
 	/**
@@ -750,15 +761,6 @@ final class Admin {
 		echo '</tbody></table>';
 		echo '<h2>' . esc_html__( 'Generation', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th scope="row">' . esc_html__( 'Product changes', 'oli-product-feed' ) . '</th><td><input type="hidden" name="s[regen_on_update]" value="0"><label><input type="checkbox" name="s[regen_on_update]" value="1"' . checked( (bool) $s['regen_on_update'], true, false ) . '> ' . esc_html__( 'Regenerate the active feeds when a product is updated (at most every 15 minutes)', 'oli-product-feed' ) . '</label></td></tr>';
-		echo '<tr><th scope="row"><label for="oliprfe-log_level">' . esc_html__( 'Log', 'oli-product-feed' ) . '</label></th><td><select id="oliprfe-log_level" name="s[log_level]">';
-		foreach ( array(
-			'off'   => __( 'Off', 'oli-product-feed' ),
-			'error' => __( 'Errors only', 'oli-product-feed' ),
-			'info'  => __( 'Errors and every generation', 'oli-product-feed' ),
-		) as $value => $label ) {
-			echo '<option value="' . esc_attr( $value ) . '"' . selected( $s['log_level'], $value, false ) . '>' . esc_html( $label ) . '</option>';
-		}
-		echo '</select><p class="description">' . esc_html__( 'Written to WooCommerce > Status > Logs (source: oli-product-feed).', 'oli-product-feed' ) . '</p></td></tr>';
 		$next = Scheduler::next_tick();
 		echo '<tr><th scope="row">' . esc_html__( 'Schedule check', 'oli-product-feed' ) . '</th><td>' . esc_html(
 			$next ? sprintf(
@@ -772,16 +774,29 @@ final class Admin {
 		echo '<input type="hidden" name="s[shop_manager_access]" value="0"><label><input type="checkbox" name="s[shop_manager_access]" value="1"' . checked( (bool) $s['shop_manager_access'], true, false ) . '> ' . esc_html__( 'Shop managers can manage the feeds (otherwise administrators only)', 'oli-product-feed' ) . '</label>';
 		echo '<p class="description">' . esc_html__( 'Checked: users with the manage_woocommerce capability (administrators and shop managers). Unchecked: users with the manage_options capability (administrators).', 'oli-product-feed' ) . '</p>';
 		echo '</td></tr></tbody></table>';
+		echo '<h2>' . esc_html__( 'Activity log', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
+		echo '<tr><th scope="row"><label for="oliprfe-log_keep">' . esc_html__( 'Keep', 'oli-product-feed' ) . '</label></th><td><input type="number" min="10" max="5000" step="1" class="small-text" id="oliprfe-log_keep" name="s[log_keep]" value="' . esc_attr( (string) $s['log_keep'] ) . '" aria-describedby="oliprfe-log_keep-desc"> ' . esc_html__( 'entries', 'oli-product-feed' );
+		echo '<p class="description" id="oliprfe-log_keep-desc">' . esc_html__( 'Older entries are deleted automatically.', 'oli-product-feed' ) . '</p></td></tr>';
+		echo '<tr><th scope="row"><label for="oliprfe-log_level">' . esc_html__( 'WooCommerce log', 'oli-product-feed' ) . '</label></th><td><select id="oliprfe-log_level" name="s[log_level]">';
+		foreach ( array(
+			'off'   => __( 'Off', 'oli-product-feed' ),
+			'error' => __( 'Errors only', 'oli-product-feed' ),
+			'info'  => __( 'Errors and every generation', 'oli-product-feed' ),
+		) as $value => $label ) {
+			echo '<option value="' . esc_attr( $value ) . '"' . selected( $s['log_level'], $value, false ) . '>' . esc_html( $label ) . '</option>';
+		}
+		echo '</select><p class="description">' . esc_html__( 'Written to WooCommerce > Status > Logs (source: oli-product-feed).', 'oli-product-feed' ) . '</p></td></tr>';
+		echo '</tbody></table>';
 		echo '<h2>' . esc_html__( 'Uninstall', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody><tr><th scope="row">' . esc_html__( 'Plugin data', 'oli-product-feed' ) . '</th><td>';
 		echo '<input type="hidden" name="s[delete_on_uninstall]" value="0"><label><input type="checkbox" name="s[delete_on_uninstall]" value="1"' . checked( (bool) $s['delete_on_uninstall'], true, false ) . '> ' . esc_html__( 'Delete all data when the plugin is deleted (feeds, settings and generated files)', 'oli-product-feed' ) . '</label>';
-		echo '<p class="description">' . esc_html__( 'Checked: the feeds, the settings, the generated files of every output folder the plugin used and its WooCommerce logs are deleted; files the plugin did not write are never touched. Unchecked: everything is kept.', 'oli-product-feed' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Checked: the feeds, the settings, the generated files of every output folder the plugin used and its WooCommerce logs are deleted; files the plugin did not write are never touched. Unchecked: everything is kept. Deactivating the plugin never deletes anything.', 'oli-product-feed' ) . '</p>';
 		echo '</td></tr></tbody></table>';
 		submit_button();
 		echo '</form>';
 		echo '<h2>' . esc_html__( 'Maintenance', 'oli-product-feed' ) . '</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="oliprfe_generate_all">';
 		wp_nonce_field( 'oliprfe_generate_all' );
-		echo '<p>' . esc_html__( 'Regenerates every active feed in the background. The current files stay online until the new ones replace them.', 'oli-product-feed' ) . '</p>';
-		submit_button( __( 'Regenerate all active feeds', 'oli-product-feed' ), 'secondary', 'submit', false );
+		echo '<p>' . esc_html__( 'Queues every active feed now. Feeds already running are skipped. The current files stay online until the new ones replace them.', 'oli-product-feed' ) . '</p>';
+		submit_button( __( 'Generate all active feeds', 'oli-product-feed' ), 'secondary', 'submit', false );
 		echo '</form>';
 		echo '</div>';
 	}
@@ -1049,6 +1064,7 @@ final class Admin {
 			)
 		);
 		Endpoint::refresh_index();
+		Activity::add( $active ? 'activated' : 'deactivated', $feed_id );
 	}
 
 	/**
@@ -1073,6 +1089,7 @@ final class Admin {
 	public static function handle_cancel() {
 		$feed_id = self::checked_feed( 'oliprfe_cancel_generation' );
 		Generator::cancel( $feed_id );
+		Activity::add( 'cancelled', $feed_id );
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
 			as_unschedule_all_actions( Scheduler::BATCH, array( $feed_id ), Scheduler::GROUP );
 		}
@@ -1088,6 +1105,8 @@ final class Admin {
 		check_admin_referer( 'oliprfe_save_settings' );
 		$raw = isset( $_POST['s'] ) && is_array( $_POST['s'] ) ? wp_unslash( $_POST['s'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by Settings::save().
 		$saved = Settings::save( $raw );
+		Activity::add( 'settings' );
+		Activity::prune();
 		if ( is_wp_error( $saved ) ) {
 			$data = (array) $saved->get_error_data();
 			self::back(
@@ -1155,8 +1174,10 @@ final class Admin {
 	 */
 	private static function posted_feed() {
 		$raw        = isset( $_POST['feed'] ) && is_array( $_POST['feed'] ) ? wp_unslash( $_POST['feed'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked in self::ajax_guard(); sanitized by Feeds::sanitize().
-		$feed       = Feeds::sanitize( Editor::parse( $raw ) );
-		$feed['id'] = isset( $_POST['feed_id'] ) ? absint( $_POST['feed_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
+		$parsed       = Editor::parse( $raw );
+		$feed         = Feeds::sanitize( $parsed );
+		$feed['name'] = isset( $parsed['name'] ) ? sanitize_text_field( (string) $parsed['name'] ) : ''; // Header of the file (site_description).
+		$feed['id']   = isset( $_POST['feed_id'] ) ? absint( $_POST['feed_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
 		return $feed;
 	}
 

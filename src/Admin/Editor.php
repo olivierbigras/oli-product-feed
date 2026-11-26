@@ -669,33 +669,15 @@ final class Editor {
 		}
 
 		if ( $feed_id ) {
-			$log = get_post_meta( $feed_id, Feeds::META_LOG, true );
-			if ( is_array( $log ) && $log ) {
-				echo '<div class="postbox"><div class="postbox-header"><h2 class="hndle">' . esc_html__( 'Last runs', 'oli-product-feed' ) . '</h2></div><div class="inside">';
-				foreach ( array_slice( $log, 0, 5 ) as $entry ) {
-					echo '<p><strong>' . esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $entry['time'] ) ) . '</strong><br>';
-					if ( 'success' === $entry['status'] ) {
-						echo esc_html(
-							sprintf(
-								/* translators: 1: items, 2: seconds. */
-								__( '%1$s items in %2$s s', 'oli-product-feed' ),
-								number_format_i18n( (int) $entry['items'] ),
-								(string) $entry['duration']
-							)
-						);
-						foreach ( (array) $entry['excluded'] as $reason => $info ) {
-							echo '<br><span class="oliprfe-meta">' . esc_html( self::reason_label( $reason ) . ' : ' . (int) $info['count'] ) . ' <span class="code">(' . esc_html( implode( ', ', array_slice( (array) $info['ids'], 0, 10 ) ) ) . ')</span></span>';
-						}
-						foreach ( (array) $entry['warnings'] as $code => $ids ) {
-							echo '<br><span class="oliprfe-meta">' . esc_html( self::reason_label( $code ) . ' : ' . count( (array) $ids ) ) . ' <span class="code">(' . esc_html( implode( ', ', array_slice( (array) $ids, 0, 10 ) ) ) . ')</span></span>';
-						}
-					} else {
-						echo '<span class="oliprfe-error-text">' . esc_html( isset( $entry['message'] ) ? $entry['message'] : __( 'Error', 'oli-product-feed' ) ) . '</span>';
-					}
-					echo '</p>';
-				}
-				echo '</div></div>';
-			}
+			// The runs moved to the Diagnostics and Activity log tabs.
+			echo '<div class="postbox"><div class="postbox-header"><h2 class="hndle">' . esc_html__( 'Runs', 'oli-product-feed' ) . '</h2></div><div class="inside"><p><a href="' . esc_url( Admin::diag_url( $feed_id ) ) . '">' . esc_html__( 'Diagnostics of the last generation', 'oli-product-feed' ) . '</a><br><a href="' . esc_url(
+				Admin::url(
+					array(
+						'tab'  => 'log',
+						'feed' => $feed_id,
+					)
+				)
+			) . '">' . esc_html__( 'View all runs', 'oli-product-feed' ) . '</a></p></div></div>';
 		}
 	}
 

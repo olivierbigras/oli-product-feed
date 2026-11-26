@@ -134,9 +134,12 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * Attribute mapping: four columns (Attribute, Source, Preview, Check), preview with any product, and a Check column that counts the products where each attribute was empty in the last generation, with a notice and a "Show only problems" filter.
 * Preview: a dry run of the first five items (table, warnings and raw file); no file is written.
 * Google category: type words or an ID and pick from the Google product taxonomy shipped with the plugin (no network request).
+* Diagnostics tab: last generation of a feed, excluded products by reason (with the products and how to fix), warnings, empty values per attribute, site checks and a plain-text report you can copy (nothing is sent).
+* Activity log tab: generations, failures, queued and cancelled runs, feed changes and saved settings, with who did it (user, schedule or product update); runs kept by earlier versions are imported once. Keeps the last 200 entries by default (Settings > Activity log).
+* Feed editor: the Last runs box is replaced by links to Diagnostics and to the activity of the feed.
 * Removed: the support notice and the support footer on the plugin screens (the donate link stays in the plugin row and in this readme).
 * Fix: the Settings tab no longer fails on PHP builds without GLOB_BRACE.
-* Data: feeds, their configuration, the settings and the feed URLs are unchanged.
+* Data: feeds, their configuration, the settings and the feed URLs are unchanged; one new setting, log_keep (Activity log entries to keep).
 
 = 0.5.7 =
 * Packaging: `.distignore` and `.gitattributes` `export-ignore` omit tests, tooling, composer/phpunit/phpcs/npm manifests and internal Markdown from the distributable ZIP. `readme.txt` stays.
