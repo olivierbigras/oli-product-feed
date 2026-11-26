@@ -173,7 +173,7 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * French translations for the whole interface (list, editor, channels, notices, CLI, product metabox). Bundled fr_FR and fr_CA catalogs (Canadian French). Falls back from fr_CA to fr_FR when the Canadian catalog is missing.
 
 = 0.5.2 =
-* Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+* French translations for the Minimum price and Extra link parameters settings.
 
 = 0.5.1 =
 * NEW: Per-feed “Parameters added to links” query string (for example `wcpbc-manual-country=US`). Added to each item `g:link` and to `mobile_link` when it is set, not to `image_link`. Existing query parameters are kept. Empty: off. Filter: `oliprfe_link_args`.
@@ -276,7 +276,7 @@ Maintenance: GitHub links updated. No functional change.
 French translations for the whole interface (fr_FR and fr_CA). Falls back from fr_CA to fr_FR when the Canadian catalog is missing.
 
 = 0.5.2 =
-Traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+French translations for the Minimum price and Extra link parameters settings.
 
 = 0.5.1 =
 Optional per-feed query string on item links. Existing feeds without extra parameters are unchanged.

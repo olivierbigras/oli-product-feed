@@ -54,7 +54,7 @@ Native WordPress admin screens. Feeds, their configuration, the settings and the
 - **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.2 → 0.5.3.
 
 - **Build** (`bin/build-zip.sh`) : script reproductible pour le ZIP installable (racine `oli-product-feed/`, sans tests / .git / node_modules / outils, fichier `.mo` FR compilé).
-- **Traductions** (`languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`) : traductions FR des réglages Prix minimum et Paramètres ajoutés aux liens.
+- **Translations** (`languages/oli-product-feed-fr_FR.po`, `languages/oli-product-feed-fr_FR.mo`): French translations for the Minimum price and Extra link parameters settings.
 - **Version** (`oli-product-feed.php`, `readme.txt`, `languages/oli-product-feed.pot`) : 0.5.1 → 0.5.2.
 
 - **Liens** (`src/Util.php`, `src/Feeds.php`, `src/ItemBuilder.php`, `src/Admin/Editor.php`) : réglage « Paramètres ajoutés aux liens » (chaîne de requête, ex. `wcpbc-manual-country=US`, vide par défaut). Ajouté à `<link>` (`g:link`) de chaque article et à `mobile_link` s’il existe, via `add_query_arg`, en conservant les paramètres déjà présents (`attribute_*` des variations, `lang`). Pas ajouté à `image_link`. Saisie limitée aux paires `clé=valeur` (`sanitize_key` / `sanitize_text_field`). Filtre `oliprfe_link_args` (tableau, produit, flux — ordre déjà utilisé par Price Based on Country). Sans réglage, la sortie reste identique.
