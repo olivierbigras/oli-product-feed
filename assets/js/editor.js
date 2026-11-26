@@ -304,6 +304,10 @@
 		holder.innerHTML = template.innerHTML.split( '__FIELD__' ).join( name );
 		var row = holder.querySelector( 'tr' );
 		body.appendChild( row );
+		var none = body.querySelector( '.oliprfe-custom-none' );
+		if ( none ) {
+			none.hidden = true;
+		}
 		input.value = '';
 		var first = row.querySelector( 'select, input' );
 		if ( first ) {
@@ -322,7 +326,12 @@
 		}
 		var row = target.closest( 'tr' );
 		if ( row ) {
-			row.parentNode.removeChild( row );
+			var rows = row.parentNode;
+			rows.removeChild( row );
+			var empty = rows.querySelector( '.oliprfe-custom-none' );
+			if ( empty && ! rows.querySelector( 'tr:not(.oliprfe-custom-none) td' ) ) {
+				empty.hidden = false;
+			}
 			var add = document.getElementById( 'oliprfe-add-attr' );
 			if ( add ) {
 				add.focus();

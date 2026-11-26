@@ -1049,6 +1049,8 @@ final class Editor {
 		}
 		// Custom: only the attributes added by hand.
 		echo '<tbody class="oliprfe-custom-rows"><tr><th scope="rowgroup" colspan="4">' . esc_html__( 'Custom', 'oli-product-feed' ) . '</th></tr>';
+		$custom = array_diff_key( $feed['mapping'], $fields );
+		echo '<tr class="oliprfe-custom-none"' . ( $custom ? ' hidden' : '' ) . '><td colspan="4"><span class="oliprfe-meta">' . esc_html__( 'No custom attribute. Add one below if the platform needs an attribute that is not listed.', 'oli-product-feed' ) . '</span></td></tr>';
 		foreach ( $feed['mapping'] as $field => $spec ) {
 			if ( ! isset( $fields[ $field ] ) ) {
 				self::mapping_row( $field, '', $spec, '', true, isset( $checks[ $field ] ) ? $checks[ $field ] : array() );
@@ -1059,7 +1061,7 @@ final class Editor {
 		self::mapping_row( '__FIELD__', '', array( 'type' => 'static' ), '', true, array() );
 		echo '</template>';
 		echo '<p><label for="oliprfe-add-attr">' . esc_html__( 'Add an attribute (name as expected by the platform):', 'oli-product-feed' ) . '</label> ';
-		echo '<input type="text" id="oliprfe-add-attr" class="code" pattern="[a-z0-9_]+" placeholder="custom_label_2"> <button type="button" class="button oliprfe-add-row">' . esc_html__( 'Add attribute', 'oli-product-feed' ) . '</button></p>';
+		echo '<input type="text" id="oliprfe-add-attr" class="code" pattern="[a-z0-9_]+"> <button type="button" class="button oliprfe-add-row">' . esc_html__( 'Add attribute', 'oli-product-feed' ) . '</button></p>';
 		self::meta_datalist();
 
 		echo '<table class="form-table" role="presentation"><tbody>';
