@@ -371,7 +371,7 @@ final class ListTable extends \WP_List_Table {
 		$label = isset( $freq[ $item['frequency'] ] ) ? $freq[ $item['frequency'] ] : $item['frequency'];
 		if ( $item['start_hour'] >= 0 && in_array( $item['frequency'], array( 'daily', 'weekly' ), true ) ) {
 			$time = ( new \DateTimeImmutable( 'now', wp_timezone() ) )->setTime( (int) $item['start_hour'], 0 );
-			/* translators: 1: frequency, e.g. "Daily", 2: time. */
+			/* translators: 1: date, or frequency such as "Daily", 2: time. */
 			$label = sprintf( __( '%1$s at %2$s', 'oli-product-feed' ), $label, wp_date( get_option( 'time_format' ), $time->getTimestamp() ) );
 		}
 		return $label;
@@ -384,7 +384,7 @@ final class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	private static function date( $time ) {
-		/* translators: 1: date, 2: time. */
+		/* translators: 1: date, or frequency such as "Daily", 2: time. */
 		$text = sprintf( __( '%1$s at %2$s', 'oli-product-feed' ), wp_date( get_option( 'date_format' ), $time ), wp_date( get_option( 'time_format' ), $time ) );
 		return '<time datetime="' . esc_attr( wp_date( 'c', $time ) ) . '">' . esc_html( $text ) . '</time>';
 	}

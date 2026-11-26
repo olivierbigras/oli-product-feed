@@ -6,6 +6,7 @@
 
 - **Suppression sans JS** (`src/Admin/Admin.php`, `assets/js/admin.js`) (P3-5) : sans `confirm=1`, le lien Delete (ligne, éditeur) et l’action groupée Delete affichent une page de confirmation native (`wp_die()`, statut 200) avec la liste des flux et de leurs fichiers, puis Cancel, Deactivate instead et « Delete N feeds ». Rien n’est supprimé avant. Le dialogue JS envoie `confirm=1` et ne montre jamais cette page.
 - **Notice multilingue** (`src/Admin/Admin.php`, `assets/js/admin.js`, `uninstall.php`) (P3-10) : « No multilingual plugin detected… » ne s’affiche plus dans l’état vide (l’assistant le dit déjà), seulement sur la liste des flux. Elle est ignorable par compte : le bouton de fermeture (`is-dismissible`) ou le lien « Do not show again » (sans JS) enregistre la méta utilisateur `oliprfe_hide_multilingual` (action `oliprfe_hide_notice`, nonce + capacité). La désinstallation avec « Plugin data » supprime cette méta.
+- **.pot régénéré** (`languages/oli-product-feed.pot`, `wp i18n make-pot`, hors `tests`, `bin`, `captures`) : 0.6.0, 613 chaînes. J’ai harmonisé deux commentaires de traducteurs pour une même chaîne (« Next: %s », « %1$s at %2$s ») : plus aucun avertissement. Les `.po` fr_CA et fr_FR ne sont pas mis à jour : les nouvelles chaînes restent en anglais jusqu’à la traduction.
 
 ### Décisions Q1-Q6 (2026-11-25) : taxonomie Google non embarquée
 

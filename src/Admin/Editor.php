@@ -641,7 +641,7 @@ final class Editor {
 			$next = 'publish' === $feed['status'] ? Scheduler::next_run( $feed, $last ) : 0;
 			echo '<div class="misc-pub-section">' . esc_html(
 				$next ? sprintf(
-					/* translators: %s: date and time. */
+					/* translators: %s: date and time of the next generation. */
 					__( 'Next: %s', 'oli-product-feed' ),
 					wp_date( $format, $next )
 				) : ( 'publish' === $feed['status'] ? __( 'Next: manual only', 'oli-product-feed' ) : __( 'Next: not scheduled (inactive)', 'oli-product-feed' ) )
