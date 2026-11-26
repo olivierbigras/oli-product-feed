@@ -19,6 +19,12 @@
 - **P3-2** : plus de `placeholder="custom_label_2"` (attribut déjà dans Optional).
 - **P3-3** : fr_CA sans espace avant « ; ? ! » (usage OQLF ; l’espace avant « : » reste) ; fr_FR inchangé. .pot régénéré (619 chaînes), `.po` et `.mo` à jour.
 
+### Correctifs QA (2026-11-25) : CA-43/44, P3-4, singulier
+
+- **Liens dans une phrase soulignés** (`assets/css/admin.css`) (QA CA-43/44, axe `link-in-text-block`) : j’ai souligné en permanence, survol et focus compris, les liens placés dans un texte : « See diagnostics » (colonne Status d’un flux en erreur), « N excluded » (colonne Items) et « View » (tableaux de Diagnostics). Règle : `.oliprfe-wrap :is(.oliprfe-meta,td)>a{text-decoration:underline}`. J’ai vérifié les autres écrans à 1440 et 390 : les liens dans des paragraphes étaient déjà soulignés par le cœur ; les actions de ligne et les vues (`subsubsub`) gardent le patron du cœur. Pour rester dans le budget, la couleur du thème passe par une variable `--c` (4 répétitions en moins). admin.css : 6 142 octets.
+- **Phrase de suppression au singulier** (`src/Admin/Admin.php`, `assets/js/admin.js`) : « Its file is deleted too. Platforms that fetch this URL… » pour un seul flux, « Their files… these URLs… » pour plusieurs (`_n()`), dans le dialogue (texte rempli par le script selon le nombre) et dans la page sans JS. fr : « Son fichier est aussi supprimé. Les plateformes qui récupèrent cette URL… ».
+- **Espaces insécables** (P3-4 de la revue du lot 5, `languages/*.po`, `*.mo`) : U+00A0 avant « : » en fr_CA et fr_FR, et avant « ; ? ! » en fr_FR, dans les `msgstr` seulement (88 chaînes fr_CA, 95 fr_FR). .pot : 619 chaînes ; fr_CA et fr_FR 619/619.
+
 ### Décisions Q1-Q6 (2026-11-25) : taxonomie Google non embarquée
 
 - **Licence vérifiée** : Google publie `taxonomy-with-ids.<langue>.txt` (page d’aide Merchant Center « Google product category », answer 6324436) sans licence de redistribution ; le fichier ne porte qu’une ligne de version, et les Conditions d’utilisation de Google gardent ses droits sans accorder de licence pour ce fichier. Ce n’est pas clair : je ne l’embarque pas (consigne).
