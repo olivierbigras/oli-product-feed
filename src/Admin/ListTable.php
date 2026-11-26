@@ -302,7 +302,7 @@ final class ListTable extends \WP_List_Table {
 		} else {
 			$actions['generate'] = '<a href="' . esc_url( Admin::action_url( 'oliprfe_generate', $id ) ) . '">' . esc_html__( 'Generate now', 'oli-product-feed' ) . '</a>';
 		}
-		$actions['preview']   = '<a href="' . esc_url( $edit . '#preview' ) . '">' . esc_html__( 'Preview', 'oli-product-feed' ) . '</a>';
+		$actions['preview']   = '<a href="' . esc_url( Editor::preview_url( $id ) ) . '">' . esc_html__( 'Preview', 'oli-product-feed' ) . '</a>';
 		$actions['duplicate'] = '<a href="' . esc_url( Admin::action_url( 'oliprfe_duplicate_feed', $id ) ) . '">' . esc_html__( 'Duplicate', 'oli-product-feed' ) . '</a>';
 		$actions['delete']    = '<a class="submitdelete" ' . Admin::delete_attrs( $id ) . '>' . esc_html__( 'Delete', 'oli-product-feed' ) . '</a>';
 		return $this->row_actions( $actions );

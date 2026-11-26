@@ -11,6 +11,7 @@
 .oliprfe-progress{display:block;width:100%;max-width:220px;height:8px;margin:4px 0;accent-color:var(--wp-admin-theme-color,#2271b1)}
 .oliprfe-url{display:flex;gap:4px;align-items:center;max-width:100%}
 .oliprfe-url code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;padding:2px 4px}
+.no-js .oliprfe-copy{display:none}
 .oliprfe-copy.is-copied{color:#007017;border-color:#007017}
 .oliprfe-copy-hint{display:block;margin-top:4px;color:#50575e}
 .oliprfe-wrap .column-name{width:20%}.oliprfe-wrap .column-target{width:9%}.oliprfe-wrap .column-items{width:8%}.oliprfe-wrap .column-status{width:15%}.oliprfe-wrap .column-last_generated{width:16%}
@@ -67,7 +68,8 @@
 .oliprfe-panel{padding:12px}
 .oliprfe-url code{max-width:180px}
 .oliprfe-dialog footer .button{flex:1 1 100%}
-.oliprfe-rules{display:block;overflow-x:auto}
+.oliprfe-wrap .wp-list-table .toggle-row{width:44px;height:44px}
+.oliprfe-rules,.oliprfe-categories,.oliprfe-dry{display:block;overflow-x:auto}
 .oliprfe-mapping thead{display:none}
 .oliprfe-mapping tr,.oliprfe-mapping th,.oliprfe-mapping td{display:block;width:auto!important}
 .oliprfe-mapping td[data-colname]::before{content:attr(data-colname);display:block;font-weight:600}

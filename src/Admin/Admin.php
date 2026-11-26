@@ -42,6 +42,10 @@ final class Admin {
 		add_action( 'admin_post_oliprfe_cancel_generation', array( __CLASS__, 'handle_cancel' ) );
 		add_action( 'wp_ajax_oliprfe_feed_status', array( __CLASS__, 'ajax_status' ) );
 		add_action( 'wp_ajax_oliprfe_match_count', array( __CLASS__, 'ajax_match_count' ) );
+		add_action( 'wp_ajax_oliprfe_preview_row', array( __CLASS__, 'ajax_preview_row' ) );
+		add_action( 'wp_ajax_oliprfe_preview', array( __CLASS__, 'ajax_preview' ) );
+		add_action( 'wp_ajax_oliprfe_product_search', array( __CLASS__, 'ajax_product_search' ) );
+		add_action( 'wp_ajax_oliprfe_gcat_search', array( __CLASS__, 'ajax_gcat_search' ) );
 		add_action( 'admin_init', array( __CLASS__, 'upgrade' ) );
 		add_action( 'admin_footer', array( __CLASS__, 'delete_dialog' ) );
 		add_filter( 'set_screen_option_oliprfe_feeds_per_page', array( __CLASS__, 'set_per_page' ), 10, 3 );
@@ -249,17 +253,21 @@ final class Admin {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'oliprfe_feed_status' ),
 				'i18n'    => array(
-					'copy'       => __( 'Copy', 'oli-product-feed' ),
-					'copied'     => __( 'Copied', 'oli-product-feed' ),
-					'copiedLong' => __( 'Feed URL copied to clipboard.', 'oli-product-feed' ),
-					'copyFailed' => __( 'Press Ctrl+C (Cmd+C on a Mac) to copy the selected URL.', 'oli-product-feed' ),
-					'generated'  => __( 'Feed generated.', 'oli-product-feed' ),
-					'failed'     => __( 'Feed generation failed.', 'oli-product-feed' ),
-					'badName'    => __( 'Use lowercase letters, digits and underscores.', 'oli-product-feed' ),
-					'exists'     => __( 'This attribute is already in the list.', 'oli-product-feed' ),
-					'counting'   => __( 'Counting…', 'oli-product-feed' ),
-					'countError' => __( 'The count failed.', 'oli-product-feed' ),
-					'selectOne'  => __( 'Select at least one feed.', 'oli-product-feed' ),
+					'copy'          => __( 'Copy', 'oli-product-feed' ),
+					'copied'        => __( 'Copied', 'oli-product-feed' ),
+					'copiedLong'    => __( 'Feed URL copied to clipboard.', 'oli-product-feed' ),
+					'copyFailed'    => __( 'Press Ctrl+C (Cmd+C on a Mac) to copy the selected URL.', 'oli-product-feed' ),
+					'generated'     => __( 'Feed generated.', 'oli-product-feed' ),
+					'failed'        => __( 'Feed generation failed.', 'oli-product-feed' ),
+					'badName'       => __( 'Use lowercase letters, digits and underscores.', 'oli-product-feed' ),
+					'exists'        => __( 'This attribute is already in the list.', 'oli-product-feed' ),
+					'counting'      => __( 'Counting…', 'oli-product-feed' ),
+					'countError'    => __( 'The count failed.', 'oli-product-feed' ),
+					'selectOne'     => __( 'Select at least one feed.', 'oli-product-feed' ),
+					'loading'       => __( 'Loading…', 'oli-product-feed' ),
+					/* translators: %d: number of products. */
+					'found'         => __( '%d products found.', 'oli-product-feed' ),
+					'previewFailed' => __( 'The preview failed.', 'oli-product-feed' ),
 				),
 				'plural'  => self::delete_plurals(),
 			)
@@ -401,7 +409,7 @@ final class Admin {
 			'cancelled'      => array( 'info', __( 'Generation cancelled. The previous file is still online.', 'oli-product-feed' ) ),
 		);
 		if ( isset( $messages[ $code ] ) ) {
-			echo '<div class="notice notice-' . esc_attr( $messages[ $code ][0] ) . ' is-dismissible"><p>' . esc_html( $messages[ $code ][1] ) . '</p></div>';
+			echo '<div class="notice notice-' . esc_attr( $messages[ $code ][0] ) . ' is-dismissible' . ( 'created' === $code ? ' oliprfe-speak' : '' ) . '"><p>' . esc_html( $messages[ $code ][1] ) . '</p></div>';
 		}
 		if ( 'folder_refused' === $code ) {
 			$folder = isset( $_GET['oliprfe_folder'] ) ? Storage::sanitize_folder( sanitize_text_field( wp_unslash( $_GET['oliprfe_folder'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -687,9 +695,9 @@ final class Admin {
 			return;
 		}
 		?>
-		<dialog class="oliprfe-dialog" id="oliprfe-delete-dialog" aria-labelledby="oliprfe-delete-title">
+		<dialog class="oliprfe-dialog" id="oliprfe-delete-dialog" aria-labelledby="oliprfe-delete-title" aria-describedby="oliprfe-delete-desc">
 			<h2 id="oliprfe-delete-title"></h2>
-			<p><?php esc_html_e( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ); ?></p>
+			<p id="oliprfe-delete-desc"><?php esc_html_e( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ); ?></p>
 			<ul class="ul-disc oliprfe-delete-list"></ul>
 			<p><?php esc_html_e( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ); ?></p>
 			<footer>
@@ -1128,6 +1136,116 @@ final class Admin {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Nonce + capability of the editor AJAX actions.
+	 */
+	private static function ajax_guard() {
+		check_ajax_referer( 'oliprfe_feed_status' );
+		if ( ! current_user_can( Settings::capability() ) ) {
+			wp_send_json_error( null, 403 );
+		}
+	}
+
+	/**
+	 * Unsaved feed configuration posted by the editor (sanitized), with its ID.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function posted_feed() {
+		$raw        = isset( $_POST['feed'] ) && is_array( $_POST['feed'] ) ? wp_unslash( $_POST['feed'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked in self::ajax_guard(); sanitized by Feeds::sanitize().
+		$feed       = Feeds::sanitize( Editor::parse( $raw ) );
+		$feed['id'] = isset( $_POST['feed_id'] ) ? absint( $_POST['feed_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
+		return $feed;
+	}
+
+	/**
+	 * AJAX: mapping preview of one product with the unsaved form (one value per attribute).
+	 */
+	public static function ajax_preview_row() {
+		self::ajax_guard();
+		$feed    = self::posted_feed();
+		$product = isset( $_POST['product'] ) ? absint( $_POST['product'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
+		$result  = $product ? Generator::build_one( $feed, $product ) : null;
+		if ( ! $result ) {
+			wp_send_json_error();
+		}
+		$fields = array();
+		foreach ( (array) $result['row'] as $field => $value ) {
+			$value            = is_array( $value ) ? implode( ', ', $value ) : (string) $value;
+			$fields[ $field ] = mb_strlen( $value ) > 140 ? mb_substr( $value, 0, 140 ) . '…' : $value;
+		}
+		wp_send_json_success(
+			array(
+				'head'     => sprintf(
+					/* translators: %s: product name. */
+					__( 'Preview: %s', 'oli-product-feed' ),
+					Editor::product_label( $product )
+				),
+				'fields'   => $fields,
+				'excluded' => null === $result['row'] ? sprintf(
+					/* translators: %s: reason. */
+					__( 'This product is not in the feed: %s', 'oli-product-feed' ),
+					Editor::reason_label( $result['reason'] )
+				) : '',
+			)
+		);
+	}
+
+	/**
+	 * AJAX: dry-run preview of the first 5 items with the unsaved form.
+	 */
+	public static function ajax_preview() {
+		self::ajax_guard();
+		wp_send_json_success( array( 'html' => Editor::preview_html( self::posted_feed() ) ) );
+	}
+
+	/**
+	 * AJAX: products and variations whose name contains the search (20 at most).
+	 */
+	public static function ajax_product_search() {
+		self::ajax_guard();
+		$term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
+		$out  = array();
+		if ( '' !== $term ) {
+			$ids = get_posts(
+				array(
+					'post_type'      => array( 'product', 'product_variation' ),
+					'post_status'    => 'publish',
+					's'              => $term,
+					'posts_per_page' => 20,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+				)
+			);
+			if ( ctype_digit( $term ) && wc_get_product( (int) $term ) ) {
+				array_unshift( $ids, (int) $term );
+			}
+			foreach ( array_slice( array_unique( array_map( 'intval', $ids ) ), 0, 20 ) as $id ) {
+				$out[] = array(
+					'id'    => $id,
+					'label' => Editor::product_label( $id ),
+				);
+			}
+		}
+		wp_send_json_success( $out );
+	}
+
+	/**
+	 * AJAX: Google categories from the local list (20 at most, no network call).
+	 */
+	public static function ajax_gcat_search() {
+		self::ajax_guard();
+		$term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce checked in self::ajax_guard().
+		$out  = array();
+		foreach ( GoogleTaxonomy::search( $term, 20 ) as $id => $path ) {
+			$out[] = array(
+				'id'   => $id,
+				'path' => $path,
+			);
+		}
+		wp_send_json_success( $out );
 	}
 
 	/**

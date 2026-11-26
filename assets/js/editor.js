@@ -11,8 +11,37 @@
 		badName: 'Use lowercase letters, digits and underscores.',
 		exists: 'This attribute is already in the list.',
 		counting: 'Counting…',
-		countError: 'The count failed.'
+		countError: 'The count failed.',
+		loading: 'Loading…',
+		found: '%d products found.',
+		previewFailed: 'The preview failed.'
 	}, cfg.i18n || {} );
+
+	/* POST to admin-ajax with the editor form (unsaved values) or with plain fields. */
+	function post( action, fields, withForm ) {
+		var form = document.querySelector( 'form.oliprfe-editor' );
+		var data = withForm && form ? new FormData( form ) : new FormData();
+		data.delete( '_wpnonce' );
+		data.set( 'action', action );
+		data.set( '_ajax_nonce', cfg.nonce || '' );
+		Object.keys( fields || {} ).forEach( function ( k ) { data.set( k, fields[ k ] ); } );
+		return window.fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data } )
+			.then( function ( r ) { return r.json(); } )
+			.then( function ( json ) {
+				if ( ! json || ! json.success ) {
+					throw new Error( 'ajax' );
+				}
+				return json.data;
+			} );
+	}
+	function debounce( fn, ms ) {
+		var t;
+		return function () {
+			var args = arguments;
+			window.clearTimeout( t );
+			t = window.setTimeout( function () { fn.apply( null, args ); }, ms );
+		};
+	}
 
 	function speak( message ) {
 		if ( window.wp && window.wp.a11y && window.wp.a11y.speak ) {
@@ -50,7 +79,7 @@
 		}
 	}
 	document.addEventListener( 'click', function ( event ) {
-		var link = event.target.closest ? event.target.closest( '.oliprfe-steps a, [data-oliprfe-go], .oliprfe-error-summary a' ) : null;
+		var link = event.target.closest ? event.target.closest( '.oliprfe-steps a, [data-oliprfe-go], .oliprfe-error-summary a, .oliprfe-attention a' ) : null;
 		if ( ! link || ! sections.length ) {
 			return;
 		}
@@ -68,8 +97,109 @@
 		if ( section ) {
 			show( section.id, false );
 		}
+		if ( 'TR' === target.tagName ) {
+			target.scrollIntoView( { block: 'center' } );
+			target = target.querySelector( 'select, input' ) || target;
+		}
 		target.focus();
 	} );
+
+	/* ---- Preview (#preview): dry run of the first 5 items with the unsaved form ---- */
+	function loadPreview() {
+		var panel = document.getElementById( 'preview' );
+		if ( ! panel ) {
+			return;
+		}
+		var inside = panel.querySelector( '.inside' );
+		inside.setAttribute( 'aria-busy', 'true' );
+		inside.textContent = i18n.loading;
+		post( 'oliprfe_preview', {}, true )
+			.then( function ( data ) { inside.innerHTML = data.html; } )
+			.catch( function () { inside.textContent = i18n.previewFailed; } )
+			.then( function () { inside.removeAttribute( 'aria-busy' ); } );
+	}
+	document.addEventListener( 'click', function ( event ) {
+		var button = event.target.closest ? event.target.closest( '[data-oliprfe-preview]' ) : null;
+		if ( ! button || ! document.getElementById( 'preview' ) ) {
+			return;
+		}
+		event.preventDefault();
+		show( 'preview', true );
+		loadPreview();
+	} );
+
+	/* ---- Mapping: preview with another product (unsaved form), product search, problems only ---- */
+	document.addEventListener( 'change', function ( event ) {
+		if ( 'oliprfe-preview-product' === event.target.id ) {
+			var head = document.getElementById( 'oliprfe-preview-head' );
+			post( 'oliprfe_preview_row', { product: event.target.value }, true )
+				.then( function ( data ) {
+					document.querySelectorAll( 'tr[data-oliprfe-field]' ).forEach( function ( row ) {
+						var cell = row.querySelector( '.oliprfe-preview' );
+						if ( cell ) {
+							cell.textContent = data.fields[ row.getAttribute( 'data-oliprfe-field' ) ] || '';
+						}
+					} );
+					head.textContent = data.head;
+					speak( data.excluded || data.head );
+				} )
+				.catch( function () { speak( i18n.previewFailed ); } );
+		}
+		if ( 'oliprfe-only-problems' === event.target.id ) {
+			var only = event.target.checked;
+			document.querySelectorAll( 'tr[data-oliprfe-field]' ).forEach( function ( row ) {
+				row.hidden = only && ! row.hasAttribute( 'data-oliprfe-problem' );
+			} );
+		}
+	} );
+	document.addEventListener( 'input', debounce( function ( event ) {
+		var input = event.target;
+		if ( 'oliprfe-product-search' !== input.id || input.value.trim().length < 2 ) {
+			return;
+		}
+		post( 'oliprfe_product_search', { term: input.value.trim() }, false ).then( function ( list ) {
+			var select  = document.getElementById( 'oliprfe-preview-product' );
+			var current = select.options[ select.selectedIndex ];
+			select.innerHTML = '';
+			select.appendChild( current );
+			list.forEach( function ( p ) {
+				if ( String( p.id ) !== current.value ) {
+					select.appendChild( new Option( p.label, p.id ) );
+				}
+			} );
+			speak( i18n.found.replace( '%d', list.length ) );
+		} );
+	}, 250 ) );
+
+	/* ---- Google categories: suggestions from the local list, the ID is saved, the path shown ---- */
+	var paths = {};
+	function showPath( input ) {
+		var out = document.getElementById( input.getAttribute( 'aria-describedby' ) );
+		if ( out && paths[ input.value ] ) {
+			out.textContent = paths[ input.value ];
+		}
+	}
+	document.addEventListener( 'input', debounce( function ( event ) {
+		var input = event.target;
+		if ( ! input.classList || ! input.classList.contains( 'oliprfe-gcat' ) ) {
+			return;
+		}
+		showPath( input );
+		if ( input.value.trim().length < 2 || paths[ input.value ] ) {
+			return;
+		}
+		post( 'oliprfe_gcat_search', { term: input.value.trim() }, false ).then( function ( list ) {
+			var datalist = document.getElementById( 'oliprfe-gcat-list' );
+			datalist.innerHTML = '';
+			list.forEach( function ( c ) {
+				paths[ c.id ] = c.path;
+				var option = new Option( c.path, c.id );
+				option.label = c.path;
+				datalist.appendChild( option );
+			} );
+			showPath( input );
+		} );
+	}, 200 ) );
 	window.addEventListener( 'hashchange', function () {
 		var id = window.location.hash.replace( /^#/, '' );
 		if ( sections.some( function ( s ) { return s.id === id; } ) ) {
@@ -128,6 +258,10 @@
 			control.hidden   = ! on;
 			control.disabled = ! on;
 		} );
+		var options = row.querySelector( 'details' );
+		if ( options ) {
+			options.hidden = 'auto' === select.value;
+		}
 	} );
 
 	/* ---- Schedule: the start hour only applies to daily and weekly feeds ---- */
@@ -269,6 +403,15 @@
 		var field   = first ? document.getElementById( ( first.getAttribute( 'href' ) || '' ).replace( /^#/, '' ) ) : null;
 		var section = sectionOf( field );
 		show( section ? section.id : window.location.hash.replace( /^#/, '' ), false );
+		var panel = document.getElementById( 'preview' );
+		if ( panel && ! panel.hidden && '' === panel.querySelector( '.inside' ).textContent.trim() ) {
+			loadPreview();
+		}
+		var created = document.querySelector( '.oliprfe-speak' );
+		if ( created ) {
+			/* The notice of a new feed is above the Mapping section the page opens on: announce it. */
+			window.setTimeout( function () { speak( created.textContent.trim() ); }, 800 );
+		}
 		syncHour();
 		syncChannel();
 		syncBackorder();

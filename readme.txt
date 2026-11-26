@@ -131,6 +131,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * Generation: the row shows the progress and is refreshed every 3 seconds without reloading the page; a notice and a screen reader announcement report the result; a running generation can be cancelled.
 * Feed editor: five numbered sections (Channel and target, Products, Mapping, Categories and links, Schedule) with section links and previous / next buttons; one section at a time with JavaScript, all sections stacked without it. Validation errors open the section of the field.
 * Add New Feed: one screen (channel, language, country, currency, suggested name); the feed is created inactive with the channel defaults and opens on its mapping.
+* Attribute mapping: four columns (Attribute, Source, Preview, Check), preview with any product, and a Check column that counts the products where each attribute was empty in the last generation, with a notice and a "Show only problems" filter.
+* Preview: a dry run of the first five items (table, warnings and raw file); no file is written.
+* Google category: type words or an ID and pick from the Google product taxonomy shipped with the plugin (no network request).
 * Removed: the support notice and the support footer on the plugin screens (the donate link stays in the plugin row and in this readme).
 * Fix: the Settings tab no longer fails on PHP builds without GLOB_BRACE.
 * Data: feeds, their configuration, the settings and the feed URLs are unchanged.
