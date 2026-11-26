@@ -38,7 +38,7 @@ final class Scheduler {
 	 *
 	 * @return bool
 	 */
-	private static function use_as() {
+	public static function use_as() {
 		return function_exists( 'as_schedule_recurring_action' ) && function_exists( 'as_has_scheduled_action' );
 	}
 
@@ -84,8 +84,11 @@ final class Scheduler {
 				continue;
 			}
 			$last = Feeds::last_run( $feed_id );
-			if ( self::is_due( $feed, $last ) || self::changed_since( $last ) ) {
+			$due = self::is_due( $feed, $last );
+			if ( $due || self::changed_since( $last ) ) {
+				Activity::$by = $due ? 'schedule' : 'product';
 				self::queue( $feed_id );
+				Activity::$by = '';
 			}
 		}
 	}
@@ -189,6 +192,7 @@ final class Scheduler {
 			return $started;
 		}
 		self::schedule_batch( $feed_id );
+		Activity::add( 'queued', $feed_id );
 		return true;
 	}
 

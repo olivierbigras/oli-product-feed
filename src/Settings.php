@@ -30,6 +30,7 @@ final class Settings {
 			'log_level'           => 'error',
 			'shop_manager_access' => true,
 			'regen_on_update'     => false,
+			'log_keep'            => 200,
 		);
 	}
 
@@ -75,6 +76,7 @@ final class Settings {
 		$out['log_level']           = in_array( $level, array( 'off', 'error', 'info' ), true ) ? $level : 'error';
 		$out['shop_manager_access'] = isset( $in['shop_manager_access'] ) ? (bool) $in['shop_manager_access'] : (bool) $current['shop_manager_access'];
 		$out['regen_on_update']     = isset( $in['regen_on_update'] ) ? (bool) $in['regen_on_update'] : (bool) $current['regen_on_update'];
+		$out['log_keep']            = max( 10, min( 5000, isset( $in['log_keep'] ) ? (int) $in['log_keep'] : (int) $current['log_keep'] ) );
 		if ( '' === $out['output_dir'] ) {
 			$out['output_dir'] = Storage::FOLDER;
 		}

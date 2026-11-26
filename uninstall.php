@@ -125,6 +125,8 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 			$wpdb->delete( $oliprfe_log_table, array( 'source' => 'oli-product-feed' ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time cleanup of the plugin's log rows.
 		}
 
+		// Multilingual notice hidden by users (0.6.0).
+		delete_metadata( 'user', 0, 'oliprfe_hide_multilingual', '', true );
 		// Per-product backorder override (simple products and variations).
 		$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_oliprfe_availability' ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time cleanup of the plugin's product meta.
 		foreach ( array( '_oli_pf_config', '_oli_pf_log', '_oli_pf_last_run' ) as $oliprfe_old_meta ) {

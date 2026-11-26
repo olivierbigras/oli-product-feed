@@ -193,6 +193,7 @@ final class Feeds {
 			'post_title'  => '' !== $name ? $name : __( 'Product feed', 'oli-product-feed' ),
 			'post_status' => $status,
 		);
+		$before = $feed_id ? get_post_status( (int) $feed_id ) : '';
 		if ( $feed_id ) {
 			$postarr['ID'] = (int) $feed_id;
 			$result        = wp_update_post( $postarr, true );
@@ -204,6 +205,10 @@ final class Feeds {
 		}
 		update_post_meta( (int) $result, self::META_KEY, wp_slash( wp_json_encode( $clean ) ) );
 		Endpoint::refresh_index();
+		Activity::add( $before ? 'edited' : 'created', (int) $result );
+		if ( $before && $before !== $status ) {
+			Activity::add( 'publish' === $status ? 'activated' : 'deactivated', (int) $result );
+		}
 		return (int) $result;
 	}
 
@@ -300,6 +305,7 @@ final class Feeds {
 		if ( ! self::get( $feed_id ) ) {
 			return;
 		}
+		Activity::add( 'deleted', $feed_id );
 		self::delete_files( $feed_id );
 		delete_option( Generator::STATE_PREFIX . $feed_id );
 		delete_transient( Generator::LOCK_PREFIX . $feed_id );

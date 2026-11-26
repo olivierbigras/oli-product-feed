@@ -1,7 +1,7 @@
 /**
  * Oli Product Feed admin script (plugin screens only, no jQuery).
- * Copy URL, confirmations, attribute mapping, schedule, channel formats, match count, error summary and generation progress.
- * Strings come from wp_localize_script( 'oliprfe-admin', 'oliprfeAdmin', { i18n, ajaxUrl, nonce } ).
+ * Copy URL, delete dialog, error summary and generation progress (the feed editor has its own editor.js).
+ * Strings come from wp_localize_script( 'oliprfe-admin', 'oliprfeAdmin', { i18n, plural, ajaxUrl, nonce } ).
  */
 ( function () {
 	'use strict';
@@ -14,11 +14,9 @@
 		copyFailed: 'Press Ctrl+C (Cmd+C on a Mac) to copy the selected URL.',
 		generated: 'Feed generated.',
 		failed: 'Feed generation failed.',
-		badName: 'Use lowercase letters, digits and underscores.',
-		exists: 'This attribute is already in the list.',
-		counting: 'Counting…',
-		countError: 'The count failed.'
+		selectOne: 'Select at least one feed.'
 	}, cfg.i18n || {} );
+	var plural = cfg.plural || { title: {}, button: {} };
 
 	/* Screen reader announcements: wp.a11y.speak(), else a plugin live region. */
 	var live;
@@ -107,101 +105,146 @@
 		}
 	} );
 
-	/* ---- Confirmations ---- */
+	/* ---- Delete dialog (row, editor and bulk): replaces the browser confirmation; focus on Cancel, Escape closes ---- */
+	var dialog, opener, onDelete, onDeactivate;
+	function openDialog( feeds, del, deactivate, from ) {
+		dialog = dialog || document.getElementById( 'oliprfe-delete-dialog' );
+		if ( ! dialog || ! dialog.showModal ) {
+			return false; // No <dialog> support: the link or the form works as is.
+		}
+		var n    = feeds.length;
+		var list = dialog.querySelector( '.oliprfe-delete-list' );
+		dialog.querySelector( 'h2' ).textContent = plural.title[ n ] || '';
+		dialog.querySelector( '.oliprfe-dialog-delete' ).textContent = plural.button[ n ] || '';
+		if ( plural.desc && plural.desc[ n ] ) {
+			dialog.querySelector( '#oliprfe-delete-desc' ).textContent = plural.desc[ n ];
+		}
+		list.textContent = '';
+		feeds.forEach( function ( feed ) {
+			var li = document.createElement( 'li' );
+			li.textContent = feed.name + ( feed.file ? ' ' : '' );
+			if ( feed.file ) {
+				var code = document.createElement( 'code' );
+				code.textContent = feed.file;
+				li.appendChild( code );
+			}
+			list.appendChild( li );
+		} );
+		opener       = from;
+		onDelete     = del;
+		onDeactivate = deactivate;
+		dialog.showModal();
+		dialog.querySelector( '.oliprfe-dialog-cancel' ).focus();
+		return true;
+	}
 	document.addEventListener( 'click', function ( event ) {
-		var link = event.target.closest ? event.target.closest( '.oliprfe-confirm' ) : null;
-		if ( link && link.getAttribute( 'data-confirm' ) && ! window.confirm( link.getAttribute( 'data-confirm' ) ) ) {
+		var link = event.target.closest ? event.target.closest( '[data-oliprfe-delete]' ) : null;
+		if ( link ) {
+			var ok = openDialog(
+				[ { name: link.getAttribute( 'data-name' ), file: link.getAttribute( 'data-file' ) } ],
+				function () { window.location.href = link.href + '&confirm=1'; }, // Confirmed here: no confirmation page.
+				function () { window.location.href = link.getAttribute( 'data-deactivate' ); },
+				link
+			);
+			if ( ok ) {
+				event.preventDefault();
+			}
+			return;
+		}
+		if ( ! dialog || ! event.target.closest || ! event.target.closest( '#oliprfe-delete-dialog' ) ) {
+			return;
+		}
+		if ( event.target.closest( '.oliprfe-dialog-cancel' ) ) {
+			dialog.close();
+		} else if ( event.target.closest( '.oliprfe-dialog-delete' ) ) {
+			onDelete();
+		} else if ( event.target.closest( '.oliprfe-dialog-deactivate' ) ) {
+			onDeactivate();
+		}
+	} );
+	document.addEventListener( 'close', function ( event ) {
+		if ( event.target === dialog && opener && document.contains( opener ) ) {
+			opener.focus(); // Focus back to what opened the dialog.
+		}
+	}, true );
+
+	/* Bulk Delete opens the same dialog; "Deactivate instead" switches the bulk action. */
+	document.addEventListener( 'submit', function ( event ) {
+		var form = event.target;
+		if ( 'oliprfe-feeds-form' !== form.id || form.oliprfeConfirmed ) {
+			return;
+		}
+		var submitter = event.submitter || document.activeElement;
+		var which     = submitter && 'doaction2' === submitter.id ? 'action2' : 'action';
+		var select    = form.querySelector( 'select[name="' + which + '"]' );
+		if ( ! select || 'delete' !== select.value || ( submitter && 'filter_action' === submitter.name ) ) {
+			return;
+		}
+		var boxes = form.querySelectorAll( 'input[name="feed_ids[]"]:checked' );
+		if ( ! boxes.length ) {
+			event.preventDefault();
+			speak( i18n.selectOne );
+			return;
+		}
+		var feeds = Array.prototype.map.call( boxes, function ( box ) {
+			return { name: box.getAttribute( 'data-name' ), file: '' };
+		} );
+		function send( action ) {
+			form.querySelectorAll( 'select[name="action"], select[name="action2"]' ).forEach( function ( s ) { s.value = action; } );
+			var confirmed = document.createElement( 'input' );
+			confirmed.type  = 'hidden';
+			confirmed.name  = 'confirm';
+			confirmed.value = '1';
+			form.appendChild( confirmed );
+			form.oliprfeConfirmed = true;
+			form.submit();
+		}
+		if ( openDialog( feeds, function () { send( 'delete' ); }, function () { send( 'deactivate' ); }, submitter ) ) {
 			event.preventDefault();
 		}
 	} );
 
-	/* ---- Mapping: the source type shows the matching control (others hidden + disabled) ---- */
-	document.addEventListener( 'change', function ( event ) {
-		var select = event.target;
-		if ( ! select.classList || ! select.classList.contains( 'oliprfe-src-type' ) ) {
-			return;
-		}
-		var row = select.closest( 'tr' );
-		row.querySelectorAll( '[data-src]' ).forEach( function ( control ) {
-			var on = control.getAttribute( 'data-src' ) === select.value;
-			control.hidden   = ! on;
-			control.disabled = ! on;
-		} );
-	} );
-
-	/* ---- Schedule: the start hour only applies to daily and weekly feeds ---- */
-	function syncHour() {
-		var checked = document.querySelector( 'input[name="feed[frequency]"]:checked' );
-		var hour    = document.getElementById( 'oliprfe-start_hour' );
-		if ( checked && hour ) {
-			hour.disabled = [ 'daily', 'weekly' ].indexOf( checked.value ) < 0;
-		}
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( 'feed[frequency]' === event.target.name ) {
-			syncHour();
-		}
-	} );
-
-	/* ---- Custom mapping rows: add from the <template>, remove ---- */
-	function addRow() {
-		var input    = document.getElementById( 'oliprfe-add-attr' );
-		var template = document.getElementById( 'oliprfe-row-template' );
-		var body     = document.querySelector( '.oliprfe-custom-rows' );
-		if ( ! input || ! template || ! body ) {
-			return;
-		}
-		var name = input.value.trim().toLowerCase();
-		if ( ! /^[a-z0-9_]+$/.test( name ) ) {
-			speak( i18n.badName );
-			input.setAttribute( 'aria-invalid', 'true' );
-			input.focus();
-			return;
-		}
-		if ( document.querySelector( '[name="feed[mapping][' + name + '][type]"]' ) ) {
-			speak( i18n.exists );
-			input.setAttribute( 'aria-invalid', 'true' );
-			input.focus();
-			return;
-		}
-		input.removeAttribute( 'aria-invalid' );
-		var holder = document.createElement( 'tbody' );
-		holder.innerHTML = template.innerHTML.split( '__FIELD__' ).join( name );
-		var row = holder.querySelector( 'tr' );
-		body.appendChild( row );
-		input.value = '';
-		var first = row.querySelector( 'select, input' );
-		if ( first ) {
-			first.focus();
-		}
-	}
+	/* ---- Multilingual notice: its dismiss button hides it for this user too ---- */
 	document.addEventListener( 'click', function ( event ) {
-		var target = event.target.closest ? event.target.closest( '.oliprfe-add-row, .oliprfe-remove-row' ) : null;
-		if ( ! target ) {
+		var notice = event.target.closest ? event.target.closest( '[data-oliprfe-hide] .notice-dismiss' ) : null;
+		if ( notice && window.fetch ) {
+			window.fetch( notice.parentNode.getAttribute( 'data-oliprfe-hide' ) + '&ajax=1', { credentials: 'same-origin' } );
+		}
+	} );
+
+	/* ---- Generation progress (polls every 3 s while a feed is generating, no reload) ---- */
+	var milestones = {};
+	var done = {};
+	function finish( feed ) {
+		if ( done[ feed.id ] ) {
 			return;
 		}
-		event.preventDefault();
-		if ( target.classList.contains( 'oliprfe-add-row' ) ) {
-			addRow();
-			return;
+		done[ feed.id ] = true;
+		var row = document.querySelector( '[data-oliprfe-row="' + feed.id + '"]' );
+		if ( row && feed.cells ) {
+			Object.keys( feed.cells ).forEach( function ( col ) {
+				var cell = row.querySelector( 'td.column-' + col );
+				if ( cell ) {
+					// Server-escaped HTML; keep the "Show more details" toggle of small screens.
+					var toggle = cell.querySelector( '.toggle-row' );
+					cell.innerHTML = feed.cells[ col ];
+					if ( toggle ) { cell.appendChild( toggle ); }
+				}
+			} );
 		}
-		var row = target.closest( 'tr' );
-		if ( row ) {
-			row.parentNode.removeChild( row );
-			var add = document.getElementById( 'oliprfe-add-attr' );
-			if ( add ) {
-				add.focus();
+		var notice = document.querySelector( '[data-oliprfe-notice="' + feed.id + '"]' );
+		if ( feed.notice ) {
+			var holder = document.createElement( 'div' );
+			holder.innerHTML = feed.notice;
+			if ( notice ) {
+				notice.parentNode.replaceChild( holder.firstChild, notice );
+			} else {
+				var box = document.querySelector( '.oliprfe-run-notices' );
+				if ( box ) { box.appendChild( holder.firstChild ); }
 			}
 		}
-	} );
-	document.addEventListener( 'keydown', function ( event ) {
-		if ( 'oliprfe-add-attr' === event.target.id && 'Enter' === event.key ) {
-			event.preventDefault();
-			addRow();
-		}
-	} );
-
-	/* ---- Generation progress (polls every 3 s while a feed is generating) ---- */
+		speak( feed.speak || ( ( 'error' === feed.status ? i18n.failed : i18n.generated ) + ' ' + feed.name ) );
+	}
 	function poll() {
 		var rows = document.querySelectorAll( '[data-oliprfe-generating]' );
 		if ( ! rows.length || ! cfg.ajaxUrl ) {
@@ -212,88 +255,40 @@
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) { return r.json(); } )
 			.then( function ( json ) {
-				var done = false;
 				( json && json.success ? json.data : [] ).forEach( function ( feed ) {
 					var el = document.querySelector( '[data-oliprfe-generating="' + feed.id + '"]' );
 					if ( ! el ) { return; }
+					if ( 'generating' !== feed.status ) {
+						el.removeAttribute( 'data-oliprfe-generating' );
+						finish( feed );
+						return;
+					}
 					var bar  = el.querySelector( 'progress' );
 					var text = el.querySelector( '.oliprfe-progress-text' );
+					var note = document.querySelector( '[data-oliprfe-notice="' + feed.id + '"] .oliprfe-run-text' );
 					if ( bar ) { bar.value = feed.percent; }
 					if ( text ) { text.textContent = feed.progressText; }
-					if ( 'generating' !== feed.status ) {
-						done = true;
-						speak( ( 'error' === feed.status ? i18n.failed : i18n.generated ) + ' ' + feed.name );
-						el.removeAttribute( 'data-oliprfe-generating' );
+					if ( note ) { note.textContent = feed.noticeText; }
+					/* Spoken once at the start (first refresh), at 25, 50 and 75 %, and at the end: wp.a11y.speak() only. */
+					if ( ! ( feed.id in milestones ) ) {
+						milestones[ feed.id ] = [ 75, 50, 25 ].filter( function ( step ) { return feed.percent >= step; } )[0] || 0;
+						speak( feed.noticeText );
+						return;
 					}
+					[ 75, 50, 25 ].some( function ( step ) {
+						if ( feed.percent >= step && ( milestones[ feed.id ] || 0 ) < step ) {
+							milestones[ feed.id ] = step;
+							speak( feed.noticeText );
+							return true;
+						}
+						return false;
+					} );
 				} );
-				if ( done ) {
-					window.location.reload(); // Reload to show the new values.
-				} else {
-					window.setTimeout( poll, 3000 );
-				}
+				window.setTimeout( poll, 3000 );
 			} )
 			.catch( function () { window.setTimeout( poll, 10000 ); } );
 	}
 
-	/* ---- Channel: formats of the channel only, generic settings ---- */
-	function syncChannel() {
-		var radio  = document.querySelector( 'input[name="feed[channel]"]:checked' );
-		var select = document.getElementById( 'oliprfe-format' );
-		if ( ! radio || ! select ) {
-			return;
-		}
-		var formats = ( radio.getAttribute( 'data-formats' ) || '' ).split( ',' );
-		Array.prototype.forEach.call( select.options, function ( option ) {
-			option.disabled = formats.indexOf( option.value ) === -1;
-		} );
-		if ( select.selectedOptions.length && select.selectedOptions[0].disabled ) {
-			select.value = formats[0];
-		}
-		document.querySelectorAll( '.oliprfe-for-generic' ).forEach( function ( row ) {
-			row.hidden = radio.value !== 'generic';
-		} );
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( event.target.name === 'feed[channel]' ) {
-			syncChannel();
-		}
-	} );
-
-	/* ---- Backorder lead time: extra fields only when the option is on ---- */
-	function syncBackorder() {
-		var on = document.querySelector( 'input[name="feed[backorder_lead_enabled]"]' );
-		document.querySelectorAll( '.oliprfe-for-backorder' ).forEach( function ( row ) {
-			row.hidden = ! on || ! on.checked;
-		} );
-	}
-	document.addEventListener( 'change', function ( event ) {
-		if ( 'feed[backorder_lead_enabled]' === event.target.name ) {
-			syncBackorder();
-		}
-	} );
-
-	/* ---- Number of products matching the filters (unsaved form) ---- */
-	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.oliprfe-match-refresh' );
-		if ( ! button || ! cfg.ajaxUrl ) {
-			return;
-		}
-		var form = button.closest( 'form' );
-		var text = form.querySelector( '.oliprfe-match-text' );
-		var data = new FormData( form );
-		data.set( 'action', 'oliprfe_match_count' );
-		data.set( '_ajax_nonce', cfg.nonce || '' );
-		data.delete( '_wpnonce' );
-		button.disabled  = true;
-		text.textContent = i18n.counting;
-		window.fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data } )
-			.then( function ( r ) { return r.json(); } )
-			.then( function ( json ) {
-				text.textContent = json && json.success ? json.data.text : i18n.countError;
-			} )
-			.catch( function () { text.textContent = i18n.countError; } )
-			.then( function () { button.disabled = false; } );
-	} );
 
 	document.addEventListener( 'DOMContentLoaded', function () {
 		live = document.createElement( 'div' );
@@ -302,14 +297,13 @@
 		live.setAttribute( 'aria-atomic', 'true' );
 		document.body.appendChild( live );
 
-		/* The error summary gets the focus first. */
+		window.setTimeout( poll, 3000 );
+	} );
+	/* The error summary gets the focus first (after WordPress has moved the notices). */
+	window.addEventListener( 'load', function () {
 		var summary = document.querySelector( '.oliprfe-error-summary' );
 		if ( summary ) {
 			summary.focus();
 		}
-		syncHour();
-		syncChannel();
-		syncBackorder();
-		window.setTimeout( poll, 3000 );
 	} );
 }() );

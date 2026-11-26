@@ -81,6 +81,9 @@ final class Generator {
 			'items'    => 0,
 			'excluded' => array(),
 			'warnings' => array(),
+			'empty'    => array(),
+			'warned'   => array(),
+			'by'       => Activity::current_by(),
 			'tmp'      => $tmp,
 			'path'     => $path,
 			'existed'  => file_exists( $path ),
@@ -110,6 +113,10 @@ final class Generator {
 			$builder = new ItemBuilder( $feed, $channel );
 			$slice   = array_slice( $state['ids'], $state['offset'], $feed['batch_size'] );
 			$buffer  = '';
+			$checked = array_keys( array_merge( $channel->fields(), $feed['mapping'] ) );
+			if ( ! isset( $state['empty'] ) ) {
+				$state['empty'] = array();
+			}
 
 			foreach ( $slice as $id ) {
 				$result = $builder->build( $id );
@@ -118,10 +125,12 @@ final class Generator {
 					if ( ! isset( $state['warnings'][ $code ] ) ) {
 						$state['warnings'][ $code ] = array();
 					}
+					$state['warned'][ $code ] = ( isset( $state['warned'][ $code ] ) ? $state['warned'][ $code ] : 0 ) + 1;
 					if ( count( $state['warnings'][ $code ] ) < 50 ) {
 						$state['warnings'][ $code ][] = $id;
 					}
 				}
+				self::count_empty( $state['empty'], $result, $checked );
 				if ( null === $result['row'] ) {
 					$reason = $result['reason'];
 					if ( ! isset( $state['excluded'][ $reason ] ) ) {
@@ -218,6 +227,103 @@ final class Generator {
 	}
 
 	/**
+	 * Counts the attributes left empty by one product (Check column of the mapping): an empty value
+	 * in a published item, or a required attribute that excluded the product.
+	 *
+	 * @param array<string,int>   $counts  Counts by attribute (updated).
+	 * @param array<string,mixed> $result  ItemBuilder::build() result.
+	 * @param string[]            $checked Attributes of the channel and of the mapping.
+	 */
+	private static function count_empty( array &$counts, array $result, array $checked ) {
+		$fields = array();
+		if ( null === $result['row'] ) {
+			if ( 0 === strpos( (string) $result['reason'], 'missing:' ) ) {
+				$fields = explode( ',', substr( (string) $result['reason'], 8 ) );
+			}
+		} else {
+			foreach ( $checked as $field ) {
+				$value = isset( $result['row'][ $field ] ) ? $result['row'][ $field ] : '';
+				if ( '' === $value || array() === $value || null === $value ) {
+					$fields[] = $field;
+				}
+			}
+		}
+		foreach ( $fields as $field ) {
+			$counts[ $field ] = isset( $counts[ $field ] ) ? $counts[ $field ] + 1 : 1;
+		}
+	}
+
+	/**
+	 * Builds one product with a feed configuration (admin preview, nothing written).
+	 *
+	 * @param array<string,mixed> $feed Feed configuration.
+	 * @param int                 $id   Product or variation ID.
+	 * @return array{row:array<string,mixed>|null,reason:string,warnings:string[]}|null
+	 */
+	public static function build_one( array $feed, $id ) {
+		$channel = Channels\Registry::get( $feed['channel'] );
+		if ( ! $channel ) {
+			return null;
+		}
+		Lang::switch_language( isset( $feed['language'] ) ? $feed['language'] : '' );
+		try {
+			$builder = new ItemBuilder( self::context( $feed ), $channel );
+			return $builder->build( (int) $id );
+		} finally {
+			Lang::restore_language();
+		}
+	}
+
+	/**
+	 * Dry run: the first items of the feed and the raw file they would make. No file is written.
+	 *
+	 * @param array<string,mixed> $feed Feed configuration.
+	 * @param int                 $max  Items wanted.
+	 * @param int                 $attempts Products tried at most.
+	 * @return array{items:array<int,array<string,mixed>>,skipped:array<int,array<string,mixed>>,raw:string}|null
+	 */
+	public static function dry_run( array $feed, $max = 5, $attempts = 50 ) {
+		$channel = Channels\Registry::get( $feed['channel'] );
+		if ( ! $channel ) {
+			return null;
+		}
+		$out = array(
+			'items'   => array(),
+			'skipped' => array(),
+			'raw'     => '',
+		);
+		Lang::switch_language( isset( $feed['language'] ) ? $feed['language'] : '' );
+		try {
+			$feed    = self::context( $feed );
+			$builder = new ItemBuilder( $feed, $channel );
+			$body    = '';
+			foreach ( array_slice( Query::ids( $feed ), 0, $attempts ) as $id ) {
+				$result = $builder->build( $id );
+				if ( null === $result['row'] ) {
+					$out['skipped'][] = array(
+						'id'     => (int) $id,
+						'reason' => $result['reason'],
+					);
+					continue;
+				}
+				$out['items'][] = array(
+					'id'       => (int) $id,
+					'row'      => $result['row'],
+					'warnings' => $result['warnings'],
+				);
+				$body .= $channel->item( $result['row'], $feed, $feed['format'] );
+				if ( count( $out['items'] ) >= $max ) {
+					break;
+				}
+			}
+			$out['raw'] = $channel->header( $feed, $feed['format'] ) . $body . $channel->footer( $feed, $feed['format'] );
+		} finally {
+			Lang::restore_language();
+		}
+		return $out;
+	}
+
+	/**
 	 * Footer, atomic rename, log.
 	 *
 	 * @param int                     $feed_id Feed ID.
@@ -255,10 +361,13 @@ final class Generator {
 			'items'      => $state['items'],
 			'excluded'   => $excluded,
 			'warnings'   => $state['warnings'],
+			'empty'      => isset( $state['empty'] ) ? $state['empty'] : array(),
+			'warned'     => isset( $state['warned'] ) ? $state['warned'] : array(),
 			'bytes'      => (int) filesize( $state['path'] ),
 			'url'        => Storage::url_for( $feed_id ),
 		);
 		Feeds::add_log( $feed_id, $entry );
+		Activity::add( 'generated', $feed_id, Activity::run_data( $entry ), isset( $state['by'] ) ? $state['by'] : 'schedule' );
 		Settings::log(
 			'info',
 			sprintf( 'Feed %1$d (%2$s) generated: %3$d items, %4$d excluded, %5$ss.', $feed_id, $feed['file_slug'], $entry['items'], $entry['candidates'] - $entry['items'], $entry['duration'] ),
@@ -310,8 +419,10 @@ final class Generator {
 				'status'  => 'error',
 				'time'    => time(),
 				'message' => $message,
+				'code'    => $code, // Diagnostics: a folder failure links to the settings.
 			)
 		);
+		Activity::add( 'failed', $feed_id, array( 'message' => $message ) );
 		Settings::log( 'error', sprintf( 'Feed %1$d: %2$s', $feed_id, $message ), array( 'feed_id' => $feed_id ) );
 		return new \WP_Error( $code, $message );
 	}
@@ -335,6 +446,7 @@ final class Generator {
 				'message' => $message,
 			)
 		);
+		Activity::add( 'failed', $feed_id, array( 'message' => $message ), isset( $state['by'] ) ? $state['by'] : 'schedule' );
 		Settings::log( 'error', sprintf( 'Feed %1$d: %2$s', $feed_id, $message ), array( 'feed_id' => $feed_id ) );
 		delete_option( self::STATE_PREFIX . $feed_id );
 		delete_transient( self::LOCK_PREFIX . $feed_id );

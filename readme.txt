@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,7 +55,7 @@ The plugin itself does not call a remote API, does not load a remote script or f
 
 = PayPal (donate) =
 
-Optional Donate / support links (Plugins screen, a dismissible notice on the plugin screens, the plugin footer, and the WordPress.org Donate link) open `https://www.paypal.com/donate/` in the browser when someone clicks them. No server-side request is made. PayPal may then see the visitor’s IP address, browser data and, if they complete a donation, the amount and the payment details they enter.
+Optional Donate links (the plugin row on the Plugins screen and the WordPress.org Donate link) open `https://www.paypal.com/donate/` in the browser when someone clicks them. No server-side request is made. PayPal may then see the visitor’s IP address, browser data and, if they complete a donation, the amount and the payment details they enter.
 
 * Terms: https://www.paypal.com/legalhub/useragreement-full
 * Privacy: https://www.paypal.com/legalhub/privacy-full
@@ -91,6 +91,15 @@ No outbound request is made from WordPress. Feeds only contain public product da
 
 == Frequently Asked Questions ==
 
+= Can I search Google product categories by name? =
+
+Yes, if you keep a copy of Google's taxonomy file on your server (download taxonomy-with-ids.en-US.txt or the file of your language, for example fr-FR, from the Google Merchant Center help). Point the plugin to it in a small mu-plugin:
+
+`add_filter( 'oliprfe_google_taxonomy_file', function () { return WP_CONTENT_DIR . '/taxonomy-with-ids.en-US.txt'; } );`
+
+The plugin does not include the file because Google does not publish it with a license that allows redistribution. Without it, the category fields take the numeric ID.
+
+
 = The platform still sees an old version of the feed =
 
 Your host or CDN probably caches static files for a long time. In **Settings**, choose **Through WordPress**: the feed is then served with a short cache (one hour by default) and validators, and the URL becomes `/?oliprfe_feed=<file>`.
@@ -122,6 +131,24 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 3. Settings.
 
 == Changelog ==
+
+= 0.6.0 =
+* Admin (in progress): native WordPress screens in four tabs (Feeds, Diagnostics, Activity log, Settings).
+* Feeds list: summary tiles (active feeds, items, excluded products, feeds with an error), six columns (Name, Target, Items, Status, Last generated, Feed URL), views All / Active / Errors / Inactive, channel filter, sorting, and Screen Options (columns, feeds per page).
+* Feeds list: row actions Edit, Generate now, Preview, Duplicate, Delete; bulk actions Generate now, Activate, Deactivate, Delete.
+* Delete: a dialog replaces the browser confirmation, lists the feeds and their files, and offers "Deactivate instead" so the feed URL keeps working.
+* Generation: the row shows the progress and is refreshed every 3 seconds without reloading the page; a notice and a screen reader announcement report the result; a running generation can be cancelled.
+* Feed editor: five numbered sections (Channel and target, Products, Mapping, Categories and links, Schedule) with section links and previous / next buttons; one section at a time with JavaScript, all sections stacked without it. Validation errors open the section of the field.
+* Add New Feed: one screen (channel, language, country, currency, suggested name); the feed is created inactive with the channel defaults and opens on its mapping.
+* Attribute mapping: four columns (Attribute, Source, Preview, Check), preview with any product, and a Check column that counts the products where each attribute was empty in the last generation, with a notice and a "Show only problems" filter.
+* Preview: a dry run of the first five items (table, warnings and raw file); no file is written.
+* Google category: a numeric ID, as before. A site that keeps its own copy of Google's taxonomy file can enable a local search with the oliprfe_google_taxonomy_file filter (the plugin does not ship the file and makes no network request).
+* Diagnostics tab: last generation of a feed, excluded products by reason (with the products and how to fix), warnings, empty values per attribute, site checks and a plain-text report you can copy (nothing is sent).
+* Activity log tab: generations, failures, queued and cancelled runs, feed changes and saved settings, with who did it (user, schedule or product update); runs kept by earlier versions are imported once. Keeps the last 200 entries by default (Settings > Activity log).
+* Feed editor: the Last runs box is replaced by links to Diagnostics and to the activity of the feed.
+* Removed: the support notice and the support footer on the plugin screens (the donate link stays in the plugin row and in this readme).
+* Fix: the Settings tab no longer fails on PHP builds without GLOB_BRACE.
+* Data: feeds, their configuration, the settings and the feed URLs are unchanged; one new setting, log_keep (Activity log entries to keep).
 
 = 0.5.7 =
 * Packaging: `.distignore` and `.gitattributes` `export-ignore` omit tests, tooling, composer/phpunit/phpcs/npm manifests and internal Markdown from the distributable ZIP. `readme.txt` stays.
@@ -222,6 +249,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+New native admin screens. Feeds, settings and feed URLs are unchanged.
 
 = 0.5.7 =
 Packaging only: development files are omitted from the distributable ZIP. No functional change.
