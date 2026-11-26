@@ -139,7 +139,7 @@
 		if ( link ) {
 			var ok = openDialog(
 				[ { name: link.getAttribute( 'data-name' ), file: link.getAttribute( 'data-file' ) } ],
-				function () { window.location.href = link.href; },
+				function () { window.location.href = link.href + '&confirm=1'; }, // Confirmed here: no confirmation page.
 				function () { window.location.href = link.getAttribute( 'data-deactivate' ); },
 				link
 			);
@@ -188,6 +188,11 @@
 		} );
 		function send( action ) {
 			form.querySelectorAll( 'select[name="action"], select[name="action2"]' ).forEach( function ( s ) { s.value = action; } );
+			var confirmed = document.createElement( 'input' );
+			confirmed.type  = 'hidden';
+			confirmed.name  = 'confirm';
+			confirmed.value = '1';
+			form.appendChild( confirmed );
 			form.oliprfeConfirmed = true;
 			form.submit();
 		}

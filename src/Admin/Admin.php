@@ -983,8 +983,50 @@ final class Admin {
 	 * Delete feed.
 	 */
 	public static function handle_delete() {
-		Feeds::delete( self::checked_feed( 'oliprfe_delete_feed' ) );
+		$feed_id = self::checked_feed( 'oliprfe_delete_feed' );
+		// Without JavaScript the link lands here first: nothing is deleted before the confirmation page.
+		if ( empty( $_GET['confirm'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked in checked_feed().
+			self::confirm_delete( array( $feed_id ) );
+		}
+		Feeds::delete( $feed_id );
 		self::back( 'deleted' );
+	}
+
+	/**
+	 * Native confirmation page of a deletion (no JavaScript): Delete, Deactivate instead, Cancel.
+	 * The JavaScript dialog sends confirm=1 and never shows this page.
+	 *
+	 * @param int[] $ids Feed IDs.
+	 */
+	private static function confirm_delete( array $ids ) {
+		$n    = count( $ids );
+		$list = '';
+		foreach ( $ids as $id ) {
+			$path  = Storage::path_for( $id );
+			$list .= '<li>' . esc_html( get_the_title( $id ) ) . ( file_exists( $path ) ? ' <code>' . esc_html( basename( $path ) ) . '</code>' : '' ) . '</li>';
+		}
+		/* translators: %d: number of feeds. */
+		$title  = sprintf( _n( 'Delete %d feed?', 'Delete %d feeds?', $n, 'oli-product-feed' ), $n );
+		/* translators: %d: number of feeds. */
+		$delete = sprintf( _n( 'Delete %d feed', 'Delete %d feeds', $n, 'oli-product-feed' ), $n );
+		$html   = '<h1>' . esc_html( $title ) . '</h1><p>' . esc_html__( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ) . '</p><ul>' . $list . '</ul><p>' . esc_html__( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ) . '</p>';
+		if ( 1 === $n ) {
+			$html .= '<p><a class="button" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Cancel', 'oli-product-feed' ) . '</a> <a class="button" href="' . esc_url( self::action_url( 'oliprfe_deactivate_feed', $ids[0] ) ) . '">' . esc_html__( 'Deactivate instead', 'oli-product-feed' ) . '</a> <a class="button" href="' . esc_url( add_query_arg( 'confirm', '1', self::action_url( 'oliprfe_delete_feed', $ids[0] ) ) ) . '">' . esc_html( $delete ) . '</a></p>';
+		} else {
+			$html .= '<form method="post" action="' . esc_url( self::url() ) . '"><input type="hidden" name="confirm" value="1"><input type="hidden" name="_wpnonce" value="' . esc_attr( wp_create_nonce( 'bulk-feeds' ) ) . '">';
+			foreach ( $ids as $id ) {
+				$html .= '<input type="hidden" name="feed_ids[]" value="' . (int) $id . '">';
+			}
+			$html .= '<p><a class="button" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Cancel', 'oli-product-feed' ) . '</a> <button type="submit" class="button" name="action" value="deactivate">' . esc_html__( 'Deactivate instead', 'oli-product-feed' ) . '</button> <button type="submit" class="button" name="action" value="delete">' . esc_html( $delete ) . '</button></p></form>';
+		}
+		wp_die(
+			$html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above.
+			esc_html( $title ),
+			array(
+				'response'  => 200,
+				'back_link' => false,
+			)
+		);
 	}
 
 	/**
@@ -1025,6 +1067,10 @@ final class Admin {
 		self::guard();
 		check_admin_referer( 'bulk-feeds' );
 		$ids = array_map( 'absint', (array) wp_unslash( $_REQUEST['feed_ids'] ) );
+		if ( 'delete' === $action && empty( $_REQUEST['confirm'] ) ) {
+			// Without JavaScript: confirmation page first (the dialog sends confirm=1).
+			self::confirm_delete( array_values( array_filter( $ids, array( Feeds::class, 'get' ) ) ) );
+		}
 		foreach ( $ids as $id ) {
 			if ( ! Feeds::get( $id ) ) {
 				continue;

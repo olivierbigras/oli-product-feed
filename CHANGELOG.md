@@ -2,6 +2,10 @@
 
 ## 0.6.0 — refonte de l’interface admin (en cours, branche `ui/native-refonte-060`)
 
+### Lot 5 (2026-11-25) : P3 restants, .pot
+
+- **Suppression sans JS** (`src/Admin/Admin.php`, `assets/js/admin.js`) (P3-5) : sans `confirm=1`, le lien Delete (ligne, éditeur) et l’action groupée Delete affichent une page de confirmation native (`wp_die()`, statut 200) avec la liste des flux et de leurs fichiers, puis Cancel, Deactivate instead et « Delete N feeds ». Rien n’est supprimé avant. Le dialogue JS envoie `confirm=1` et ne montre jamais cette page.
+
 ### Décisions Q1-Q6 (2026-11-25) : taxonomie Google non embarquée
 
 - **Licence vérifiée** : Google publie `taxonomy-with-ids.<langue>.txt` (page d’aide Merchant Center « Google product category », answer 6324436) sans licence de redistribution ; le fichier ne porte qu’une ligne de version, et les Conditions d’utilisation de Google gardent ses droits sans accorder de licence pour ce fichier. Ce n’est pas clair : je ne l’embarque pas (consigne).
