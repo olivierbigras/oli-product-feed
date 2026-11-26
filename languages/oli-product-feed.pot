@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-26T02:41:31+00:00\n"
+"POT-Creation-Date: 2026-11-26T03:09:18+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: oli-product-feed\n"
@@ -152,7 +152,7 @@ msgid "Unknown"
 msgstr ""
 
 #: src/Admin/Admin.php:134
-#: src/Admin/Admin.php:370
+#: src/Admin/Admin.php:387
 msgid "Feeds"
 msgstr ""
 
@@ -162,16 +162,16 @@ msgstr ""
 
 #: src/Admin/Admin.php:230
 #: src/Admin/Admin.php:231
-#: src/Admin/Admin.php:391
-#: src/Admin/Admin.php:668
-#: src/Admin/Admin.php:748
+#: src/Admin/Admin.php:408
+#: src/Admin/Admin.php:685
+#: src/Admin/Admin.php:765
 #: src/Admin/Diagnostics.php:67
 msgid "Product Feeds"
 msgstr ""
 
 #: src/Admin/Admin.php:263
-#: src/Admin/Admin.php:635
 #: src/Admin/Admin.php:652
+#: src/Admin/Admin.php:669
 msgid "Copy"
 msgstr ""
 
@@ -230,8 +230,8 @@ msgid "The preview failed."
 msgstr ""
 
 #. translators: %d: number of feeds.
-#: src/Admin/Admin.php:297
-#: src/Admin/Admin.php:1017
+#: src/Admin/Admin.php:298
+#: src/Admin/Admin.php:1034
 #, php-format
 msgid "Delete %d feed?"
 msgid_plural "Delete %d feeds?"
@@ -239,433 +239,434 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of feeds.
-#: src/Admin/Admin.php:299
-#: src/Admin/Admin.php:1019
+#: src/Admin/Admin.php:300
+#: src/Admin/Admin.php:1036
 #, php-format
 msgid "Delete %d feed"
 msgid_plural "Delete %d feeds"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Admin/Admin.php:358
-#: src/Admin/Admin.php:674
+#: src/Admin/Admin.php:313
+msgid "Its file is deleted too. Platforms that fetch this URL will get an error and may pause your products."
+msgid_plural "Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/Admin.php:375
+#: src/Admin/Admin.php:691
 #: src/Admin/Diagnostics.php:71
 #: src/Admin/Editor.php:105
 #: src/Admin/Editor.php:246
 msgid "Add New Feed"
 msgstr ""
 
-#: src/Admin/Admin.php:371
+#: src/Admin/Admin.php:388
 msgid "Diagnostics"
 msgstr ""
 
-#: src/Admin/Admin.php:372
-#: src/Admin/Admin.php:785
+#: src/Admin/Admin.php:389
+#: src/Admin/Admin.php:802
 msgid "Activity log"
 msgstr ""
 
-#: src/Admin/Admin.php:373
+#: src/Admin/Admin.php:390
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/Admin.php:375
+#: src/Admin/Admin.php:392
 msgid "Product feed screens"
 msgstr ""
 
 #. translators: %s: number of entries.
-#: src/Admin/Admin.php:399
+#: src/Admin/Admin.php:416
 #, php-format
 msgid "The last %s entries are kept (Settings › Activity log). Older entries are deleted automatically."
 msgstr ""
 
-#: src/Admin/Admin.php:411
+#: src/Admin/Admin.php:428
 msgid "Feed saved."
 msgstr ""
 
-#: src/Admin/Admin.php:412
+#: src/Admin/Admin.php:429
 msgid "Feed saved. Generation started in the background."
 msgstr ""
 
-#: src/Admin/Admin.php:413
+#: src/Admin/Admin.php:430
 msgid "Feed created (inactive). Review the mapping, then generate it."
 msgstr ""
 
-#: src/Admin/Admin.php:414
+#: src/Admin/Admin.php:431
 msgid "Feed deleted."
 msgstr ""
 
-#: src/Admin/Admin.php:415
+#: src/Admin/Admin.php:432
 msgid "Feed duplicated (inactive). Review it, then generate it."
 msgstr ""
 
-#: src/Admin/Admin.php:416
+#: src/Admin/Admin.php:433
 msgid "Generation started in the background."
 msgstr ""
 
-#: src/Admin/Admin.php:417
+#: src/Admin/Admin.php:434
 #: src/Admin/ListTable.php:301
 #: src/Generator.php:45
 msgid "A generation is already running for this feed."
 msgstr ""
 
-#: src/Admin/Admin.php:418
+#: src/Admin/Admin.php:435
 msgid "The action failed."
 msgstr ""
 
-#: src/Admin/Admin.php:419
+#: src/Admin/Admin.php:436
 msgid "Settings saved."
 msgstr ""
 
-#: src/Admin/Admin.php:420
+#: src/Admin/Admin.php:437
 msgid "Generation of every active feed started in the background."
 msgstr ""
 
-#: src/Admin/Admin.php:421
+#: src/Admin/Admin.php:438
 msgid "Feed activated."
 msgstr ""
 
-#: src/Admin/Admin.php:422
+#: src/Admin/Admin.php:439
 msgid "Feed deactivated. Its URL keeps the last file."
 msgstr ""
 
-#: src/Admin/Admin.php:423
+#: src/Admin/Admin.php:440
 msgid "Feeds activated."
 msgstr ""
 
-#: src/Admin/Admin.php:424
+#: src/Admin/Admin.php:441
 msgid "Feeds deactivated. Their URLs keep the last file."
 msgstr ""
 
-#: src/Admin/Admin.php:425
+#: src/Admin/Admin.php:442
 msgid "Feeds deleted."
 msgstr ""
 
-#: src/Admin/Admin.php:426
+#: src/Admin/Admin.php:443
 msgid "Generation cancelled. The previous file is still online."
 msgstr ""
 
-#: src/Admin/Admin.php:434
+#: src/Admin/Admin.php:451
 msgid "Settings saved, but the output folder was not changed."
 msgstr ""
 
 #. translators: %s: folder, e.g. "oli-product-feed".
-#: src/Admin/Admin.php:436
+#: src/Admin/Admin.php:453
 #: src/Cli.php:228
 #, php-format
 msgid "The feeds stay in wp-content/uploads/%s."
 msgstr ""
 
 #. translators: %s: folder, e.g. "oli-product-feed".
-#: src/Admin/Admin.php:444
+#: src/Admin/Admin.php:461
 #, php-format
 msgid "Nothing was moved or deleted: the feeds are still generated and served from wp-content/uploads/%s. Fix the folder or choose another one in the settings (or in the oliprfe_output_dir filter)."
 msgstr ""
 
-#: src/Admin/Admin.php:446
+#: src/Admin/Admin.php:463
 msgid "The feeds cannot be generated until the folder is fixed or another one is chosen in the settings (or in the oliprfe_output_dir filter)."
 msgstr ""
 
 #. translators: 1: file name, 2: output folder, 3: previous folder.
-#: src/Admin/Admin.php:456
+#: src/Admin/Admin.php:473
 #, php-format
 msgid "The feed file %1$s was not moved to wp-content/uploads/%2$s: a file of the same name that the plugin did not write is there. That file is left untouched, and the feed is still served from wp-content/uploads/%3$s (not regenerated). Remove or rename that file, or change the file name of the feed, then generate the feed."
 msgstr ""
 
 #. translators: %s: delay, e.g. "3 hours".
-#: src/Admin/Admin.php:469
+#: src/Admin/Admin.php:486
 #, php-format
 msgid "Scheduled generation is %s late: WP-Cron does not seem to run on this site (DISABLE_WP_CRON without a server cron). Ask your host for a server cron that calls wp-cron.php, or run \"wp oli-feed run-due\" from a system cron."
 msgstr ""
 
-#: src/Admin/Admin.php:477
+#: src/Admin/Admin.php:494
 msgid "No multilingual plugin detected: feeds use the site language. With TranslatePress, you can create one feed per language."
 msgstr ""
 
-#: src/Admin/Admin.php:477
+#: src/Admin/Admin.php:494
 msgid "Do not show again"
 msgstr ""
 
-#: src/Admin/Admin.php:509
+#: src/Admin/Admin.php:526
 #: src/Admin/Overview.php:106
 msgid "Generating"
 msgstr ""
 
-#: src/Admin/Admin.php:510
+#: src/Admin/Admin.php:527
 msgid "Error"
 msgstr ""
 
-#: src/Admin/Admin.php:511
+#: src/Admin/Admin.php:528
 #: src/Admin/ListTable.php:146
 msgid "Inactive"
 msgstr ""
 
-#: src/Admin/Admin.php:512
+#: src/Admin/Admin.php:529
 msgid "Never generated"
 msgstr ""
 
-#: src/Admin/Admin.php:513
+#: src/Admin/Admin.php:530
 #: src/Admin/Editor.php:1367
 #: src/Admin/Editor.php:1379
 #: src/Admin/ListTable.php:144
 msgid "Active"
 msgstr ""
 
-#: src/Admin/Admin.php:569
+#: src/Admin/Admin.php:586
 msgid "Generation progress"
 msgstr ""
 
-#: src/Admin/Admin.php:572
+#: src/Admin/Admin.php:589
 #: src/Admin/Overview.php:90
 #: src/Admin/Overview.php:139
 msgid "See diagnostics"
 msgstr ""
 
 #. translators: 1: processed products, 2: total products.
-#: src/Admin/Admin.php:587
+#: src/Admin/Admin.php:604
 #, php-format
 msgid "%1$s of %2$s products"
 msgstr ""
 
 #. translators: 1: processed products, 2: total products, 3: percentage.
-#: src/Admin/Admin.php:590
+#: src/Admin/Admin.php:607
 #, php-format
 msgid "%1$s of %2$s products (%3$s%%)"
 msgstr ""
 
-#: src/Admin/Admin.php:637
+#: src/Admin/Admin.php:654
 msgid "Generate the feed to publish its URL."
 msgstr ""
 
 #. translators: %s: feed file name.
-#: src/Admin/Admin.php:648
+#: src/Admin/Admin.php:665
 #, php-format
 msgid "Copy feed URL of %s"
 msgstr ""
 
-#: src/Admin/Admin.php:653
-#: src/Admin/Admin.php:659
+#: src/Admin/Admin.php:670
+#: src/Admin/Admin.php:676
 #: src/Admin/ListTable.php:52
 msgid "Feed URL"
 msgstr ""
 
-#: src/Admin/Admin.php:672
+#: src/Admin/Admin.php:689
 msgid "Create your first product feed"
 msgstr ""
 
-#: src/Admin/Admin.php:673
+#: src/Admin/Admin.php:690
 msgid "A feed is a file that a shopping platform fetches on a schedule. Pick a channel, a language and a currency, and the rest is set up for you."
 msgstr ""
 
-#: src/Admin/Admin.php:703
+#: src/Admin/Admin.php:720
 msgid "Search Feeds"
 msgstr ""
 
-#: src/Admin/Admin.php:719
-#: src/Admin/Admin.php:1020
-msgid "Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products."
-msgstr ""
-
-#: src/Admin/Admin.php:721
-#: src/Admin/Admin.php:1020
+#: src/Admin/Admin.php:738
+#: src/Admin/Admin.php:1037
 msgid "To stop a feed without breaking its URL, deactivate it instead."
 msgstr ""
 
-#: src/Admin/Admin.php:723
-#: src/Admin/Admin.php:1022
-#: src/Admin/Admin.php:1028
+#: src/Admin/Admin.php:740
+#: src/Admin/Admin.php:1039
+#: src/Admin/Admin.php:1045
 #: src/Admin/Editor.php:306
 msgid "Cancel"
 msgstr ""
 
-#: src/Admin/Admin.php:724
-#: src/Admin/Admin.php:1022
-#: src/Admin/Admin.php:1028
+#: src/Admin/Admin.php:741
+#: src/Admin/Admin.php:1039
+#: src/Admin/Admin.php:1045
 msgid "Deactivate instead"
 msgstr ""
 
-#: src/Admin/Admin.php:753
+#: src/Admin/Admin.php:770
 msgid "Feed files"
 msgstr ""
 
-#: src/Admin/Admin.php:754
+#: src/Admin/Admin.php:771
 msgid "Output folder"
 msgstr ""
 
-#: src/Admin/Admin.php:755
+#: src/Admin/Admin.php:772
 msgid "Folder inside uploads, created when a feed is generated. Changing it changes every feed URL: the feed files move to the new folder, and the previous folder is removed when the plugin created it and nothing else is in it. A folder that cannot be used (symbolic link, outside uploads, not writable) is refused, and nothing is moved. The oliprfe_output_dir filter can also set it."
 msgstr ""
 
 #. translators: 1: number of files, 2: total size.
-#: src/Admin/Admin.php:759
+#: src/Admin/Admin.php:776
 #, php-format
 msgid "Currently %1$s files, %2$s."
 msgstr ""
 
-#: src/Admin/Admin.php:764
+#: src/Admin/Admin.php:781
 msgid "Serve feeds"
 msgstr ""
 
-#: src/Admin/Admin.php:765
+#: src/Admin/Admin.php:782
 msgid "Static file (fastest; the host or CDN decides the cache headers)"
 msgstr ""
 
-#: src/Admin/Admin.php:766
+#: src/Admin/Admin.php:783
 msgid "Through WordPress (?oliprfe_feed=<file>): short cache, noindex, ETag and Last-Modified on any host"
 msgstr ""
 
-#: src/Admin/Admin.php:767
+#: src/Admin/Admin.php:784
 msgid "Use WordPress serving when a CDN caches static files for a long time (stale feeds). The feed URLs change: update them in the platforms."
 msgstr ""
 
-#: src/Admin/Admin.php:768
+#: src/Admin/Admin.php:785
 msgid "Cache lifetime"
 msgstr ""
 
-#: src/Admin/Admin.php:768
+#: src/Admin/Admin.php:785
 msgid "seconds (WordPress serving only; at most half of the regeneration interval of the feed; 0: no-cache)"
 msgstr ""
 
-#: src/Admin/Admin.php:770
+#: src/Admin/Admin.php:787
 msgid "Generation"
 msgstr ""
 
-#: src/Admin/Admin.php:771
+#: src/Admin/Admin.php:788
 msgid "Product changes"
 msgstr ""
 
-#: src/Admin/Admin.php:771
+#: src/Admin/Admin.php:788
 msgid "Regenerate the active feeds when a product is updated (at most every 15 minutes)"
 msgstr ""
 
-#: src/Admin/Admin.php:773
+#: src/Admin/Admin.php:790
 msgid "Schedule check"
 msgstr ""
 
 #. translators: %s: date and time.
-#: src/Admin/Admin.php:776
+#: src/Admin/Admin.php:793
 #, php-format
 msgid "Next check of the due feeds: %s (every 15 minutes)."
 msgstr ""
 
-#: src/Admin/Admin.php:778
+#: src/Admin/Admin.php:795
 msgid "Not scheduled yet: it is scheduled on the next page load."
 msgstr ""
 
-#: src/Admin/Admin.php:781
+#: src/Admin/Admin.php:798
 msgid "Access"
 msgstr ""
 
-#: src/Admin/Admin.php:781
+#: src/Admin/Admin.php:798
 msgid "Shop managers"
 msgstr ""
 
-#: src/Admin/Admin.php:782
+#: src/Admin/Admin.php:799
 msgid "Shop managers can manage the feeds (otherwise administrators only)"
 msgstr ""
 
-#: src/Admin/Admin.php:783
+#: src/Admin/Admin.php:800
 msgid "Checked: users with the manage_woocommerce capability (administrators and shop managers). Unchecked: users with the manage_options capability (administrators)."
 msgstr ""
 
-#: src/Admin/Admin.php:786
+#: src/Admin/Admin.php:803
 msgid "Keep"
 msgstr ""
 
-#: src/Admin/Admin.php:786
+#: src/Admin/Admin.php:803
 msgid "entries"
 msgstr ""
 
-#: src/Admin/Admin.php:787
+#: src/Admin/Admin.php:804
 msgid "Older entries are deleted automatically."
 msgstr ""
 
-#: src/Admin/Admin.php:788
+#: src/Admin/Admin.php:805
 msgid "WooCommerce log"
 msgstr ""
 
-#: src/Admin/Admin.php:790
+#: src/Admin/Admin.php:807
 msgid "Off"
 msgstr ""
 
-#: src/Admin/Admin.php:791
+#: src/Admin/Admin.php:808
 msgid "Errors only"
 msgstr ""
 
-#: src/Admin/Admin.php:792
+#: src/Admin/Admin.php:809
 msgid "Errors and every generation"
 msgstr ""
 
-#: src/Admin/Admin.php:796
+#: src/Admin/Admin.php:813
 msgid "Written to WooCommerce > Status > Logs (source: oli-product-feed)."
 msgstr ""
 
-#: src/Admin/Admin.php:798
+#: src/Admin/Admin.php:815
 msgid "Uninstall"
 msgstr ""
 
-#: src/Admin/Admin.php:798
+#: src/Admin/Admin.php:815
 msgid "Plugin data"
 msgstr ""
 
-#: src/Admin/Admin.php:799
+#: src/Admin/Admin.php:816
 msgid "Delete all data when the plugin is deleted (feeds, settings and generated files)"
 msgstr ""
 
-#: src/Admin/Admin.php:800
+#: src/Admin/Admin.php:817
 msgid "Checked: the feeds, the settings, the generated files of every output folder the plugin used and its WooCommerce logs are deleted; files the plugin did not write are never touched. Unchecked: everything is kept. Deactivating the plugin never deletes anything."
 msgstr ""
 
-#: src/Admin/Admin.php:804
+#: src/Admin/Admin.php:821
 msgid "Maintenance"
 msgstr ""
 
-#: src/Admin/Admin.php:806
+#: src/Admin/Admin.php:823
 msgid "Queues every active feed now. Feeds already running are skipped. The current files stay online until the new ones replace them."
 msgstr ""
 
-#: src/Admin/Admin.php:807
+#: src/Admin/Admin.php:824
 msgid "Generate all active feeds"
 msgstr ""
 
-#: src/Admin/Admin.php:844
+#: src/Admin/Admin.php:861
 msgid "You are not allowed to do this."
 msgstr ""
 
-#: src/Admin/Admin.php:935
+#: src/Admin/Admin.php:952
 msgid "Choose a channel."
 msgstr ""
 
-#: src/Admin/Admin.php:938
+#: src/Admin/Admin.php:955
 msgid "Choose the country this feed targets."
 msgstr ""
 
 #. translators: %s: feed name.
-#: src/Admin/Admin.php:1047
+#: src/Admin/Admin.php:1064
 #, php-format
 msgid "%s (copy)"
 msgstr ""
 
 #. translators: 1: items, 2: products, 3: variations.
-#: src/Admin/Admin.php:1219
+#: src/Admin/Admin.php:1236
 #, php-format
 msgid "%1$s items match these filters (%2$s products and %3$s variations)."
 msgstr ""
 
 #. translators: %s: product name.
-#: src/Admin/Admin.php:1272
+#: src/Admin/Admin.php:1289
 #: src/Admin/Editor.php:1026
 #, php-format
 msgid "Preview: %s"
 msgstr ""
 
 #. translators: %s: reason.
-#: src/Admin/Admin.php:1278
+#: src/Admin/Admin.php:1295
 #, php-format
 msgid "This product is not in the feed: %s"
 msgstr ""
 
 #. translators: 1: feed name, 2: error message.
-#: src/Admin/Admin.php:1377
+#: src/Admin/Admin.php:1394
 #: src/Admin/Overview.php:138
 #, php-format
 msgid "%1$s could not be generated: %2$s"
