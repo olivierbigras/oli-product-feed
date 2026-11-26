@@ -141,7 +141,6 @@ final class Editor {
 		self::box_schedule( $feed );
 		echo '<p class="oliprfe-submit-bottom"><button type="submit" class="button button-primary button-large" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></p>';
 		echo '</div></div><br class="clear"></div></form>';
-		Admin::support_footer();
 		echo '</div>';
 	}
 
@@ -399,8 +398,7 @@ final class Editor {
 		}
 		echo '</div><div id="major-publishing-actions">';
 		if ( $feed_id ) {
-			$delete = wp_nonce_url( add_query_arg( array( 'action' => 'oliprfe_delete_feed', 'feed' => $feed_id ), admin_url( 'admin-post.php' ) ), 'oliprfe_delete_feed_' . $feed_id );
-			echo '<div id="delete-action"><a class="submitdelete deletion oliprfe-confirm" href="' . esc_url( $delete ) . '" data-confirm="' . esc_attr__( 'Delete this feed and its file?', 'oli-product-feed' ) . '">' . esc_html__( 'Delete feed', 'oli-product-feed' ) . '</a></div>';
+			echo '<div id="delete-action"><a class="submitdelete deletion" ' . Admin::delete_attrs( $feed_id ) . '>' . esc_html__( 'Delete feed', 'oli-product-feed' ) . '</a></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Admin::delete_attrs().
 		}
 		echo '<div id="publishing-action"><button type="submit" class="button" name="generate" value="1">' . esc_html__( 'Save and generate now', 'oli-product-feed' ) . '</button> ';
 		echo '<button type="submit" class="button button-primary" name="save" value="1">' . esc_html__( 'Save feed', 'oli-product-feed' ) . '</button></div><div class="clear"></div></div>';

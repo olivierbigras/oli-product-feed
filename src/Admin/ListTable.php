@@ -1,6 +1,6 @@
 <?php
 /**
- * Feed list (WP_List_Table).
+ * Feed list (WP_List_Table): 6 columns, views, channel filter, search, sorting, Screen Options.
  *
  * @package Oliprfe
  */
@@ -9,7 +9,8 @@ namespace Oliprfe\Admin;
 
 use Oliprfe\Channels\Registry;
 use Oliprfe\Feeds;
-use Oliprfe\Lang;
+use Oliprfe\Generator;
+use Oliprfe\Scheduler;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,22 +37,50 @@ final class ListTable extends \WP_List_Table {
 	}
 
 	/**
+	 * Columns (also listed in Screen Options).
+	 *
+	 * @return array<string,string>
+	 */
+	public static function columns() {
+		return array(
+			'cb'             => '<input type="checkbox">',
+			'name'           => __( 'Name', 'oli-product-feed' ),
+			'target'         => __( 'Target', 'oli-product-feed' ),
+			'items'          => __( 'Items', 'oli-product-feed' ),
+			'status'         => __( 'Status', 'oli-product-feed' ),
+			'last_generated' => __( 'Last generated', 'oli-product-feed' ),
+			'url'            => __( 'Feed URL', 'oli-product-feed' ),
+		);
+	}
+
+	/**
 	 * Columns.
 	 *
 	 * @return array<string,string>
 	 */
 	public function get_columns() {
+		return self::columns();
+	}
+
+	/**
+	 * Sortable columns.
+	 *
+	 * @return array<string,array<int,mixed>>
+	 */
+	protected function get_sortable_columns() {
 		return array(
-			'cb'             => '<input type="checkbox">',
-			'name'           => __( 'Name', 'oli-product-feed' ),
-			'language'       => __( 'Language', 'oli-product-feed' ),
-			'country'        => __( 'Country', 'oli-product-feed' ),
-			'currency'       => __( 'Currency', 'oli-product-feed' ),
-			'products'       => __( 'Products', 'oli-product-feed' ),
-			'last_generated' => __( 'Last generated', 'oli-product-feed' ),
-			'status'         => __( 'Status', 'oli-product-feed' ),
-			'url'            => __( 'Feed URL', 'oli-product-feed' ),
+			'name'           => array( 'name', false ),
+			'last_generated' => array( 'last_generated', true ),
 		);
+	}
+
+	/**
+	 * Primary column (row actions, "Show more details" on small screens).
+	 *
+	 * @return string
+	 */
+	protected function get_default_primary_column_name() {
+		return 'name';
 	}
 
 	/**
@@ -61,40 +90,70 @@ final class ListTable extends \WP_List_Table {
 	 */
 	protected function get_bulk_actions() {
 		return array(
-			'generate' => __( 'Generate now', 'oli-product-feed' ),
-			'delete'   => __( 'Delete', 'oli-product-feed' ),
+			'generate'   => __( 'Generate now', 'oli-product-feed' ),
+			'activate'   => __( 'Activate', 'oli-product-feed' ),
+			'deactivate' => __( 'Deactivate', 'oli-product-feed' ),
+			'delete'     => __( 'Delete', 'oli-product-feed' ),
 		);
 	}
 
 	/**
-	 * Views by channel.
+	 * Current view: all, active, errors or inactive.
+	 *
+	 * @return string
+	 */
+	public static function current_view() {
+		$view = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// 0.5 link: ?channel=errors.
+		if ( '' === $view && isset( $_GET['channel'] ) && 'errors' === $_GET['channel'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$view = 'errors';
+		}
+		return in_array( $view, array( 'active', 'errors', 'inactive' ), true ) ? $view : 'all';
+	}
+
+	/**
+	 * Does a feed belong to a view? Active: published and not in error. Errors: the last generation
+	 * failed. Inactive: not published.
+	 *
+	 * @param int    $feed_id Feed ID.
+	 * @param string $view    View.
+	 * @return bool
+	 */
+	public static function in_view( $feed_id, $view ) {
+		$error = self::has_error( $feed_id );
+		switch ( $view ) {
+			case 'active':
+				return 'publish' === get_post_status( $feed_id ) && ! $error;
+			case 'errors':
+				return $error;
+			case 'inactive':
+				return 'publish' !== get_post_status( $feed_id );
+		}
+		return true;
+	}
+
+	/**
+	 * Views All / Active / Errors / Inactive with exact counts.
 	 *
 	 * @return array<string,string>
 	 */
 	protected function get_views() {
-		$current = isset( $_GET['channel'] ) ? sanitize_key( wp_unslash( $_GET['channel'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$counts  = array();
-		$all     = 0;
-		foreach ( Feeds::all_ids() as $id ) {
-			$feed = Feeds::get( $id );
-			if ( $feed ) {
-				$counts[ $feed['channel'] ] = isset( $counts[ $feed['channel'] ] ) ? $counts[ $feed['channel'] ] + 1 : 1;
-				++$all;
-			}
-		}
-		$base  = Admin::url();
-		$views = array(
-			'all' => '<a href="' . esc_url( $base ) . '"' . ( '' === $current ? ' class="current" aria-current="page"' : '' ) . '>' . esc_html__( 'All', 'oli-product-feed' ) . ' <span class="count">(' . (int) $all . ')</span></a>',
+		$current = self::current_view();
+		$labels  = array(
+			'all'      => __( 'All', 'oli-product-feed' ),
+			'active'   => __( 'Active', 'oli-product-feed' ),
+			'errors'   => __( 'Errors', 'oli-product-feed' ),
+			'inactive' => __( 'Inactive', 'oli-product-feed' ),
 		);
-		foreach ( $counts as $channel_id => $count ) {
-			$channel = Registry::get( $channel_id );
-			if ( $channel ) {
-				$views[ $channel_id ] = '<a href="' . esc_url( add_query_arg( 'channel', $channel_id, $base ) ) . '"' . ( $current === $channel_id ? ' class="current" aria-current="page"' : '' ) . '>' . esc_html( $channel->label() ) . ' <span class="count">(' . (int) $count . ')</span></a>';
+		$ids     = Feeds::all_ids();
+		$views   = array();
+		foreach ( $labels as $view => $label ) {
+			$count = 0;
+			foreach ( $ids as $id ) {
+				$count += self::in_view( $id, $view ) ? 1 : 0;
 			}
-		}
-		$errors = count( array_filter( Feeds::all_ids(), array( __CLASS__, 'has_error' ) ) );
-		if ( $errors ) {
-			$views['errors'] = '<a href="' . esc_url( add_query_arg( 'channel', 'errors', $base ) ) . '"' . ( 'errors' === $current ? ' class="current" aria-current="page"' : '' ) . '>' . esc_html__( 'Errors', 'oli-product-feed' ) . ' <span class="count">(' . (int) $errors . ')</span></a>';
+			$url            = 'all' === $view ? Admin::url() : Admin::url( array( 'status' => $view ) );
+			$views[ $view ] = '<a href="' . esc_url( $url ) . '"' . ( $current === $view ? ' class="current" aria-current="page"' : '' ) . '>' . esc_html( $label ) . ' <span class="count">(' . (int) $count . ')</span></a>';
 		}
 		return $views;
 	}
@@ -111,18 +170,43 @@ final class ListTable extends \WP_List_Table {
 	}
 
 	/**
-	 * Loads the rows.
+	 * Channel filter next to the bulk actions.
+	 *
+	 * @param string $which top|bottom.
+	 */
+	protected function extra_tablenav( $which ) {
+		if ( 'top' !== $which ) {
+			return;
+		}
+		$current = isset( $_GET['channel'] ) ? sanitize_key( wp_unslash( $_GET['channel'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		echo '<div class="alignleft actions"><label for="oliprfe-filter-channel" class="screen-reader-text">' . esc_html__( 'Filter by channel', 'oli-product-feed' ) . '</label>';
+		echo '<select name="channel" id="oliprfe-filter-channel"><option value="">' . esc_html__( 'All channels', 'oli-product-feed' ) . '</option>';
+		foreach ( Registry::all() as $channel ) {
+			echo '<option value="' . esc_attr( $channel->id() ) . '"' . selected( $current, $channel->id(), false ) . '>' . esc_html( $channel->label() ) . '</option>';
+		}
+		echo '</select>';
+		submit_button( __( 'Filter', 'oli-product-feed' ), '', 'filter_action', false, array( 'id' => 'oliprfe-filter-submit' ) );
+		echo '</div>';
+	}
+
+	/**
+	 * Loads the rows: view, channel, search, sorting and pagination.
 	 */
 	public function prepare_items() {
-		$channel = isset( $_GET['channel'] ) ? sanitize_key( wp_unslash( $_GET['channel'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$search  = isset( $_REQUEST['s'] ) ? trim( sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$items   = array();
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list state.
+		$channel = isset( $_GET['channel'] ) ? sanitize_key( wp_unslash( $_GET['channel'] ) ) : '';
+		$search  = isset( $_REQUEST['s'] ) ? trim( sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) ) : '';
+		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : '';
+		$order   = isset( $_GET['order'] ) && 'desc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'desc' : 'asc';
+		// phpcs:enable
+		$view  = self::current_view();
+		$items = array();
 		foreach ( Feeds::all_ids() as $id ) {
 			$feed = Feeds::get( $id );
-			if ( ! $feed ) {
+			if ( ! $feed || ! self::in_view( $id, $view ) ) {
 				continue;
 			}
-			if ( 'errors' === $channel ? ! self::has_error( $id ) : ( '' !== $channel && $feed['channel'] !== $channel ) ) {
+			if ( '' !== $channel && 'errors' !== $channel && $feed['channel'] !== $channel ) {
 				continue;
 			}
 			if ( '' !== $search && false === mb_stripos( $feed['name'] . ' ' . $feed['file_slug'], $search ) ) {
@@ -130,12 +214,29 @@ final class ListTable extends \WP_List_Table {
 			}
 			$items[] = $feed;
 		}
-		$this->_column_headers = array( $this->get_columns(), array(), array() );
-		$this->items           = $items;
+		if ( in_array( $orderby, array( 'name', 'last_generated' ), true ) ) {
+			usort(
+				$items,
+				static function ( $a, $b ) use ( $orderby, $order ) {
+					if ( 'name' === $orderby ) {
+						$cmp = strnatcasecmp( $a['name'], $b['name'] );
+					} else {
+						$la  = Admin::last_success( $a['id'] );
+						$lb  = Admin::last_success( $b['id'] );
+						$cmp = ( isset( $la['time'] ) ? (int) $la['time'] : 0 ) - ( isset( $lb['time'] ) ? (int) $lb['time'] : 0 );
+					}
+					return 'desc' === $order ? -$cmp : $cmp;
+				}
+			);
+		}
+		$per_page              = $this->get_items_per_page( 'oliprfe_feeds_per_page', 20 );
+		$total                 = count( $items );
+		$this->_column_headers = array( $this->get_columns(), get_hidden_columns( $this->screen ), $this->get_sortable_columns(), 'name' );
+		$this->items           = array_slice( $items, ( $this->get_pagenum() - 1 ) * $per_page, $per_page );
 		$this->set_pagination_args(
 			array(
-				'total_items' => count( $items ),
-				'per_page'    => max( 1, count( $items ) ),
+				'total_items' => $total,
+				'per_page'    => $per_page,
 			)
 		);
 	}
@@ -147,45 +248,184 @@ final class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	protected function column_cb( $item ) {
-		return '<label class="screen-reader-text" for="oliprfe-cb-' . (int) $item['id'] . '">' . esc_html( $item['name'] ) . '</label><input type="checkbox" id="oliprfe-cb-' . (int) $item['id'] . '" name="feed_ids[]" value="' . (int) $item['id'] . '">';
+		/* translators: %s: feed name. */
+		$label = sprintf( __( 'Select %s', 'oli-product-feed' ), '' !== $item['name'] ? $item['name'] : __( '(no name)', 'oli-product-feed' ) );
+		return '<label class="screen-reader-text" for="oliprfe-cb-' . (int) $item['id'] . '">' . esc_html( $label ) . '</label><input type="checkbox" id="oliprfe-cb-' . (int) $item['id'] . '" name="feed_ids[]" value="' . (int) $item['id'] . '" data-name="' . esc_attr( $item['name'] ) . '">';
 	}
 
 	/**
-	 * Name column with row actions.
+	 * Name column: name, channel and format.
 	 *
 	 * @param array<string,mixed> $item Feed.
 	 * @return string
 	 */
 	protected function column_name( $item ) {
-		$id      = (int) $item['id'];
-		$edit    = add_query_arg(
+		$channel = Registry::get( $item['channel'] );
+		return '<strong><a class="row-title" href="' . esc_url( self::edit_url( $item ) ) . '">' . esc_html( '' !== $item['name'] ? $item['name'] : __( '(no name)', 'oli-product-feed' ) ) . '</a></strong>'
+			. '<span class="oliprfe-meta">' . esc_html( ( $channel ? $channel->label() : $item['channel'] ) . ' · ' . strtoupper( $item['format'] ) ) . '</span>';
+	}
+
+	/**
+	 * Editor URL of a feed.
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	private static function edit_url( array $item ) {
+		return Admin::url(
 			array(
 				'action' => 'edit',
-				'feed'   => $id,
-			),
-			Admin::url()
+				'feed'   => (int) $item['id'],
+			)
 		);
-		$channel = Registry::get( $item['channel'] );
-		$freq    = array(
-			'manual'     => __( 'Manual', 'oli-product-feed' ),
+	}
+
+	/**
+	 * Row actions of the primary column: Edit, Generate now, Preview, Duplicate, Delete.
+	 *
+	 * @param array<string,mixed> $item        Feed.
+	 * @param string              $column_name Column.
+	 * @param string              $primary     Primary column.
+	 * @return string
+	 */
+	protected function handle_row_actions( $item, $column_name, $primary ) {
+		if ( $primary !== $column_name ) {
+			return '';
+		}
+		$id      = (int) $item['id'];
+		$edit    = self::edit_url( $item );
+		$actions = array(
+			'edit' => '<a href="' . esc_url( $edit ) . '">' . esc_html__( 'Edit', 'oli-product-feed' ) . '</a>',
+		);
+		if ( Generator::is_running( $id ) ) {
+			$actions['generate'] = '<a role="link" aria-disabled="true" title="' . esc_attr__( 'A generation is already running for this feed.', 'oli-product-feed' ) . '">' . esc_html__( 'Generate now', 'oli-product-feed' ) . '</a>';
+		} else {
+			$actions['generate'] = '<a href="' . esc_url( Admin::action_url( 'oliprfe_generate', $id ) ) . '">' . esc_html__( 'Generate now', 'oli-product-feed' ) . '</a>';
+		}
+		$actions['preview']   = '<a href="' . esc_url( $edit . '#preview' ) . '">' . esc_html__( 'Preview', 'oli-product-feed' ) . '</a>';
+		$actions['duplicate'] = '<a href="' . esc_url( Admin::action_url( 'oliprfe_duplicate_feed', $id ) ) . '">' . esc_html__( 'Duplicate', 'oli-product-feed' ) . '</a>';
+		$actions['delete']    = '<a class="submitdelete" ' . Admin::delete_attrs( $id ) . '>' . esc_html__( 'Delete', 'oli-product-feed' ) . '</a>';
+		return $this->row_actions( $actions );
+	}
+
+	/**
+	 * Language code of a feed (the site language when the feed has none).
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	private static function language_code( array $item ) {
+		$locale = '' !== $item['language'] ? $item['language'] : determine_locale();
+		return strtolower( (string) preg_replace( '/[_-].*$/', '', $locale ) );
+	}
+
+	/**
+	 * Target cell: language · country · currency (full names for screen readers in the title).
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	private static function target_cell( array $item ) {
+		$countries = function_exists( 'WC' ) && WC()->countries ? WC()->countries->get_countries() : array();
+		$country   = isset( $countries[ $item['country'] ] ) ? $countries[ $item['country'] ] : $item['country'];
+		$text      = implode( ' · ', array_filter( array( self::language_code( $item ), $item['country'], $item['currency'] ) ) );
+		return '<span title="' . esc_attr( html_entity_decode( (string) $country, ENT_QUOTES, 'UTF-8' ) ) . '">' . esc_html( '' !== $text ? $text : '—' ) . '</span>';
+	}
+
+	/**
+	 * Items cell: items of the last successful generation and a link to the excluded products.
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	public static function items_cell( array $item ) {
+		$ok = Admin::last_success( (int) $item['id'] );
+		if ( ! isset( $ok['items'] ) ) {
+			return '—';
+		}
+		$excluded = max( 0, (int) ( isset( $ok['candidates'] ) ? $ok['candidates'] : 0 ) - (int) $ok['items'] );
+		$html     = esc_html( number_format_i18n( (int) $ok['items'] ) );
+		if ( $excluded ) {
+			$url = Admin::diag_url( (int) $item['id'] );
+			/* translators: %s: number of excluded products. */
+			$text  = sprintf( __( '%s excluded', 'oli-product-feed' ), number_format_i18n( $excluded ) );
+			$html .= '<a class="oliprfe-meta" href="' . esc_url( $url ) . '">' . esc_html( $text ) . '</a>';
+		}
+		return $html;
+	}
+
+	/**
+	 * Schedule label of a feed (e.g. "Daily at 3:00 am", "Manual only").
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	public static function schedule_label( array $item ) {
+		$freq = array(
+			'manual'     => __( 'Manual only', 'oli-product-feed' ),
 			'hourly'     => __( 'Hourly', 'oli-product-feed' ),
 			'twicedaily' => __( 'Twice a day', 'oli-product-feed' ),
 			'daily'      => __( 'Daily', 'oli-product-feed' ),
 			'weekly'     => __( 'Weekly', 'oli-product-feed' ),
 		);
-		$sched   = $freq[ $item['frequency'] ];
+		$label = isset( $freq[ $item['frequency'] ] ) ? $freq[ $item['frequency'] ] : $item['frequency'];
 		if ( $item['start_hour'] >= 0 && in_array( $item['frequency'], array( 'daily', 'weekly' ), true ) ) {
-			$sched .= ' ' . sprintf( '%02d:00', (int) $item['start_hour'] );
+			$time = ( new \DateTimeImmutable( 'now', wp_timezone() ) )->setTime( (int) $item['start_hour'], 0 );
+			/* translators: 1: frequency, e.g. "Daily", 2: time. */
+			$label = sprintf( __( '%1$s at %2$s', 'oli-product-feed' ), $label, wp_date( get_option( 'time_format' ), $time->getTimestamp() ) );
 		}
-		$actions = array(
-			'edit'      => '<a href="' . esc_url( $edit ) . '">' . esc_html__( 'Edit', 'oli-product-feed' ) . '</a>',
-			'generate'  => '<a href="' . esc_url( Admin::action_url( 'oliprfe_generate', $id ) ) . '">' . esc_html__( 'Generate now', 'oli-product-feed' ) . '</a>',
-			'duplicate' => '<a href="' . esc_url( Admin::action_url( 'oliprfe_duplicate_feed', $id ) ) . '">' . esc_html__( 'Duplicate', 'oli-product-feed' ) . '</a>',
-			'delete'    => '<a class="submitdelete oliprfe-confirm" href="' . esc_url( Admin::action_url( 'oliprfe_delete_feed', $id ) ) . '" data-confirm="' . esc_attr__( 'Delete this feed and its file?', 'oli-product-feed' ) . '">' . esc_html__( 'Delete', 'oli-product-feed' ) . '</a>',
-		);
-		return '<strong><a class="row-title" href="' . esc_url( $edit ) . '">' . esc_html( '' !== $item['name'] ? $item['name'] : __( '(no name)', 'oli-product-feed' ) ) . '</a></strong>'
-			. '<span class="oliprfe-meta">' . esc_html( ( $channel ? $channel->label() : $item['channel'] ) . ' · ' . strtoupper( $item['format'] ) . ' · ' . $sched ) . '</span>'
-			. $this->row_actions( $actions );
+		return $label;
+	}
+
+	/**
+	 * Date of a run, in the site format.
+	 *
+	 * @param int $time Timestamp.
+	 * @return string
+	 */
+	private static function date( $time ) {
+		/* translators: 1: date, 2: time. */
+		$text = sprintf( __( '%1$s at %2$s', 'oli-product-feed' ), wp_date( get_option( 'date_format' ), $time ), wp_date( get_option( 'time_format' ), $time ) );
+		return '<time datetime="' . esc_attr( wp_date( 'c', $time ) ) . '">' . esc_html( $text ) . '</time>';
+	}
+
+	/**
+	 * Last generated cell: date of the last successful file and the next run (or why there is none).
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 * @return string
+	 */
+	public static function last_cell( array $item ) {
+		$id   = (int) $item['id'];
+		$last = Feeds::last_run( $id );
+		$ok   = Admin::last_success( $id );
+		$html = ! empty( $ok['time'] ) ? self::date( (int) $ok['time'] ) : '—';
+		if ( Generator::is_running( $id ) ) {
+			$meta = __( 'Running now', 'oli-product-feed' );
+		} elseif ( isset( $last['status'] ) && 'error' === $last['status'] ) {
+			$meta = ! empty( $ok['time'] ) ? __( 'Last success', 'oli-product-feed' ) : __( 'No successful generation yet', 'oli-product-feed' );
+		} elseif ( 'publish' !== $item['status'] ) {
+			$meta = 'manual' === $item['frequency'] ? __( 'Manual only', 'oli-product-feed' ) : __( 'Not scheduled (inactive)', 'oli-product-feed' );
+		} elseif ( empty( $last['time'] ) ) {
+			$meta = self::schedule_label( $item );
+		} else {
+			$next = Scheduler::next_run( $item, $last );
+			/* translators: %s: date and time of the next generation. */
+			$meta = $next ? sprintf( __( 'Next: %s', 'oli-product-feed' ), wp_date( get_option( 'date_format' ) . ', ' . get_option( 'time_format' ), $next ) ) : __( 'Manual only', 'oli-product-feed' );
+		}
+		return $html . '<span class="oliprfe-meta">' . esc_html( $meta ) . '</span>';
+	}
+
+	/**
+	 * Feed URL cell.
+	 *
+	 * @param int $feed_id Feed ID.
+	 * @return string
+	 */
+	public static function url_cell( $feed_id ) {
+		ob_start();
+		Admin::feed_url_field( (int) $feed_id, 'list' );
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -196,40 +436,36 @@ final class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	protected function column_default( $item, $column_name ) {
-		$id   = (int) $item['id'];
-		$last = Feeds::last_run( $id );
 		switch ( $column_name ) {
-			case 'language':
-				$langs = Lang::languages();
-				return esc_html( isset( $langs[ $item['language'] ] ) ? $langs[ $item['language'] ] : ( '' !== $item['language'] ? $item['language'] : '—' ) );
-			case 'country':
-				$countries = WC()->countries->get_countries();
-				return esc_html( isset( $countries[ $item['country'] ] ) ? $countries[ $item['country'] ] : '—' );
-			case 'currency':
-				return esc_html( $item['currency'] );
-			case 'products':
-				return isset( $last['items'] ) ? esc_html( number_format_i18n( (int) $last['items'] ) ) : '—';
-			case 'last_generated':
-				if ( empty( $last['time'] ) ) {
-					return '—';
-				}
-				$abs = wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $last['time'] );
-				/* translators: %s: human time difference. */
-				return '<time datetime="' . esc_attr( wp_date( 'c', (int) $last['time'] ) ) . '" title="' . esc_attr( $abs ) . '">' . esc_html( sprintf( __( '%s ago', 'oli-product-feed' ), human_time_diff( (int) $last['time'] ) ) ) . '</time>';
+			case 'target':
+				return self::target_cell( $item );
+			case 'items':
+				return self::items_cell( $item );
 			case 'status':
-				return Admin::status_cell( $id );
+				return Admin::status_cell( (int) $item['id'] );
+			case 'last_generated':
+				return self::last_cell( $item );
 			case 'url':
-				ob_start();
-				Admin::feed_url_field( $id, 'list' );
-				return (string) ob_get_clean();
+				return self::url_cell( (int) $item['id'] );
 		}
 		return '';
 	}
 
 	/**
-	 * Empty state.
+	 * Row with the feed ID (used by the progress refresh).
+	 *
+	 * @param array<string,mixed> $item Feed.
+	 */
+	public function single_row( $item ) {
+		echo '<tr data-oliprfe-row="' . (int) $item['id'] . '">';
+		$this->single_row_columns( $item );
+		echo '</tr>';
+	}
+
+	/**
+	 * No feed matches the view, the filter or the search.
 	 */
 	public function no_items() {
-		esc_html_e( 'No feed yet.', 'oli-product-feed' );
+		esc_html_e( 'No feed matches.', 'oli-product-feed' );
 	}
 }

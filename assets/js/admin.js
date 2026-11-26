@@ -1,7 +1,7 @@
 /**
  * Oli Product Feed admin script (plugin screens only, no jQuery).
- * Copy URL, confirmations, attribute mapping, schedule, channel formats, match count, error summary and generation progress.
- * Strings come from wp_localize_script( 'oliprfe-admin', 'oliprfeAdmin', { i18n, ajaxUrl, nonce } ).
+ * Copy URL, delete dialog, attribute mapping, schedule, channel formats, match count, error summary and generation progress.
+ * Strings come from wp_localize_script( 'oliprfe-admin', 'oliprfeAdmin', { i18n, plural, ajaxUrl, nonce } ).
  */
 ( function () {
 	'use strict';
@@ -17,8 +17,10 @@
 		badName: 'Use lowercase letters, digits and underscores.',
 		exists: 'This attribute is already in the list.',
 		counting: 'Counting…',
-		countError: 'The count failed.'
+		countError: 'The count failed.',
+		selectOne: 'Select at least one feed.'
 	}, cfg.i18n || {} );
+	var plural = cfg.plural || { title: {}, button: {} };
 
 	/* Screen reader announcements: wp.a11y.speak(), else a plugin live region. */
 	var live;
@@ -107,10 +109,93 @@
 		}
 	} );
 
-	/* ---- Confirmations ---- */
+	/* ---- Delete dialog (row, editor and bulk): replaces the browser confirmation; focus on Cancel, Escape closes ---- */
+	var dialog, opener, onDelete, onDeactivate;
+	function openDialog( feeds, del, deactivate, from ) {
+		dialog = dialog || document.getElementById( 'oliprfe-delete-dialog' );
+		if ( ! dialog || ! dialog.showModal ) {
+			return false; // No <dialog> support: the link or the form works as is.
+		}
+		var n    = feeds.length;
+		var list = dialog.querySelector( '.oliprfe-delete-list' );
+		dialog.querySelector( 'h2' ).textContent = plural.title[ n ] || '';
+		dialog.querySelector( '.oliprfe-dialog-delete' ).textContent = plural.button[ n ] || '';
+		list.textContent = '';
+		feeds.forEach( function ( feed ) {
+			var li = document.createElement( 'li' );
+			li.textContent = feed.name + ( feed.file ? ' ' : '' );
+			if ( feed.file ) {
+				var code = document.createElement( 'code' );
+				code.textContent = feed.file;
+				li.appendChild( code );
+			}
+			list.appendChild( li );
+		} );
+		opener       = from;
+		onDelete     = del;
+		onDeactivate = deactivate;
+		dialog.showModal();
+		dialog.querySelector( '.oliprfe-dialog-cancel' ).focus();
+		return true;
+	}
 	document.addEventListener( 'click', function ( event ) {
-		var link = event.target.closest ? event.target.closest( '.oliprfe-confirm' ) : null;
-		if ( link && link.getAttribute( 'data-confirm' ) && ! window.confirm( link.getAttribute( 'data-confirm' ) ) ) {
+		var link = event.target.closest ? event.target.closest( '[data-oliprfe-delete]' ) : null;
+		if ( link ) {
+			var ok = openDialog(
+				[ { name: link.getAttribute( 'data-name' ), file: link.getAttribute( 'data-file' ) } ],
+				function () { window.location.href = link.href; },
+				function () { window.location.href = link.getAttribute( 'data-deactivate' ); },
+				link
+			);
+			if ( ok ) {
+				event.preventDefault();
+			}
+			return;
+		}
+		if ( ! dialog || ! event.target.closest || ! event.target.closest( '#oliprfe-delete-dialog' ) ) {
+			return;
+		}
+		if ( event.target.closest( '.oliprfe-dialog-cancel' ) ) {
+			dialog.close();
+		} else if ( event.target.closest( '.oliprfe-dialog-delete' ) ) {
+			onDelete();
+		} else if ( event.target.closest( '.oliprfe-dialog-deactivate' ) ) {
+			onDeactivate();
+		}
+	} );
+	document.addEventListener( 'close', function ( event ) {
+		if ( event.target === dialog && opener && document.contains( opener ) ) {
+			opener.focus(); // Focus back to what opened the dialog.
+		}
+	}, true );
+
+	/* Bulk Delete opens the same dialog; "Deactivate instead" switches the bulk action. */
+	document.addEventListener( 'submit', function ( event ) {
+		var form = event.target;
+		if ( 'oliprfe-feeds-form' !== form.id || form.oliprfeConfirmed ) {
+			return;
+		}
+		var submitter = event.submitter || document.activeElement;
+		var which     = submitter && 'doaction2' === submitter.id ? 'action2' : 'action';
+		var select    = form.querySelector( 'select[name="' + which + '"]' );
+		if ( ! select || 'delete' !== select.value || ( submitter && 'filter_action' === submitter.name ) ) {
+			return;
+		}
+		var boxes = form.querySelectorAll( 'input[name="feed_ids[]"]:checked' );
+		if ( ! boxes.length ) {
+			event.preventDefault();
+			speak( i18n.selectOne );
+			return;
+		}
+		var feeds = Array.prototype.map.call( boxes, function ( box ) {
+			return { name: box.getAttribute( 'data-name' ), file: '' };
+		} );
+		function send( action ) {
+			form.querySelectorAll( 'select[name="action"], select[name="action2"]' ).forEach( function ( s ) { s.value = action; } );
+			form.oliprfeConfirmed = true;
+			form.submit();
+		}
+		if ( openDialog( feeds, function () { send( 'delete' ); }, function () { send( 'deactivate' ); }, submitter ) ) {
 			event.preventDefault();
 		}
 	} );
@@ -201,7 +286,34 @@
 		}
 	} );
 
-	/* ---- Generation progress (polls every 3 s while a feed is generating) ---- */
+	/* ---- Generation progress (polls every 3 s while a feed is generating, no reload) ---- */
+	var milestones = {};
+	function finish( feed ) {
+		var row = document.querySelector( '[data-oliprfe-row="' + feed.id + '"]' );
+		if ( row && feed.cells ) {
+			Object.keys( feed.cells ).forEach( function ( col ) {
+				var cell = row.querySelector( 'td.column-' + col );
+				if ( cell ) {
+					// Server-escaped HTML; keep the "Show more details" toggle of small screens.
+					var toggle = cell.querySelector( '.toggle-row' );
+					cell.innerHTML = feed.cells[ col ];
+					if ( toggle ) { cell.appendChild( toggle ); }
+				}
+			} );
+		}
+		var notice = document.querySelector( '[data-oliprfe-notice="' + feed.id + '"]' );
+		if ( feed.notice ) {
+			var holder = document.createElement( 'div' );
+			holder.innerHTML = feed.notice;
+			if ( notice ) {
+				notice.parentNode.replaceChild( holder.firstChild, notice );
+			} else {
+				var box = document.querySelector( '.oliprfe-run-notices' );
+				if ( box ) { box.appendChild( holder.firstChild ); }
+			}
+		}
+		speak( feed.speak || ( ( 'error' === feed.status ? i18n.failed : i18n.generated ) + ' ' + feed.name ) );
+	}
 	function poll() {
 		var rows = document.querySelectorAll( '[data-oliprfe-generating]' );
 		if ( ! rows.length || ! cfg.ajaxUrl ) {
@@ -212,25 +324,30 @@
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) { return r.json(); } )
 			.then( function ( json ) {
-				var done = false;
 				( json && json.success ? json.data : [] ).forEach( function ( feed ) {
 					var el = document.querySelector( '[data-oliprfe-generating="' + feed.id + '"]' );
 					if ( ! el ) { return; }
+					if ( 'generating' !== feed.status ) {
+						el.removeAttribute( 'data-oliprfe-generating' );
+						finish( feed );
+						return;
+					}
 					var bar  = el.querySelector( 'progress' );
 					var text = el.querySelector( '.oliprfe-progress-text' );
+					var note = document.querySelector( '[data-oliprfe-notice="' + feed.id + '"] .oliprfe-run-text' );
 					if ( bar ) { bar.value = feed.percent; }
 					if ( text ) { text.textContent = feed.progressText; }
-					if ( 'generating' !== feed.status ) {
-						done = true;
-						speak( ( 'error' === feed.status ? i18n.failed : i18n.generated ) + ' ' + feed.name );
-						el.removeAttribute( 'data-oliprfe-generating' );
-					}
+					if ( note ) { note.textContent = feed.noticeText; }
+					[ 75, 50, 25 ].some( function ( step ) {
+						if ( feed.percent >= step && ( milestones[ feed.id ] || 0 ) < step ) {
+							milestones[ feed.id ] = step;
+							speak( feed.noticeText );
+							return true;
+						}
+						return false;
+					} );
 				} );
-				if ( done ) {
-					window.location.reload(); // Reload to show the new values.
-				} else {
-					window.setTimeout( poll, 3000 );
-				}
+				window.setTimeout( poll, 3000 );
 			} )
 			.catch( function () { window.setTimeout( poll, 10000 ); } );
 	}

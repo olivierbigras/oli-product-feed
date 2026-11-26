@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.5.7
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -123,6 +123,16 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.6.0 =
+* Admin (in progress): native WordPress screens in four tabs (Feeds, Diagnostics, Activity log, Settings).
+* Feeds list: summary tiles (active feeds, items, excluded products, feeds with an error), six columns (Name, Target, Items, Status, Last generated, Feed URL), views All / Active / Errors / Inactive, channel filter, sorting, and Screen Options (columns, feeds per page).
+* Feeds list: row actions Edit, Generate now, Preview, Duplicate, Delete; bulk actions Generate now, Activate, Deactivate, Delete.
+* Delete: a dialog replaces the browser confirmation, lists the feeds and their files, and offers "Deactivate instead" so the feed URL keeps working.
+* Generation: the row shows the progress and is refreshed every 3 seconds without reloading the page; a notice and a screen reader announcement report the result; a running generation can be cancelled.
+* Removed: the support notice and the support footer on the plugin screens (the donate link stays in the plugin row and in this readme).
+* Fix: the Settings tab no longer fails on PHP builds without GLOB_BRACE.
+* Data: feeds, their configuration, the settings and the feed URLs are unchanged.
+
 = 0.5.7 =
 * Packaging: `.distignore` and `.gitattributes` `export-ignore` omit tests, tooling, composer/phpunit/phpcs/npm manifests and internal Markdown from the distributable ZIP. `readme.txt` stays.
 
@@ -222,6 +232,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+New native admin screens. Feeds, settings and feed URLs are unchanged.
 
 = 0.5.7 =
 Packaging only: development files are omitted from the distributable ZIP. No functional change.

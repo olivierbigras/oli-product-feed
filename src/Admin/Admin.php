@@ -35,10 +35,14 @@ final class Admin {
 		add_action( 'admin_post_oliprfe_generate', array( __CLASS__, 'handle_generate' ) );
 		add_action( 'admin_post_oliprfe_save_settings', array( __CLASS__, 'handle_settings' ) );
 		add_action( 'admin_post_oliprfe_generate_all', array( __CLASS__, 'handle_generate_all' ) );
+		add_action( 'admin_post_oliprfe_activate_feed', array( __CLASS__, 'handle_activate' ) );
+		add_action( 'admin_post_oliprfe_deactivate_feed', array( __CLASS__, 'handle_deactivate' ) );
+		add_action( 'admin_post_oliprfe_cancel_generation', array( __CLASS__, 'handle_cancel' ) );
 		add_action( 'wp_ajax_oliprfe_feed_status', array( __CLASS__, 'ajax_status' ) );
 		add_action( 'wp_ajax_oliprfe_match_count', array( __CLASS__, 'ajax_match_count' ) );
-		add_action( 'wp_ajax_oliprfe_dismiss_donate', array( __CLASS__, 'ajax_dismiss_donate' ) );
-		add_action( 'admin_notices', array( __CLASS__, 'donate_notice' ) );
+		add_action( 'admin_init', array( __CLASS__, 'upgrade' ) );
+		add_action( 'admin_footer', array( __CLASS__, 'delete_dialog' ) );
+		add_filter( 'set_screen_option_oliprfe_feeds_per_page', array( __CLASS__, 'set_per_page' ), 10, 3 );
 		add_filter( 'plugin_action_links_' . plugin_basename( OLIPRFE_FILE ), array( __CLASS__, 'action_links' ) );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
 	}
@@ -51,6 +55,20 @@ final class Admin {
 	 */
 	public static function url( array $args = array() ) {
 		return add_query_arg( array_merge( array( 'page' => self::SLUG ), $args ), admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Diagnostics tab URL (of one feed, or the default feed).
+	 *
+	 * @param int $feed_id Feed ID (0: the first feed in error, else the last generated).
+	 * @return string
+	 */
+	public static function diag_url( $feed_id = 0 ) {
+		$args = array( 'tab' => 'diagnostics' );
+		if ( $feed_id ) {
+			$args['feed'] = (int) $feed_id;
+		}
+		return self::url( $args );
 	}
 
 	/**
@@ -71,6 +89,26 @@ final class Admin {
 			),
 			$action . '_' . (int) $feed_id
 		);
+	}
+
+	/**
+	 * Attributes of a Delete link: the nonced URL (used as is without JavaScript) and what the delete
+	 * dialog needs (feed name, file name, nonced "Deactivate instead" URL). Every value is escaped.
+	 *
+	 * @param int $feed_id Feed ID.
+	 * @return string
+	 */
+	public static function delete_attrs( $feed_id ) {
+		$feed = Feeds::get( $feed_id );
+		$file = $feed ? basename( (string) wp_parse_url( Storage::url_for( $feed_id ), PHP_URL_PATH ) ) : '';
+		if ( $feed && Endpoint::enabled() ) {
+			$file = $feed['file_slug'];
+		}
+		return 'href="' . esc_url( self::action_url( 'oliprfe_delete_feed', $feed_id ) ) . '"'
+			. ' data-oliprfe-delete="' . (int) $feed_id . '"'
+			. ' data-name="' . esc_attr( $feed ? $feed['name'] : '' ) . '"'
+			. ' data-file="' . esc_attr( file_exists( Storage::path_for( $feed_id ) ) ? $file : '' ) . '"'
+			. ' data-deactivate="' . esc_url( self::action_url( 'oliprfe_deactivate_feed', $feed_id ) ) . '"';
 	}
 
 	/**
@@ -115,71 +153,60 @@ final class Admin {
 	}
 
 	/**
-	 * Dismissible support notice on plugin screens.
+	 * One-time clean-up when the 0.6 screens are first loaded: the dismissed flag of the former support
+	 * notice (removed in 0.6.0) is deleted. Feeds, their configuration and the settings are not touched.
 	 */
-	public static function donate_notice() {
-		if ( ! self::is_plugin_screen() || ! current_user_can( Settings::capability() ) ) {
+	public static function upgrade() {
+		if ( OLIPRFE_UI_VERSION === get_option( 'oliprfe_ui_version' ) ) {
 			return;
 		}
-		if ( get_user_meta( get_current_user_id(), 'oliprfe_donate_dismissed', true ) ) {
-			return;
-		}
-		?>
-		<div class="notice notice-info is-dismissible oliprfe-donate-notice">
-			<p>
-				<?php
-				echo wp_kses(
-					sprintf(
-						/* translators: %s: donate URL */
-						__( 'Enjoying Oli Product Feed? <a href="%s" target="_blank" rel="noopener noreferrer">Buy me a coffee</a> — your support keeps the plugin free and maintained.', 'oli-product-feed' ),
-						esc_url( OLIPRFE_DONATE_URL )
-					),
-					array(
-						'a' => array(
-							'href'   => true,
-							'target' => true,
-							'rel'    => true,
-						),
-					)
-				);
-				?>
-			</p>
-		</div>
-		<?php
+		delete_metadata( 'user', 0, 'oliprfe_donate_dismissed', '', true );
+		update_option( 'oliprfe_ui_version', OLIPRFE_UI_VERSION, false );
 	}
 
 	/**
-	 * Persist donate notice dismissal.
+	 * Screen Options: number of feeds per page.
+	 *
+	 * @param mixed  $keep   Value to keep (false by default).
+	 * @param string $option Option name.
+	 * @param mixed  $value  Submitted value.
+	 * @return mixed
 	 */
-	public static function ajax_dismiss_donate() {
-		check_ajax_referer( 'oliprfe_donate', 'nonce' );
-		if ( ! current_user_can( Settings::capability() ) ) {
-			wp_send_json_error( null, 403 );
-		}
-		update_user_meta( get_current_user_id(), 'oliprfe_donate_dismissed', 1 );
-		wp_send_json_success();
+	public static function set_per_page( $keep, $option, $value ) {
+		return 'oliprfe_feeds_per_page' === $option ? max( 1, min( 999, (int) $value ) ) : $keep;
 	}
 
 	/**
-	 * Footer donation line used on plugin screens.
+	 * Screen Options of the feed list (columns that can be hidden, feeds per page) and bulk actions.
 	 */
-	public static function support_footer() {
-		echo '<p class="description oliprfe-support-footer">';
-		echo wp_kses(
-			sprintf(
-				/* translators: %s: donate URL */
-				__( 'If this plugin helps you, please consider a <a href="%s" target="_blank" rel="noopener noreferrer">donation</a>. Thank you!', 'oli-product-feed' ),
-				esc_url( OLIPRFE_DONATE_URL )
-			),
-			array(
-				'a' => array(
-					'href'   => true,
-					'target' => true,
-					'rel'    => true,
-				),
-			)
-		);
-		echo '</p>';
+	public static function load_screen() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only routing.
+		$tab    = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'feeds';
+		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
+		// phpcs:enable
+		if ( 'feeds' === $tab && ( '' === $action || '-1' === $action || in_array( $action, array( 'generate', 'activate', 'deactivate', 'delete' ), true ) ) ) {
+			add_screen_option(
+				'per_page',
+				array(
+					'default' => 20,
+					'option'  => 'oliprfe_feeds_per_page',
+				)
+			);
+			$screen = get_current_screen();
+			if ( $screen ) {
+				add_filter( 'manage_' . $screen->id . '_columns', array( __CLASS__, 'screen_columns' ) );
+			}
+		}
+		self::handle_bulk();
+	}
+
+	/**
+	 * Columns listed in Screen Options.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function screen_columns() {
+		return ListTable::columns();
 	}
 
 	/**
@@ -195,7 +222,7 @@ final class Admin {
 			array( __CLASS__, 'render' )
 		);
 		if ( $hook ) {
-			add_action( 'load-' . $hook, array( __CLASS__, 'handle_bulk' ) );
+			add_action( 'load-' . $hook, array( __CLASS__, 'load_screen' ) );
 		}
 	}
 
@@ -214,10 +241,9 @@ final class Admin {
 			'oliprfe-admin',
 			'oliprfeAdmin',
 			array(
-				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-				'nonce'       => wp_create_nonce( 'oliprfe_feed_status' ),
-				'donateNonce' => wp_create_nonce( 'oliprfe_donate' ),
-				'i18n'        => array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'oliprfe_feed_status' ),
+				'i18n'    => array(
 					'copy'       => __( 'Copy', 'oli-product-feed' ),
 					'copied'     => __( 'Copied', 'oli-product-feed' ),
 					'copiedLong' => __( 'Feed URL copied to clipboard.', 'oli-product-feed' ),
@@ -228,31 +254,31 @@ final class Admin {
 					'exists'     => __( 'This attribute is already in the list.', 'oli-product-feed' ),
 					'counting'   => __( 'Counting…', 'oli-product-feed' ),
 					'countError' => __( 'The count failed.', 'oli-product-feed' ),
+					'selectOne'  => __( 'Select at least one feed.', 'oli-product-feed' ),
 				),
+				'plural'  => self::delete_plurals(),
 			)
 		);
-		wp_add_inline_script( 'oliprfe-admin', self::donate_dismiss_js() );
 	}
 
 	/**
-	 * Dismiss handler for the support notice (attached to the enqueued admin script).
+	 * Plural titles and buttons of the delete dialog, for 1 to the number of feeds (translated with _n()).
 	 *
-	 * @return string
+	 * @return array<string,array<int,string>>
 	 */
-	private static function donate_dismiss_js() {
-		return "(function () {\n"
-			. "\tvar notice = document.querySelector('.oliprfe-donate-notice');\n"
-			. "\tif (!notice || typeof oliprfeAdmin === 'undefined') return;\n"
-			. "\tnotice.addEventListener('click', function (e) {\n"
-			. "\t\tif (!e.target.classList.contains('notice-dismiss')) return;\n"
-			. "\t\tvar body = new FormData();\n"
-			. "\t\tbody.append('action', 'oliprfe_dismiss_donate');\n"
-			. "\t\tbody.append('nonce', oliprfeAdmin.donateNonce || '');\n"
-			. "\t\tif (window.fetch) {\n"
-			. "\t\t\tfetch(oliprfeAdmin.ajaxUrl, { method: 'POST', body: body, credentials: 'same-origin' });\n"
-			. "\t\t}\n"
-			. "\t});\n"
-			. "})();";
+	private static function delete_plurals() {
+		$out = array(
+			'title'  => array(),
+			'button' => array(),
+		);
+		$max = max( 1, count( Feeds::all_ids() ) );
+		for ( $n = 1; $n <= $max; $n++ ) {
+			/* translators: %d: number of feeds. */
+			$out['title'][ $n ] = sprintf( _n( 'Delete %d feed?', 'Delete %d feeds?', $n, 'oli-product-feed' ), $n );
+			/* translators: %d: number of feeds. */
+			$out['button'][ $n ] = sprintf( _n( 'Delete %d feed', 'Delete %d feeds', $n, 'oli-product-feed' ), $n );
+		}
+		return $out;
 	}
 
 	/**
@@ -269,6 +295,10 @@ final class Admin {
 		// phpcs:enable
 		if ( 'settings' === $tab ) {
 			self::render_settings();
+			return;
+		}
+		if ( 'diagnostics' === $tab || 'log' === $tab ) {
+			self::render_pending_tab( $tab );
 			return;
 		}
 		if ( 'new' === $action || ( 'edit' === $action && $feed && Feeds::get( $feed ) ) ) {
@@ -299,17 +329,39 @@ final class Admin {
 	}
 
 	/**
-	 * Tabs.
+	 * Screen tabs (real links): Feeds, Diagnostics, Activity log, Settings.
 	 *
-	 * @param string $current feeds|settings.
+	 * @param string $current feeds|diagnostics|log|settings.
 	 */
 	public static function tabs( $current ) {
-		echo '<nav class="nav-tab-wrapper wp-clearfix" aria-label="' . esc_attr__( 'Secondary menu', 'oli-product-feed' ) . '">';
-		foreach ( array( 'feeds' => __( 'Feeds', 'oli-product-feed' ), 'settings' => __( 'Settings', 'oli-product-feed' ) ) as $tab => $label ) {
+		$tabs = array(
+			'feeds'       => __( 'Feeds', 'oli-product-feed' ),
+			'diagnostics' => __( 'Diagnostics', 'oli-product-feed' ),
+			'log'         => __( 'Activity log', 'oli-product-feed' ),
+			'settings'    => __( 'Settings', 'oli-product-feed' ),
+		);
+		echo '<nav class="nav-tab-wrapper wp-clearfix" aria-label="' . esc_attr__( 'Product feed screens', 'oli-product-feed' ) . '">';
+		foreach ( $tabs as $tab => $label ) {
 			$url = 'feeds' === $tab ? self::url() : self::url( array( 'tab' => $tab ) );
 			echo '<a href="' . esc_url( $url ) . '" class="nav-tab' . ( $current === $tab ? ' nav-tab-active" aria-current="page' : '' ) . '">' . esc_html( $label ) . '</a>';
 		}
 		echo '</nav>';
+	}
+
+	/**
+	 * Diagnostics and Activity log tabs: their content comes with the next steps of the 0.6 screens.
+	 * Meanwhile the tab explains where the information is today.
+	 *
+	 * @param string $tab diagnostics|log.
+	 */
+	private static function render_pending_tab( $tab ) {
+		echo '<div class="wrap oliprfe-wrap">';
+		self::heading( __( 'Product Feeds', 'oli-product-feed' ) );
+		self::tabs( $tab );
+		self::notices();
+		echo '<div class="oliprfe-panel"><h2>' . esc_html( 'log' === $tab ? __( 'Activity log', 'oli-product-feed' ) : __( 'Diagnostics', 'oli-product-feed' ) ) . '</h2>';
+		echo '<p>' . esc_html__( 'The last runs of each feed are listed in its editor, under Last runs.', 'oli-product-feed' ) . '</p></div>';
+		echo '</div>';
 	}
 
 	/**
@@ -327,6 +379,12 @@ final class Admin {
 			'error'          => array( 'error', __( 'The action failed.', 'oli-product-feed' ) ),
 			'settings_saved' => array( 'success', __( 'Settings saved.', 'oli-product-feed' ) ),
 			'all_queued'     => array( 'info', __( 'Generation of every active feed started in the background.', 'oli-product-feed' ) ),
+			'activated'      => array( 'success', __( 'Feed activated.', 'oli-product-feed' ) ),
+			'deactivated'    => array( 'success', __( 'Feed deactivated. Its URL keeps the last file.', 'oli-product-feed' ) ),
+			'bulk_activated' => array( 'success', __( 'Feeds activated.', 'oli-product-feed' ) ),
+			'bulk_off'       => array( 'success', __( 'Feeds deactivated. Their URLs keep the last file.', 'oli-product-feed' ) ),
+			'bulk_deleted'   => array( 'success', __( 'Feeds deleted.', 'oli-product-feed' ) ),
+			'cancelled'      => array( 'info', __( 'Generation cancelled. The previous file is still online.', 'oli-product-feed' ) ),
 		);
 		if ( isset( $messages[ $code ] ) ) {
 			echo '<div class="notice notice-' . esc_attr( $messages[ $code ][0] ) . ' is-dismissible"><p>' . esc_html( $messages[ $code ][1] ) . '</p></div>';
@@ -380,25 +438,61 @@ final class Admin {
 	}
 
 	/**
-	 * Status badge HTML.
+	 * Status of a feed: generating, error, inactive, never or active.
+	 *
+	 * @param int $feed_id Feed ID.
+	 * @return string
+	 */
+	public static function status_key( $feed_id ) {
+		$last = Feeds::last_run( $feed_id );
+		if ( Generator::is_running( $feed_id ) ) {
+			return 'generating';
+		}
+		if ( ! empty( $last['status'] ) && 'error' === $last['status'] ) {
+			return 'error';
+		}
+		if ( 'publish' !== get_post_status( $feed_id ) ) {
+			return 'inactive';
+		}
+		return empty( $last['time'] ) ? 'never' : 'active';
+	}
+
+	/**
+	 * Status badge HTML: icon (decorative) + text, never the color alone.
 	 *
 	 * @param int $feed_id Feed ID.
 	 * @return string
 	 */
 	public static function status_badge( $feed_id ) {
+		$all    = array(
+			'generating' => array( 'ok', 'dashicons-update', __( 'Generating', 'oli-product-feed' ) ),
+			'error'      => array( 'error', 'dashicons-warning', __( 'Error', 'oli-product-feed' ) ),
+			'inactive'   => array( 'off', 'dashicons-controls-pause', __( 'Inactive', 'oli-product-feed' ) ),
+			'never'      => array( 'off', 'dashicons-clock', __( 'Never generated', 'oli-product-feed' ) ),
+			'active'     => array( 'ok', 'dashicons-yes-alt', __( 'Active', 'oli-product-feed' ) ),
+		);
+		$status = $all[ self::status_key( $feed_id ) ];
+		return '<span class="oliprfe-status oliprfe-is-' . esc_attr( $status[0] ) . '"><span class="dashicons ' . esc_attr( $status[1] ) . '" aria-hidden="true"></span>' . esc_html( $status[2] ) . '</span>';
+	}
+
+	/**
+	 * Last successful run of a feed (the last run, or the latest success of the run history).
+	 *
+	 * @param int $feed_id Feed ID.
+	 * @return array<string,mixed>
+	 */
+	public static function last_success( $feed_id ) {
 		$last = Feeds::last_run( $feed_id );
-		if ( Generator::is_running( $feed_id ) ) {
-			$status = array( 'generating', 'dashicons-update', __( 'Generating', 'oli-product-feed' ) );
-		} elseif ( ! empty( $last['status'] ) && 'error' === $last['status'] ) {
-			$status = array( 'error', 'dashicons-warning', __( 'Error', 'oli-product-feed' ) );
-		} elseif ( 'publish' !== get_post_status( $feed_id ) ) {
-			$status = array( 'inactive', 'dashicons-controls-pause', __( 'Inactive', 'oli-product-feed' ) );
-		} elseif ( empty( $last['time'] ) ) {
-			$status = array( 'never', 'dashicons-clock', __( 'Never generated', 'oli-product-feed' ) );
-		} else {
-			$status = array( 'active', 'dashicons-yes-alt', __( 'Active', 'oli-product-feed' ) );
+		if ( isset( $last['status'] ) && 'success' === $last['status'] ) {
+			return $last;
 		}
-		return '<span class="oliprfe-status oliprfe-status-' . esc_attr( $status[0] ) . '"><span class="dashicons ' . esc_attr( $status[1] ) . '" aria-hidden="true"></span>' . esc_html( $status[2] ) . '</span>';
+		$log = get_post_meta( $feed_id, Feeds::META_LOG, true );
+		foreach ( is_array( $log ) ? $log : array() as $entry ) {
+			if ( is_array( $entry ) && isset( $entry['status'] ) && 'success' === $entry['status'] ) {
+				return $entry;
+			}
+		}
+		return array();
 	}
 
 	/**
@@ -419,7 +513,7 @@ final class Admin {
 	}
 
 	/**
-	 * Status cell of the list (badge, progress or error).
+	 * Status cell of the list (badge, progress or error with a link to the diagnostics).
 	 *
 	 * @param int $feed_id Feed ID.
 	 * @return string
@@ -427,13 +521,14 @@ final class Admin {
 	public static function status_cell( $feed_id ) {
 		$html = self::status_badge( $feed_id );
 		$last = Feeds::last_run( $feed_id );
-		if ( Generator::is_running( $feed_id ) ) {
+		$key  = self::status_key( $feed_id );
+		if ( 'generating' === $key ) {
 			$p     = self::progress( $feed_id );
 			$html  = '<div data-oliprfe-generating="' . (int) $feed_id . '">' . $html;
 			$html .= '<progress class="oliprfe-progress" max="100" value="' . (int) $p['percent'] . '" aria-label="' . esc_attr__( 'Generation progress', 'oli-product-feed' ) . '">' . (int) $p['percent'] . '%</progress>';
-			$html .= '<span class="oliprfe-meta oliprfe-progress-text">' . esc_html( self::progress_text( $p ) ) . '</span></div>';
-		} elseif ( ! empty( $last['status'] ) && 'error' === $last['status'] ) {
-			$html .= '<span class="oliprfe-error-text">' . esc_html( isset( $last['message'] ) ? $last['message'] : '' ) . '</span>';
+			$html .= '<span class="oliprfe-meta oliprfe-progress-text">' . esc_html( self::progress_text( $p, false ) ) . '</span></div>';
+		} elseif ( 'error' === $key ) {
+			$html .= '<span class="oliprfe-meta">' . esc_html( isset( $last['message'] ) ? $last['message'] : '' ) . ' <a href="' . esc_url( self::diag_url( (int) $feed_id ) ) . '">' . esc_html__( 'See diagnostics', 'oli-product-feed' ) . '</a></span>';
 		}
 		return $html;
 	}
@@ -441,10 +536,15 @@ final class Admin {
 	/**
 	 * Progress text.
 	 *
-	 * @param array{done:int,total:int,percent:int} $p Progress.
+	 * @param array{done:int,total:int,percent:int} $p       Progress.
+	 * @param bool                                  $percent With the percentage.
 	 * @return string
 	 */
-	private static function progress_text( array $p ) {
+	public static function progress_text( array $p, $percent = true ) {
+		if ( ! $percent ) {
+			/* translators: 1: processed products, 2: total products. */
+			return sprintf( __( '%1$s of %2$s products', 'oli-product-feed' ), number_format_i18n( $p['done'] ), number_format_i18n( $p['total'] ) );
+		}
 		/* translators: 1: processed products, 2: total products, 3: percentage. */
 		return sprintf( __( '%1$s of %2$s products (%3$s%%)', 'oli-product-feed' ), number_format_i18n( $p['done'] ), number_format_i18n( $p['total'] ), $p['percent'] );
 	}
@@ -497,12 +597,22 @@ final class Admin {
 			return;
 		}
 		if ( 'list' === $context ) {
-			// Short distinct label: the file name (static file) or the feed slug (WordPress serving); full URL in the title.
+			// Short label (shortened by CSS), full URL in the title and in the hidden field used by Copy.
+			$file   = basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
 			$config = Feeds::get( $feed_id );
-			$label  = Endpoint::enabled() && $config ? '?' . $config['file_slug'] : basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
-			$html   = '<div class="oliprfe-feed-url"><a href="' . esc_url( $url ) . '" class="oliprfe-url-link" title="' . esc_attr( $url ) . '" target="_blank" rel="noopener">' . esc_html( $label ) . '<span class="screen-reader-text"> ' . esc_html__( '(opens in a new tab)', 'oli-product-feed' ) . '</span></a>' . $button . '</div>';
+			if ( Endpoint::enabled() && $config ) {
+				$file = $config['file_slug'];
+			}
+			/* translators: %s: feed file name. */
+			$label  = sprintf( __( 'Copy feed URL of %s', 'oli-product-feed' ), $file );
+			$query  = (string) wp_parse_url( $url, PHP_URL_QUERY );
+			$short  = '' !== $query ? '…/?' . $query : '…/' . $file;
+			$html   = '<div class="oliprfe-url"><code title="' . esc_attr( $url ) . '">' . esc_html( $short ) . '</code>';
+			$html  .= '<button type="button" class="button button-small oliprfe-copy" data-target="' . esc_attr( $id ) . '" aria-label="' . esc_attr( $label ) . '"><span class="oliprfe-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button></div>';
+			$html  .= '<label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '" hidden><span class="oliprfe-copy-hint" hidden></span>';
+			$allowed['code']   = array( 'title' => true );
+			$allowed['button']['aria-label'] = true;
 			echo wp_kses( $html, $allowed );
-			echo '<div class="oliprfe-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '" hidden></div><span class="oliprfe-copy-hint" hidden></span>';
 			return;
 		}
 		$html = '<div class="oliprfe-feed-url"><label for="' . esc_attr( $id ) . '" class="screen-reader-text">' . esc_html__( 'Feed URL', 'oli-product-feed' ) . '</label><input type="text" id="' . esc_attr( $id ) . '" class="code oliprfe-url-input" readonly value="' . esc_attr( $url ) . '">' . $button . '</div><span class="oliprfe-copy-hint" hidden></span>';
@@ -510,36 +620,71 @@ final class Admin {
 	}
 
 	/**
-	 * Feed list screen.
+	 * Feed list screen: notices, tiles, tabs, views, search, bulk actions, filter and table.
 	 */
 	private static function render_list() {
-		$table = new ListTable();
-		$table->prepare_items();
 		echo '<div class="wrap oliprfe-wrap">';
 		self::heading( __( 'Product Feeds', 'oli-product-feed' ) );
-		self::tabs( 'feeds' );
-		self::notices();
 		if ( empty( Feeds::all_ids() ) ) {
+			self::tabs( 'feeds' );
+			self::notices();
 			echo '<div class="oliprfe-empty"><span class="dashicons dashicons-rss" aria-hidden="true"></span><h2>' . esc_html__( 'Create your first product feed', 'oli-product-feed' ) . '</h2>';
-			echo '<p>' . esc_html__( 'One feed per platform, language and currency. The file is regenerated in the background and its URL never changes.', 'oli-product-feed' ) . '</p>';
-			echo '<p><a class="button button-primary" href="' . esc_url( self::url( array( 'action' => 'new' ) ) ) . '">' . esc_html__( 'Add New Feed', 'oli-product-feed' ) . '</a></p></div>';
-			self::support_footer();
+			echo '<p>' . esc_html__( 'A feed is a file that a shopping platform fetches on a schedule. Pick a channel, a language and a currency, and the rest is set up for you.', 'oli-product-feed' ) . '</p>';
+			echo '<p><a class="button button-primary button-large" href="' . esc_url( self::url( array( 'action' => 'new' ) ) ) . '">' . esc_html__( 'Add New Feed', 'oli-product-feed' ) . '</a></p></div>';
 			echo '</div>';
 			return;
 		}
-		$table->views();
-		echo '<form method="get" class="oliprfe-search">';
-		echo '<input type="hidden" name="page" value="' . esc_attr( self::SLUG ) . '">';
-		if ( isset( $_GET['channel'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			echo '<input type="hidden" name="channel" value="' . esc_attr( sanitize_key( wp_unslash( $_GET['channel'] ) ) ) . '">'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$table = new ListTable();
+		$table->prepare_items();
+		$stats = Overview::stats();
+		self::notices();
+		Overview::error_notice( $stats['errors'] );
+		echo '<div class="oliprfe-run-notices" aria-live="polite">';
+		foreach ( $stats['running'] as $running ) {
+			echo Overview::running_notice( $running ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Overview::running_notice().
 		}
-		$table->search_box( __( 'Search feeds', 'oli-product-feed' ), 'oliprfe-feeds' );
-		echo '</form>';
-		echo '<form method="post" action="' . esc_url( self::url() ) . '">';
+		echo '</div>';
+		Overview::tiles( $stats );
+		self::tabs( 'feeds' );
+		$table->views();
+		echo '<form method="get" id="oliprfe-feeds-form">';
+		echo '<input type="hidden" name="page" value="' . esc_attr( self::SLUG ) . '">';
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list state.
+		if ( isset( $_GET['status'] ) ) {
+			echo '<input type="hidden" name="status" value="' . esc_attr( sanitize_key( wp_unslash( $_GET['status'] ) ) ) . '">';
+		}
+		foreach ( array( 'orderby', 'order' ) as $key ) {
+			if ( isset( $_GET[ $key ] ) ) {
+				echo '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( sanitize_key( wp_unslash( $_GET[ $key ] ) ) ) . '">';
+			}
+		}
+		// phpcs:enable
+		$table->search_box( __( 'Search Feeds', 'oli-product-feed' ), 'oliprfe-feeds' );
 		$table->display();
 		echo '</form>';
-		self::support_footer();
 		echo '</div>';
+	}
+
+	/**
+	 * Delete dialog (feed list and editor): replaces the browser confirm(). Filled by the script.
+	 */
+	public static function delete_dialog() {
+		if ( ! self::is_plugin_screen() || ! current_user_can( Settings::capability() ) ) {
+			return;
+		}
+		?>
+		<dialog class="oliprfe-dialog" id="oliprfe-delete-dialog" aria-labelledby="oliprfe-delete-title">
+			<h2 id="oliprfe-delete-title"></h2>
+			<p><?php esc_html_e( 'Their files are deleted too. Platforms that fetch these URLs will get an error and may pause your products.', 'oli-product-feed' ); ?></p>
+			<ul class="ul-disc oliprfe-delete-list"></ul>
+			<p><?php esc_html_e( 'To stop a feed without breaking its URL, deactivate it instead.', 'oli-product-feed' ); ?></p>
+			<footer>
+				<button type="button" class="button oliprfe-dialog-cancel" autofocus><?php esc_html_e( 'Cancel', 'oli-product-feed' ); ?></button>
+				<button type="button" class="button oliprfe-dialog-deactivate"><?php esc_html_e( 'Deactivate instead', 'oli-product-feed' ); ?></button>
+				<button type="button" class="button oliprfe-danger oliprfe-dialog-delete"></button>
+			</footer>
+		</dialog>
+		<?php
 	}
 
 	/**
@@ -548,14 +693,18 @@ final class Admin {
 	private static function render_settings() {
 		$s     = Settings::all();
 		$base  = Storage::base();
-		$files = glob( trailingslashit( $base['dir'] ) . '*.{xml,csv,tsv,txt}', GLOB_BRACE );
-		$files = is_array( $files ) ? $files : array();
+		$files = array();
+		// One pattern per extension: GLOB_BRACE is missing on some PHP builds (musl, Solaris).
+		foreach ( array( 'xml', 'csv', 'tsv', 'txt' ) as $ext ) {
+			$found = glob( trailingslashit( $base['dir'] ) . '*.' . $ext );
+			$files = array_merge( $files, is_array( $found ) ? $found : array() );
+		}
 		$size  = 0;
 		foreach ( $files as $file ) {
 			$size += (int) filesize( $file );
 		}
 		echo '<div class="wrap oliprfe-wrap">';
-		self::heading( __( 'Product Feeds Settings', 'oli-product-feed' ), false );
+		self::heading( __( 'Product Feeds', 'oli-product-feed' ) );
 		self::tabs( 'settings' );
 		self::notices();
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '"><input type="hidden" name="action" value="oliprfe_save_settings">';
@@ -580,7 +729,11 @@ final class Admin {
 		echo '<h2>' . esc_html__( 'Generation', 'oli-product-feed' ) . '</h2><table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th scope="row">' . esc_html__( 'Product changes', 'oli-product-feed' ) . '</th><td><input type="hidden" name="s[regen_on_update]" value="0"><label><input type="checkbox" name="s[regen_on_update]" value="1"' . checked( (bool) $s['regen_on_update'], true, false ) . '> ' . esc_html__( 'Regenerate the active feeds when a product is updated (at most every 15 minutes)', 'oli-product-feed' ) . '</label></td></tr>';
 		echo '<tr><th scope="row"><label for="oliprfe-log_level">' . esc_html__( 'Log', 'oli-product-feed' ) . '</label></th><td><select id="oliprfe-log_level" name="s[log_level]">';
-		foreach ( array( 'off' => __( 'Off', 'oli-product-feed' ), 'error' => __( 'Errors only', 'oli-product-feed' ), 'info' => __( 'Errors and every generation', 'oli-product-feed' ) ) as $value => $label ) {
+		foreach ( array(
+			'off'   => __( 'Off', 'oli-product-feed' ),
+			'error' => __( 'Errors only', 'oli-product-feed' ),
+			'info'  => __( 'Errors and every generation', 'oli-product-feed' ),
+		) as $value => $label ) {
 			echo '<option value="' . esc_attr( $value ) . '"' . selected( $s['log_level'], $value, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select><p class="description">' . esc_html__( 'Written to WooCommerce > Status > Logs (source: oli-product-feed).', 'oli-product-feed' ) . '</p></td></tr>';
@@ -608,7 +761,6 @@ final class Admin {
 		echo '<p>' . esc_html__( 'Regenerates every active feed in the background. The current files stay online until the new ones replace them.', 'oli-product-feed' ) . '</p>';
 		submit_button( __( 'Regenerate all active feeds', 'oli-product-feed' ), 'secondary', 'submit', false );
 		echo '</form>';
-		self::support_footer();
 		echo '</div>';
 	}
 
@@ -682,7 +834,10 @@ final class Admin {
 				),
 				10 * MINUTE_IN_SECONDS
 			);
-			wp_safe_redirect( self::url( $feed_id ? array( 'action' => 'edit', 'feed' => $feed_id ) : array( 'action' => 'new' ) ) );
+			wp_safe_redirect( self::url( $feed_id ? array(
+				'action' => 'edit',
+				'feed'   => $feed_id,
+			) : array( 'action' => 'new' ) ) );
 			exit;
 		}
 		$saved = Feeds::save( $config, $feed_id );
@@ -749,31 +904,89 @@ final class Admin {
 	}
 
 	/**
-	 * Bulk actions of the list (posted to the list screen itself).
+	 * Bulk actions of the list (Generate now, Activate, Deactivate, Delete): nonce and capability checked.
 	 */
 	public static function handle_bulk() {
-		if ( empty( $_POST['feed_ids'] ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked below before any change.
+		if ( empty( $_REQUEST['feed_ids'] ) ) {
+			return;
+		}
+		$table  = new ListTable();
+		$action = $table->current_action();
+		if ( ! in_array( $action, array( 'generate', 'activate', 'deactivate', 'delete' ), true ) ) {
 			return;
 		}
 		self::guard();
 		check_admin_referer( 'bulk-feeds' );
-		$table  = new ListTable();
-		$action = $table->current_action();
-		$ids    = array_map( 'absint', (array) wp_unslash( $_POST['feed_ids'] ) );
-		if ( ! in_array( $action, array( 'generate', 'delete' ), true ) ) {
-			return;
-		}
+		$ids = array_map( 'absint', (array) wp_unslash( $_REQUEST['feed_ids'] ) );
 		foreach ( $ids as $id ) {
 			if ( ! Feeds::get( $id ) ) {
 				continue;
 			}
 			if ( 'generate' === $action ) {
 				Scheduler::queue( $id );
-			} else {
+			} elseif ( 'delete' === $action ) {
 				Feeds::delete( $id );
+			} else {
+				self::set_active( $id, 'activate' === $action );
 			}
 		}
-		self::back( 'delete' === $action ? 'deleted' : 'queued' );
+		$notices = array(
+			'generate'   => 'queued',
+			'activate'   => 'bulk_activated',
+			'deactivate' => 'bulk_off',
+			'delete'     => 'bulk_deleted',
+		);
+		self::back( $notices[ $action ] );
+	}
+
+	/**
+	 * Activates or deactivates a feed: only the post status changes (the configuration is not rewritten).
+	 *
+	 * @param int  $feed_id Feed ID.
+	 * @param bool $active  Active.
+	 */
+	private static function set_active( $feed_id, $active ) {
+		$status = $active ? 'publish' : 'draft';
+		if ( get_post_status( $feed_id ) === $status ) {
+			return;
+		}
+		wp_update_post(
+			array(
+				'ID'          => (int) $feed_id,
+				'post_status' => $status,
+			)
+		);
+		Endpoint::refresh_index();
+	}
+
+	/**
+	 * Activate a feed.
+	 */
+	public static function handle_activate() {
+		self::set_active( self::checked_feed( 'oliprfe_activate_feed' ), true );
+		self::back( 'activated' );
+	}
+
+	/**
+	 * Deactivate a feed ("Deactivate instead" of the delete dialog): the URL keeps the last file.
+	 */
+	public static function handle_deactivate() {
+		self::set_active( self::checked_feed( 'oliprfe_deactivate_feed' ), false );
+		self::back( 'deactivated' );
+	}
+
+	/**
+	 * Cancel a running generation: the previous file stays online.
+	 */
+	public static function handle_cancel() {
+		$feed_id = self::checked_feed( 'oliprfe_cancel_generation' );
+		Generator::cancel( $feed_id );
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( Scheduler::BATCH, array( $feed_id ), Scheduler::GROUP );
+		}
+		wp_clear_scheduled_hook( Scheduler::BATCH, array( $feed_id ) );
+		self::back( 'cancelled' );
 	}
 
 	/**
@@ -789,7 +1002,7 @@ final class Admin {
 			self::back(
 				'folder_refused',
 				array(
-					'tab'           => 'settings',
+					'tab'            => 'settings',
 					'oliprfe_folder' => isset( $data['folder'] ) ? $data['folder'] : '',
 					'oliprfe_reason' => isset( $data['reason'] ) ? $data['reason'] : '',
 				)
@@ -849,15 +1062,32 @@ final class Admin {
 			if ( ! $feed ) {
 				continue;
 			}
-			$p     = self::progress( $id );
-			$last  = Feeds::last_run( $id );
-			$out[] = array(
+			$p       = self::progress( $id );
+			$last    = Feeds::last_run( $id );
+			$running = Generator::is_running( $id );
+			$row     = array(
 				'id'           => $id,
 				'name'         => $feed['name'],
-				'status'       => Generator::is_running( $id ) ? 'generating' : ( isset( $last['status'] ) ? $last['status'] : 'never' ),
+				'status'       => $running ? 'generating' : ( isset( $last['status'] ) ? $last['status'] : 'never' ),
 				'percent'      => $p['percent'],
-				'progressText' => self::progress_text( $p ),
+				'progressText' => self::progress_text( $p, false ),
+				'noticeText'   => Overview::running_text( $feed['name'], $p ),
 			);
+			if ( ! $running ) {
+				// Finished: the new cells of the row and the end notice (escaped HTML built on the server).
+				$row['cells']  = array(
+					'status'         => self::status_cell( $id ),
+					'items'          => ListTable::items_cell( $feed ),
+					'last_generated' => ListTable::last_cell( $feed ),
+					'url'            => ListTable::url_cell( $id ),
+				);
+				$row['notice'] = Overview::finished_notice( $id );
+				$row['speak']  = 'error' === $row['status']
+					/* translators: 1: feed name, 2: error message. */
+					? sprintf( __( '%1$s could not be generated: %2$s', 'oli-product-feed' ), $feed['name'], isset( $last['message'] ) ? $last['message'] : '' )
+					: wp_strip_all_tags( $row['notice'] );
+			}
+			$out[] = $row;
 		}
 		wp_send_json_success( $out );
 	}
