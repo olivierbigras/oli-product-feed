@@ -462,7 +462,7 @@ final class Diagnostics {
 				'text'  => sprintf( __( '%s: the schedule check is not scheduled yet. It is scheduled on the next admin page load.', 'oli-product-feed' ), $runner ),
 				'link'  => $tools,
 			);
-		} elseif ( $late > HOUR_IN_SECONDS ) {
+		} elseif ( $late > \HOUR_IN_SECONDS ) {
 			$out[] = array(
 				'state' => 'error',
 				/* translators: 1: Action Scheduler or WP-Cron, 2: delay. */
@@ -642,7 +642,7 @@ final class Diagnostics {
 	 */
 	private static function relative( $folder ) {
 		$folder = wp_normalize_path( (string) $folder );
-		$root   = wp_normalize_path( WP_CONTENT_DIR );
+		$root   = wp_normalize_path( \WP_CONTENT_DIR );
 		return 0 === strpos( $folder, $root ) ? ltrim( substr( $folder, strlen( $root ) ), '/' ) . '/' : basename( $folder ) . '/';
 	}
 
@@ -677,7 +677,7 @@ final class Diagnostics {
 	public static function report( $feed_id, $feed, array $last, array $ok, array $checks ) {
 		global $wp_version;
 		$lines   = array( 'Oli Product Feed diagnostic report' );
-		$lines[] = sprintf( 'Plugin %s · WordPress %s · WooCommerce %s · PHP %s', OLIPRFE_VERSION, $wp_version, defined( 'WC_VERSION' ) ? WC_VERSION : '-', PHP_VERSION );
+		$lines[] = sprintf( 'Plugin %s · WordPress %s · WooCommerce %s · PHP %s', \OLIPRFE_VERSION, $wp_version, defined( 'WC_VERSION' ) ? \WC_VERSION : '-', \PHP_VERSION );
 		$lines[] = sprintf( 'Generated: %s', gmdate( 'Y-m-d H:i' ) . ' UTC' );
 		$lines[] = '';
 		if ( $feed ) {

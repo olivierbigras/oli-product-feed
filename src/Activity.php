@@ -144,7 +144,7 @@ final class Activity {
 			}
 		}
 		self::store( $entries );
-		update_option( self::IMPORTED, OLIPRFE_VERSION, false );
+		update_option( self::IMPORTED, \OLIPRFE_VERSION, false );
 	}
 
 	/**

@@ -56,7 +56,7 @@ final class Admin {
 		add_action( 'admin_init', array( __CLASS__, 'upgrade' ) );
 		add_action( 'admin_footer', array( __CLASS__, 'delete_dialog' ) );
 		add_filter( 'set_screen_option_oliprfe_feeds_per_page', array( __CLASS__, 'set_per_page' ), 10, 3 );
-		add_filter( 'plugin_action_links_' . plugin_basename( OLIPRFE_FILE ), array( __CLASS__, 'action_links' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( \OLIPRFE_FILE ), array( __CLASS__, 'action_links' ) );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
 	}
 
@@ -113,7 +113,7 @@ final class Admin {
 	 */
 	public static function delete_attrs( $feed_id ) {
 		$feed = Feeds::get( $feed_id );
-		$file = $feed ? basename( (string) wp_parse_url( Storage::url_for( $feed_id ), PHP_URL_PATH ) ) : '';
+		$file = $feed ? basename( (string) wp_parse_url( Storage::url_for( $feed_id ), \PHP_URL_PATH ) ) : '';
 		if ( $feed && Endpoint::enabled() ) {
 			$file = $feed['file_slug'];
 		}
@@ -144,10 +144,10 @@ final class Admin {
 	 * @return string[]
 	 */
 	public static function plugin_row_meta( $links, $file ) {
-		if ( $file !== plugin_basename( OLIPRFE_FILE ) ) {
+		if ( $file !== plugin_basename( \OLIPRFE_FILE ) ) {
 			return $links;
 		}
-		$links[] = '<a href="' . esc_url( OLIPRFE_DONATE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Donate', 'oli-product-feed' ) . '</a>';
+		$links[] = '<a href="' . esc_url( \OLIPRFE_DONATE_URL ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Donate', 'oli-product-feed' ) . '</a>';
 		return $links;
 	}
 
@@ -169,11 +169,11 @@ final class Admin {
 	 * notice (removed in 0.6.0) is deleted. Feeds, their configuration and the settings are not touched.
 	 */
 	public static function upgrade() {
-		if ( OLIPRFE_UI_VERSION === get_option( 'oliprfe_ui_version' ) ) {
+		if ( \OLIPRFE_UI_VERSION === get_option( 'oliprfe_ui_version' ) ) {
 			return;
 		}
 		delete_metadata( 'user', 0, 'oliprfe_donate_dismissed', '', true );
-		update_option( 'oliprfe_ui_version', OLIPRFE_UI_VERSION, false );
+		update_option( 'oliprfe_ui_version', \OLIPRFE_UI_VERSION, false );
 	}
 
 	/**
@@ -247,11 +247,11 @@ final class Admin {
 		if ( false === strpos( (string) $hook, self::SLUG ) ) {
 			return;
 		}
-		wp_enqueue_style( 'oliprfe-admin', OLIPRFE_URL . 'assets/css/admin.css', array(), OLIPRFE_VERSION );
-		wp_enqueue_script( 'oliprfe-admin', OLIPRFE_URL . 'assets/js/admin.js', array( 'wp-a11y' ), OLIPRFE_VERSION, true );
+		wp_enqueue_style( 'oliprfe-admin', \OLIPRFE_URL . 'assets/css/admin.css', array(), \OLIPRFE_VERSION );
+		wp_enqueue_script( 'oliprfe-admin', \OLIPRFE_URL . 'assets/js/admin.js', array( 'wp-a11y' ), \OLIPRFE_VERSION, true );
 		$action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen routing.
 		if ( 'new' === $action || 'edit' === $action ) {
-			wp_enqueue_script( 'oliprfe-editor', OLIPRFE_URL . 'assets/js/editor.js', array( 'wp-a11y', 'oliprfe-admin' ), OLIPRFE_VERSION, true );
+			wp_enqueue_script( 'oliprfe-editor', \OLIPRFE_URL . 'assets/js/editor.js', array( 'wp-a11y', 'oliprfe-admin' ), \OLIPRFE_VERSION, true );
 		}
 		wp_localize_script(
 			'oliprfe-admin',
@@ -370,7 +370,7 @@ final class Admin {
 	 * @param bool   $add_new Show "Add New Feed".
 	 */
 	public static function heading( $title, $add_new = true ) {
-		echo '<h1 class="wp-heading-inline oliprfe-title"><img src="' . esc_url( OLIPRFE_URL . 'assets/images/icon.svg' ) . '" width="32" height="32" alt="">' . esc_html( $title ) . '</h1>';
+		echo '<h1 class="wp-heading-inline oliprfe-title"><img src="' . esc_url( \OLIPRFE_URL . 'assets/images/icon.svg' ) . '" width="32" height="32" alt="">' . esc_html( $title ) . '</h1>';
 		if ( $add_new ) {
 			echo ' <a href="' . esc_url( self::url( array( 'action' => 'new' ) ) ) . '" class="page-title-action">' . esc_html__( 'Add New Feed', 'oli-product-feed' ) . '</a>';
 		}
@@ -479,7 +479,7 @@ final class Admin {
 			}
 			echo '</div>';
 		}
-		if ( Scheduler::tick_delay() > HOUR_IN_SECONDS ) {
+		if ( Scheduler::tick_delay() > \HOUR_IN_SECONDS ) {
 			echo '<div class="notice notice-warning"><p>' . esc_html(
 				sprintf(
 					/* translators: %s: delay, e.g. "3 hours". */
@@ -656,14 +656,14 @@ final class Admin {
 		}
 		if ( 'list' === $context ) {
 			// Short label (shortened by CSS), full URL in the title and in the hidden field used by Copy.
-			$file   = basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+			$file   = basename( (string) wp_parse_url( $url, \PHP_URL_PATH ) );
 			$config = Feeds::get( $feed_id );
 			if ( Endpoint::enabled() && $config ) {
 				$file = $config['file_slug'];
 			}
 			/* translators: %s: feed file name. */
 			$label  = sprintf( __( 'Copy feed URL of %s', 'oli-product-feed' ), $file );
-			$query  = (string) wp_parse_url( $url, PHP_URL_QUERY );
+			$query  = (string) wp_parse_url( $url, \PHP_URL_QUERY );
 			$short  = '' !== $query ? '…/?' . $query : '…/' . $file;
 			$html   = '<div class="oliprfe-url"><code title="' . esc_attr( $url ) . '">' . esc_html( $short ) . '</code>';
 			$html  .= '<button type="button" class="button button-small oliprfe-copy" data-target="' . esc_attr( $id ) . '" aria-label="' . esc_attr( $label ) . '"><span class="oliprfe-copy-label">' . esc_html__( 'Copy', 'oli-product-feed' ) . '</span></button></div>';
@@ -895,7 +895,7 @@ final class Admin {
 					'errors' => $errors,
 					'config' => $config,
 				),
-				10 * MINUTE_IN_SECONDS
+				10 * \MINUTE_IN_SECONDS
 			);
 			wp_safe_redirect( self::url( $feed_id ? array(
 				'action' => 'edit',
@@ -961,7 +961,7 @@ final class Admin {
 					'errors' => $errors,
 					'config' => array_merge( $config, array( 'name' => $picked['name'] ) ),
 				),
-				10 * MINUTE_IN_SECONDS
+				10 * \MINUTE_IN_SECONDS
 			);
 			wp_safe_redirect( self::url( array( 'action' => 'new' ) ) );
 			exit;

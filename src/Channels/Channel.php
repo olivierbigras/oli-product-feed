@@ -153,7 +153,7 @@ abstract class Channel {
 			return '';
 		}
 		$from = $from ? $from : time();
-		$to   = $to ? $to : $from + 10 * YEAR_IN_SECONDS;
+		$to   = $to ? $to : $from + 10 * \YEAR_IN_SECONDS;
 		return wp_date( 'Y-m-d\TH:iO', $from ) . '/' . wp_date( 'Y-m-d\TH:iO', $to );
 	}
 
@@ -380,7 +380,7 @@ abstract class Channel {
 	 * @return string
 	 */
 	public static function xml_text( $text ) {
-		return htmlspecialchars( self::xml_clean( $text ), ENT_XML1 | ENT_QUOTES, 'UTF-8' );
+		return htmlspecialchars( self::xml_clean( $text ), \ENT_XML1 | \ENT_QUOTES, 'UTF-8' );
 	}
 
 	/**

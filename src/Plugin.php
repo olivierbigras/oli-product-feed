@@ -18,7 +18,8 @@ final class Plugin {
 	 * Boots the plugin (plugins_loaded).
 	 */
 	public static function boot() {
-		PrefixMigrate::maybe_run();
+		// init priority 5: after action_scheduler_init (priority 1).
+		add_action( 'init', array( __CLASS__, 'on_init' ), 5 );
 		add_action( 'init', array( Feeds::class, 'register_post_type' ) );
 		add_action( 'wp_trash_post', array( Feeds::class, 'on_trash' ) );
 		add_action( 'transition_post_status', array( Feeds::class, 'on_status' ), 10, 3 );
@@ -39,9 +40,16 @@ final class Plugin {
 			Admin\Product::init();
 		}
 
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		if ( defined( 'WP_CLI' ) && \WP_CLI ) {
 			\WP_CLI::add_command( 'oli-feed', Cli::class );
 		}
+	}
+
+	/**
+	 * One-time prefix migration, after Action Scheduler has initialized.
+	 */
+	public static function on_init() {
+		PrefixMigrate::maybe_run();
 	}
 
 	/**
@@ -64,13 +72,13 @@ final class Plugin {
 		$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_user_locale();
 		$locale = (string) apply_filters( 'plugin_locale', $locale, $domain ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter, applied as load_plugin_textdomain() does.
 
-		$bundled = OLIPRFE_DIR . 'languages/oli-product-feed-' . $locale . '.mo';
+		$bundled = \OLIPRFE_DIR . 'languages/oli-product-feed-' . $locale . '.mo';
 		if ( is_readable( $bundled ) ) {
 			return $bundled;
 		}
 
 		if ( 'fr_CA' === $locale ) {
-			$fallback = OLIPRFE_DIR . 'languages/oli-product-feed-fr_FR.mo';
+			$fallback = \OLIPRFE_DIR . 'languages/oli-product-feed-fr_FR.mo';
 			if ( is_readable( $fallback ) ) {
 				return $fallback;
 			}
@@ -90,11 +98,14 @@ final class Plugin {
 	}
 
 	/**
-	 * Activation: copy any pre-0.3.5 `oli_pf_` options (the output folder is created on the
-	 * first generation, so that a custom output folder setting is respected).
+	 * Activation.
+	 *
+	 * The prefix migration is not run here. Activation can happen before Action
+	 * Scheduler is ready, which raises a doing-it-wrong notice. The migration
+	 * flag stays unset, so the next init (priority 5) runs it.
 	 */
 	public static function activate() {
-		PrefixMigrate::maybe_run();
+		// Deferred to on_init(). The output folder is still created on the first generation.
 	}
 
 	/**

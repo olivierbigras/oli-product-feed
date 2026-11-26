@@ -191,7 +191,7 @@ final class Editor {
 		if ( class_exists( '\\Locale' ) ) {
 			$name = \Locale::getDisplayLanguage( $locale, $locale );
 			if ( is_string( $name ) && '' !== $name && $name !== $locale ) {
-				return function_exists( 'mb_convert_case' ) ? mb_convert_case( mb_substr( $name, 0, 1 ), MB_CASE_TITLE ) . mb_substr( $name, 1 ) : $name;
+				return function_exists( 'mb_convert_case' ) ? mb_convert_case( mb_substr( $name, 0, 1 ), \MB_CASE_TITLE ) . mb_substr( $name, 1 ) : $name;
 			}
 		}
 		$names = array(
@@ -217,7 +217,7 @@ final class Editor {
 		$language  = isset( $languages[ $config['language'] ] ) ? $languages[ $config['language'] ] : self::site_language();
 		$countries = function_exists( 'WC' ) ? WC()->countries->get_countries() : array();
 		$name      = self::channel_short( (string) $config['channel'] ) . ' — ' . $language;
-		$country   = isset( $countries[ $config['country'] ] ) ? ' (' . html_entity_decode( $countries[ $config['country'] ], ENT_QUOTES, 'UTF-8' ) . ')' : '';
+		$country   = isset( $countries[ $config['country'] ] ) ? ' (' . html_entity_decode( $countries[ $config['country'] ], \ENT_QUOTES, 'UTF-8' ) . ')' : '';
 		if ( '' !== $country && substr( $name, -strlen( $country ) ) !== $country ) {
 			$name .= $country;
 		}
@@ -840,7 +840,7 @@ final class Editor {
 			}
 			$html = '';
 			foreach ( $by_parent[ $parent_id ] as $term ) {
-				$html .= '<li><label class="selectit"><input type="checkbox" name="' . esc_attr( $name ) . '[]" value="' . esc_attr( (string) $term->term_id ) . '"' . checked( in_array( (int) $term->term_id, $selected, true ), true, false ) . '> ' . esc_html( html_entity_decode( $term->name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) . '</label>';
+				$html .= '<li><label class="selectit"><input type="checkbox" name="' . esc_attr( $name ) . '[]" value="' . esc_attr( (string) $term->term_id ) . '"' . checked( in_array( (int) $term->term_id, $selected, true ), true, false ) . '> ' . esc_html( html_entity_decode( $term->name, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' ) ) . '</label>';
 				$children = $walk( (int) $term->term_id );
 				$html    .= '' !== $children ? '<ul class="children">' . $children . '</ul>' : '';
 				$html    .= '</li>';
@@ -1534,7 +1534,7 @@ final class Editor {
 		if ( ! is_array( $keys ) ) {
 			// Distinct product meta keys, for autocompletion only (cached 1 hour).
 			$keys = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT pm.meta_key FROM {$wpdb->postmeta} pm INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE p.post_type IN (%s, %s) ORDER BY pm.meta_key LIMIT 500", 'product', 'product_variation' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cached in a transient.
-			set_transient( 'oliprfe_meta_keys', $keys, HOUR_IN_SECONDS );
+			set_transient( 'oliprfe_meta_keys', $keys, \HOUR_IN_SECONDS );
 		}
 		echo '<datalist id="oliprfe-meta-keys">';
 		foreach ( (array) $keys as $key ) {
@@ -1580,10 +1580,10 @@ final class Editor {
 			$name[]                     = $term->name;
 			$rows[ implode( ' > ', $name ) ] = $term;
 		}
-		ksort( $rows, SORT_NATURAL | SORT_FLAG_CASE );
+		ksort( $rows, \SORT_NATURAL | \SORT_FLAG_CASE );
 		foreach ( $rows as $path => $term ) {
 			$id = (int) $term->term_id;
-			echo '<tr><th scope="row">' . esc_html( html_entity_decode( $path, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) . ' <span class="oliprfe-meta">(' . (int) $term->count . ')</span></th>';
+			echo '<tr><th scope="row">' . esc_html( html_entity_decode( $path, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' ) ) . ' <span class="oliprfe-meta">(' . (int) $term->count . ')</span></th>';
 			$gcat = isset( $feed['google_category_map'][ $id ] ) ? $feed['google_category_map'][ $id ] : '';
 			echo wp_kses( '<td>' . self::text( 'feed[google_category_map][' . $id . ']', '', $gcat, 'code oliprfe-gcat', ' aria-label="' . esc_attr__( 'Google category ID', 'oli-product-feed' ) . '"' . self::gcat_attrs( (string) $id ) ) . self::gcat_path( (string) $id, $gcat ) . '</td>', self::allowed_html() );
 			echo wp_kses( '<td>' . self::text( 'feed[title_type_map][' . $id . ']', '', isset( $feed['title_type_map'][ $id ] ) ? $feed['title_type_map'][ $id ] : '', 'regular-text', ' aria-label="' . esc_attr__( 'Type for the title', 'oli-product-feed' ) . '"' ) . '</td></tr>', self::allowed_html() );

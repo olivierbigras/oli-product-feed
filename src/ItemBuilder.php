@@ -342,7 +342,7 @@ final class ItemBuilder {
 		}
 		$names = array();
 		foreach ( $terms as $term ) {
-			$names[] = Util::clean_text( html_entity_decode( $term->name, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+			$names[] = Util::clean_text( html_entity_decode( $term->name, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' ) );
 		}
 		$chosen = '';
 		foreach ( $this->feed['brand_priority'] as $priority ) {
@@ -384,7 +384,7 @@ final class ItemBuilder {
 			);
 			$this->brand_names = is_array( $terms ) ? array_map(
 				static function ( $name ) {
-					return html_entity_decode( $name, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+					return html_entity_decode( $name, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 				},
 				$terms
 			) : array();
@@ -420,7 +420,7 @@ final class ItemBuilder {
 	 * @return string
 	 */
 	private static function opening_name( $text, array $names ) {
-		$text = Util::clean_text( html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		$text = Util::clean_text( html_entity_decode( $text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' ) );
 		usort(
 			$names,
 			static function ( $a, $b ) {
@@ -513,7 +513,7 @@ final class ItemBuilder {
 					$term  = get_term_by( 'slug', $slug, $attribute );
 					$label = $term ? $term->name : $label;
 				}
-				$value = html_entity_decode( Lang::translate( $label, $lang ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+				$value = html_entity_decode( Lang::translate( $label, $lang ), \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 				foreach ( $this->feed['title_strip_patterns'] as $pattern ) {
 					$value = (string) preg_replace( Util::regex( $pattern ), '', $value );
 				}
@@ -804,7 +804,7 @@ final class ItemBuilder {
 			$values = $attribute->is_taxonomy() ? wc_get_product_terms( $product->get_id(), $attribute->get_name(), array( 'fields' => 'names' ) ) : $attribute->get_options();
 			$values = array_map(
 				static function ( $v ) use ( $lang ) {
-					return html_entity_decode( Lang::translate( (string) $v, $lang ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+					return html_entity_decode( Lang::translate( (string) $v, $lang ), \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 				},
 				(array) $values
 			);
@@ -896,7 +896,7 @@ final class ItemBuilder {
 		if ( 0 === strpos( set_url_scheme( $url, 'https' ), $base_url ) ) {
 			$file = get_attached_file( $id );
 			if ( 'full' !== $size ) {
-				$file = trailingslashit( dirname( (string) $file ) ) . basename( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+				$file = trailingslashit( dirname( (string) $file ) ) . basename( (string) wp_parse_url( $url, \PHP_URL_PATH ) );
 			}
 			if ( $file && ! file_exists( $file ) ) {
 				return '';

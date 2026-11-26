@@ -32,7 +32,7 @@ final class Endpoint {
 		// (language redirects, output buffer), redirect_canonical and any template.
 		add_action( 'init', array( __CLASS__, 'maybe_serve' ), 1 );
 		$index = get_option( self::INDEX_OPTION );
-		if ( ! is_array( $index ) || ! isset( $index['version'] ) || OLIPRFE_VERSION !== $index['version'] ) {
+		if ( ! is_array( $index ) || ! isset( $index['version'] ) || \OLIPRFE_VERSION !== $index['version'] ) {
 			// First load after an update: build the early index once the feed post type exists.
 			add_action( 'init', array( __CLASS__, 'refresh_index' ), 20 );
 		}
@@ -52,7 +52,7 @@ final class Endpoint {
 			return;
 		}
 		// Index of another plugin version (rebuilt on init): the init path decides.
-		if ( defined( 'OLIPRFE_VERSION' ) && ( ! isset( $index['version'] ) || OLIPRFE_VERSION !== $index['version'] ) ) {
+		if ( defined( 'OLIPRFE_VERSION' ) && ( ! isset( $index['version'] ) || \OLIPRFE_VERSION !== $index['version'] ) ) {
 			return;
 		}
 		$slug = sanitize_title( wp_unslash( $_GET[ self::QUERY_VAR ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -69,7 +69,7 @@ final class Endpoint {
 		$real  = '' !== $path ? realpath( $path ) : false;
 		$base  = '' !== $dir ? realpath( $dir ) : false;
 		// Only a readable file of the plugin's output folder.
-		if ( ! $real || ! $base || 0 !== strpos( $real, $base . DIRECTORY_SEPARATOR ) || ! is_readable( $real ) ) {
+		if ( ! $real || ! $base || 0 !== strpos( $real, $base . \DIRECTORY_SEPARATOR ) || ! is_readable( $real ) ) {
 			return;
 		}
 		self::send( $real, isset( $entry['format'] ) ? (string) $entry['format'] : 'xml', isset( $entry['max_age'] ) ? (int) $entry['max_age'] : 0 );
@@ -80,7 +80,7 @@ final class Endpoint {
 	 */
 	public static function refresh_index() {
 		$previous = get_option( self::INDEX_OPTION );
-		if ( ! is_array( $previous ) || ! isset( $previous['version'] ) || OLIPRFE_VERSION !== $previous['version'] ) {
+		if ( ! is_array( $previous ) || ! isset( $previous['version'] ) || \OLIPRFE_VERSION !== $previous['version'] ) {
 			// First rebuild by this version: remove the files of feeds trashed by an older version, record the
 			// output folder and clean the previous ones (filter changed while the plugin was updated).
 			Feeds::delete_trashed_files();
@@ -102,7 +102,7 @@ final class Endpoint {
 		}
 		$base  = Storage::base();
 		$index = array(
-			'version' => OLIPRFE_VERSION,
+			'version' => \OLIPRFE_VERSION,
 			'mode'    => self::enabled() ? 'endpoint' : 'file',
 			'dir'     => $base['dir'],
 			'feeds'   => $feeds,
@@ -129,7 +129,7 @@ final class Endpoint {
 	 */
 	public static function url( $file_slug ) {
 		$home = home_url( '/' );
-		if ( 'https' === wp_parse_url( $home, PHP_URL_SCHEME ) || is_ssl() ) {
+		if ( 'https' === wp_parse_url( $home, \PHP_URL_SCHEME ) || is_ssl() ) {
 			$home = set_url_scheme( $home, 'https' );
 		}
 		return add_query_arg( self::QUERY_VAR, rawurlencode( $file_slug ), $home );

@@ -5,7 +5,7 @@ Tags: product feed, google merchant center, tiktok, facebook catalog, woocommerc
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -132,6 +132,10 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 
 == Changelog ==
 
+= 0.6.1 =
+* Fix: namespaced PHP files fully qualify global constants, so those constants resolve in the global namespace.
+* Fix: the one-time prefix migration runs on init at priority 5, after Action Scheduler is ready. It no longer runs during boot or activation, which avoids a doing-it-wrong notice on upgrade.
+
 = 0.6.0 =
 * Admin (in progress): native WordPress screens in four tabs (Feeds, Diagnostics, Activity log, Settings).
 * Feeds list: summary tiles (active feeds, items, excluded products, feeds with an error), six columns (Name, Target, Items, Status, Last generated, Feed URL), views All / Active / Errors / Inactive, channel filter, sorting, and Screen Options (columns, feeds per page).
@@ -249,6 +253,9 @@ The scheduled tasks and their Action Scheduler history are always removed. When 
 * First version: Google Merchant Center feeds, TranslatePress, Price Based on Country, batches, WP-CLI.
 
 == Upgrade Notice ==
+
+= 0.6.1 =
+Fixes constant resolution in namespaced code and runs the one-time prefix migration on init, after Action Scheduler is ready.
 
 = 0.6.0 =
 New native admin screens. Feeds, settings and feed URLs are unchanged.

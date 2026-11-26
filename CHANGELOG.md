@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1
+
+- **Fix**: Namespaced PHP files now fully qualify global constants (a leading `\`), so those constants resolve in the global namespace.
+- **Fix**: The one-time prefix migration runs on `init` at priority 5, after Action Scheduler has initialized. It is no longer called during boot or activation, which avoids a doing-it-wrong notice on upgrade.
+
 ## 0.6.0 — refonte de l’interface admin (en cours, branche `ui/native-refonte-060`)
 
 ### Lot 5 (2026-11-25) : P3 restants, .pot

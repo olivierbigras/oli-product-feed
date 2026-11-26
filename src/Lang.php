@@ -208,7 +208,7 @@ final class Lang {
 			return $text;
 		}
 		$candidates = array( $text );
-		$encoded    = htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+		$encoded    = htmlspecialchars( $text, \ENT_QUOTES, 'UTF-8' );
 		if ( $encoded !== $text ) {
 			$candidates[] = $encoded;
 		}

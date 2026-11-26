@@ -262,7 +262,7 @@ final class Sources {
 		$name = static function ( $term ) use ( $translate, $feed ) {
 			// Translate the stored name (TranslatePress keys its dictionary on the encoded string), then decode.
 			$label = $translate ? Lang::translate( $term->name, $feed['language'] ) : $term->name;
-			return html_entity_decode( $label, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			return html_entity_decode( $label, \ENT_QUOTES | \ENT_HTML5, 'UTF-8' );
 		};
 
 		if ( 'path' === $mode || 'top' === $mode ) {

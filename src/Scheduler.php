@@ -30,7 +30,7 @@ final class Scheduler {
 		add_action( 'woocommerce_update_product', array( __CLASS__, 'product_changed' ) );
 		add_action( 'woocommerce_update_product_variation', array( __CLASS__, 'product_changed' ) );
 		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) ); // phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval
-		add_action( 'init', array( __CLASS__, 'ensure_tick' ), 20 );
+		add_action( 'init', array( __CLASS__, 'ensure_tick' ), 20 ); // After action_scheduler_init (priority 1).
 	}
 
 	/**
@@ -60,7 +60,7 @@ final class Scheduler {
 	 * Makes sure the recurring tick exists.
 	 */
 	public static function ensure_tick() {
-		if ( ! is_admin() && ! wp_doing_cron() && ! ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+		if ( ! is_admin() && ! wp_doing_cron() && ! ( defined( 'WP_CLI' ) && \WP_CLI ) ) {
 			return;
 		}
 		if ( self::use_as() ) {
@@ -132,8 +132,8 @@ final class Scheduler {
 		$last_run = isset( $last['time'] ) ? (int) $last['time'] : 0;
 		if ( $feed['start_hour'] >= 0 && in_array( $feed['frequency'], array( 'daily', 'weekly' ), true ) ) {
 			$next = ( new \DateTimeImmutable( 'now', wp_timezone() ) )->setTime( (int) $feed['start_hour'], 0 )->getTimestamp();
-			while ( $next <= $last_run || $next - $last_run < $interval - DAY_IN_SECONDS + HOUR_IN_SECONDS ) {
-				$next += DAY_IN_SECONDS;
+			while ( $next <= $last_run || $next - $last_run < $interval - \DAY_IN_SECONDS + \HOUR_IN_SECONDS ) {
+				$next += \DAY_IN_SECONDS;
 			}
 		} else {
 			$next = $last_run + $interval;
@@ -150,10 +150,10 @@ final class Scheduler {
 	 */
 	public static function interval( $frequency ) {
 		$intervals = array(
-			'hourly'     => HOUR_IN_SECONDS,
-			'twicedaily' => 12 * HOUR_IN_SECONDS,
-			'daily'      => DAY_IN_SECONDS,
-			'weekly'     => WEEK_IN_SECONDS,
+			'hourly'     => \HOUR_IN_SECONDS,
+			'twicedaily' => 12 * \HOUR_IN_SECONDS,
+			'daily'      => \DAY_IN_SECONDS,
+			'weekly'     => \WEEK_IN_SECONDS,
 		);
 		return isset( $intervals[ $frequency ] ) ? $intervals[ $frequency ] : 0;
 	}
@@ -174,8 +174,8 @@ final class Scheduler {
 		$last_run = isset( $last['time'] ) ? (int) $last['time'] : 0;
 		if ( $feed['start_hour'] >= 0 && in_array( $feed['frequency'], array( 'daily', 'weekly' ), true ) ) {
 			$today = ( new \DateTimeImmutable( 'now', wp_timezone() ) )->setTime( (int) $feed['start_hour'], 0 )->getTimestamp();
-			$slot  = $now >= $today ? $today : $today - DAY_IN_SECONDS;
-			return $last_run < $slot && $now - $last_run >= $interval - DAY_IN_SECONDS + HOUR_IN_SECONDS;
+			$slot  = $now >= $today ? $today : $today - \DAY_IN_SECONDS;
+			return $last_run < $slot && $now - $last_run >= $interval - \DAY_IN_SECONDS + \HOUR_IN_SECONDS;
 		}
 		return $now - $last_run >= $interval - self::TICK_SECONDS / 2;
 	}
